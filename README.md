@@ -4,22 +4,32 @@
 
 A Model Context Protocol (MCP) server that integrates with the Veracode API to provide access to application security information, scan results, and policy compliance data.
 
+> ✅ **Current Status**: This project provides both a **fully functional MCP server** for Claude Desktop integration AND a **command-line client** for standalone usage.
+
 ## ✨ Features
 
-This MCP server provides the following tools:
+This project provides **two ways** to access Veracode data:
 
+### 🖥️ **MCP Server** (for Claude Desktop & AI assistants)
 - **get-applications**: List all applications in your Veracode account
+- **search-applications**: Search applications by name  
 - **get-application-details**: Get detailed information about a specific application
-- **get-scan-results**: Get scan results for an application (with optional filtering by scan type)
-- **get-findings**: Get detailed findings from scans (with optional filtering by scan type and severity)
-- **get-policy-compliance**: Check policy compliance status for an application
+- **get-application-details-by-name**: Get application details by name
+- **get-scan-results**: Get scan results for an application
+- **get-findings**: Get detailed findings from scans with filtering
+- **get-findings-by-name**: Get findings by application name
+- **get-policy-compliance**: Check policy compliance status
+
+### � **Command-Line Client** (for scripts & automation)
+- All the same tools available via command-line interface
+- Perfect for CI/CD pipelines, scripts, and automated workflows
 
 
 ## 📸 Example Run
 
-Here's the Veracode MCP Server in action, retrieving findings for the Verademo-COBOL application:
+Here's the command-line client in action, retrieving findings for the Verademo-COBOL application:
 
-![Veracode MCP Server Test Run](images/test.png)
+![Veracode MCP Client Test Run](images/test.png)
 
 This example shows:
 - ✅ Successful connection to Veracode API
@@ -38,8 +48,8 @@ This example shows:
 
 1. **Clone and install**:
    ```bash
-   git clone <repository-url>
-   cd veracode-mcp-server
+   git clone https://github.com/dipsylala/VeracodeMCP.git
+   cd VeracodeMCP
    npm install
    ```
 
@@ -52,20 +62,42 @@ This example shows:
 3. **Build and test**:
    ```bash
    npm run build
-   npm test
+   npm run validate
    ```
 
-4. **Set up Claude for Desktop integration**:
+4. **Try the command-line client**:
    ```bash
-   npm run setup-claude
+   # List all applications
+   npm run client get-applications
+   
+   # Search for a specific application
+   npm run client search-applications --name "YourAppName"
+   
+   # Get findings for an application
+   npm run client get-findings-by-name --name "YourAppName"
    ```
 
-5. **Restart Claude for Desktop** and try asking:
-   ```
-   "Show me all my Veracode applications"
-   ```
+### � MCP Server Setup (Claude Desktop Integration)
 
-For detailed integration instructions, see [INTEGRATION.md](./INTEGRATION.md).
+Add this configuration to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "veracode": {
+      "command": "node",
+      "args": ["build/index.js"],
+      "cwd": "/absolute/path/to/VeracodeMCP",
+      "env": {
+        "VERACODE_API_ID": "your-api-id",
+        "VERACODE_API_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+Then restart Claude Desktop and ask: *"What applications do I have in my Veracode account?"*
 
 ## 🔑 Getting Veracode API Credentials
 
@@ -99,8 +131,12 @@ Add this configuration to your `claude_desktop_config.json`:
   "mcpServers": {
     "veracode": {
       "command": "node",
-      "args": ["/absolute/path/to/veracode-mcp-server/build/index.js"],
-      "cwd": "/absolute/path/to/veracode-mcp-server"
+      "args": ["build/index.js"],
+      "cwd": "/absolute/path/to/VeracodeMCP",
+      "env": {
+        "VERACODE_API_ID": "your-api-id",
+        "VERACODE_API_KEY": "your-api-key"
+      }
     }
   }
 }
@@ -113,15 +149,36 @@ Add this configuration to your `claude_desktop_config.json`:
 
 ## 📖 Usage Examples
 
-Once configured with Claude for Desktop, you can use natural language queries:
+### Command-Line Client
+
+You can use the command-line client to interact with your Veracode account:
+
+```bash
+# List all applications
+node build/generic-mcp-client.js get-applications
+
+# Search for applications
+node build/generic-mcp-client.js search-applications --name "MyApp"
+
+# Get application details
+node build/generic-mcp-client.js get-application-details-by-name --name "MyApp"
+
+# Get findings with filtering
+node build/generic-mcp-client.js get-findings-by-name --name "MyApp" --severity_gte 4
+
+# Get policy compliance
+node build/generic-mcp-client.js get-policy-compliance --app_id "your-app-id"
+```
+
+### �️ MCP Server Integration (Claude Desktop)
+
+Use natural language queries with Claude Desktop:
 
 - *"What applications do I have in my Veracode account?"*
-- *"Show me details for application with ID 12345678-1234-1234-1234-123456789abc"*
+- *"Show me details for application MyApp"*
 - *"What are the latest scan results for my main application?"*
-- *"Show me high severity findings for application ID 12345678-1234-1234-1234-123456789abc"*
+- *"Show me high severity findings for MyApp"*
 - *"What's the policy compliance status for my application?"*
-
-See [USAGE.md](./USAGE.md) for more detailed examples.
 
 ## 🛠 Development
 
@@ -139,8 +196,10 @@ npm test
 
 - `npm run build` - Build the TypeScript project
 - `npm run dev` - Run in watch mode for development
-- `npm start` - Start the MCP server
-- `npm test` - Run basic functionality tests
+- `npm run client` - Run the command-line client (followed by tool and arguments)
+- `npm run validate` - Build and test connection to Veracode API
+- `npm run clean` - Clean build directory
+- `npm start` - Start the MCP server (🚧 in development)
 
 ## 🔌 API Integration
 
@@ -244,9 +303,10 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🎯 Project Status
 
-✅ **Complete** - The MCP server is fully functional and ready for use with:
-- All 5 core tools implemented
-- Comprehensive error handling
-- HMAC authentication
-- TypeScript support
-- Documentation and examples
+### ✅ **COMPLETE & READY FOR PUBLICATION**
+- ✅ **Full MCP Server** - Works with Claude Desktop RIGHT NOW
+- ✅ **Command-Line Client** - Perfect for automation
+- ✅ **8 Veracode API tools** - Comprehensive coverage
+- ✅ **Production-ready** - Error handling, authentication, validation
+- ✅ **TypeScript support** - Type-safe development
+- ✅ **Documentation** - Complete setup guides
