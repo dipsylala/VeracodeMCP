@@ -14,6 +14,20 @@ This MCP server provides the following tools:
 - **get-findings**: Get detailed findings from scans (with optional filtering by scan type and severity)
 - **get-policy-compliance**: Check policy compliance status for an application
 
+
+## 📸 Example Run
+
+Here's the Veracode MCP Server in action, retrieving findings for the Verademo-COBOL application:
+
+![Veracode MCP Server Test Run](images/test.png)
+
+This example shows:
+- ✅ Successful connection to Veracode API
+- 🔍 Finding 16 security findings for Verademo-COBOL
+- 🚨 Critical OS Command Injection vulnerability (Severity 5)
+- ⚠️ Hard-coded password issue (Severity 3)
+- 📋 Detailed findings with CWE classifications and policy violations
+
 ## 📋 Prerequisites
 
 - Node.js 16 or higher
