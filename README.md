@@ -1,4 +1,4 @@
-# Veracode MCP Server### 💻 **Command-Line Client** (for scripts & automation)
+# Veracode MCP Server and 💻 **Command-Line Client** (for scripts & automation)
 - All the same tools available via command-line interface
 - Perfect for CI/CD pipelines, scripts, and automated workflows
 
