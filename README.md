@@ -305,7 +305,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📚 Resources
 
-- [Veracode API Documentation](https://help.veracode.com/r/c_rest_api)
+- [Veracode API Documentation](https://docs.veracode.com/r/c_rest_intro)
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
 - [Claude for Desktop](https://claude.ai/download)
 
