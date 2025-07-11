@@ -33,109 +33,157 @@ export interface VeracodeScan {
   policy_compliance_status?: string;
 }
 
+// Base annotation interface
+export interface VeracodeAnnotation {
+  action: string;
+  comment: string;
+  created: string;
+  user_name: string;
+  remaining_risk?: string;
+  specifics?: string;
+  technique?: string;
+  verification?: string;
+}
+
+// Base finding status interface
+export interface VeracodeFindingStatus {
+  first_found_date: string;
+  last_seen_date?: string;
+  status: string;
+  resolution: string;
+  resolution_status: string;
+  new: boolean;
+  mitigation_review_status?: string;
+}
+
+// Base CWE interface
+export interface VeracodeCWE {
+  id: number;
+  name: string;
+  href?: string;
+}
+
+// Static Analysis finding details
+export interface VeracodeStaticFinding {
+  severity: number;
+  cwe?: VeracodeCWE;
+  cvss?: string;
+  exploitability?: number;
+  attack_vector?: string;
+  file_line_number?: string;
+  file_name?: string;
+  file_path?: string;
+  finding_category?: string;
+  module?: string;
+  procedure?: string;
+  relative_location?: string;
+}
+
+// Dynamic Analysis finding details
+export interface VeracodeDynamicFinding {
+  severity: number;
+  cwe?: VeracodeCWE;
+  cvss?: string;
+  attack_vector?: string;
+  hostname?: string;
+  port?: string;
+  path?: string;
+  plugin?: string;
+  URL?: string;
+  vulnerable_parameter?: string;
+  discovered_by_vsa?: string;
+  finding_category?: string;
+}
+
+// Manual finding details
+export interface VeracodeManualFinding {
+  severity: number;
+  cwe?: VeracodeCWE;
+  cvss?: string;
+  capec_id?: string;
+  exploit_desc?: string;
+  exploit_difficulty?: string;
+  input_vector?: string;
+  location?: string;
+  module?: string;
+  remediation_desc?: string;
+  severity_desc?: string;
+}
+
+// SCA-specific interfaces
+export interface VeracodeSCALicense {
+  license_id: string;
+  risk_rating: string;
+}
+
+export interface VeracodeSCAExploitability {
+  exploit_service_status: string;
+  cve_full?: string;
+  epss_status?: string;
+  epss_score?: number;
+  epss_percentile?: number;
+  epss_score_date?: string;
+  epss_model_version?: string;
+  epss_citation?: string;
+  exploit_observed?: boolean;
+  exploit_source?: string;
+  exploit_note?: string;
+}
+
+export interface VeracodeSCACVE {
+  name: string;
+  cvss: number;
+  href: string;
+  severity: string;
+  vector: string;
+  cvss3?: {
+    score: number;
+    severity: string;
+    vector: string;
+  };
+  exploitability?: VeracodeSCAExploitability;
+}
+
+export interface VeracodeSCAComponentPath {
+  path: string;
+}
+
+// SCA finding details
+export interface VeracodeSCAFinding {
+  severity: number;
+  cwe?: VeracodeCWE;
+  component_id?: string;
+  licenses?: VeracodeSCALicense[];
+  cve?: VeracodeSCACVE;
+  version?: string;
+  product_id?: string;
+  component_filename?: string;
+  language?: string;
+  component_path?: VeracodeSCAComponentPath[];
+  metadata?: string;
+}
+
+// Union type for all finding details
+export type VeracodeFindingDetails =
+  | VeracodeStaticFinding
+  | VeracodeDynamicFinding
+  | VeracodeManualFinding
+  | VeracodeSCAFinding;
+
+// Main finding interface
 export interface VeracodeFinding {
-  scan_type: string;
+  scan_type: 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA';
   description: string;
   count: number;
-  context_type: string;
+  context_type: 'APPLICATION' | 'SANDBOX';
   context_guid: string;
   violates_policy: boolean;
   issue_id?: number;
   build_id?: number;
   grace_period_expires_date?: string;
-  annotations?: Array<{
-    action: string;
-    comment: string;
-    created: string;
-    user_name: string;
-    remaining_risk?: string;
-    specifics?: string;
-    technique?: string;
-    verification?: string;
-  }>;
-  finding_status: {
-    first_found_date: string;
-    last_seen_date?: string;
-    status: string;
-    resolution: string;
-    resolution_status: string;
-    new: boolean;
-    mitigation_review_status?: string;
-  };
-  finding_details: {
-    severity: number;
-    cwe?: {
-      id: number;
-      name: string;
-      href?: string;
-    };
-    cvss?: string;
-    // Static Analysis findings
-    exploitability?: number;
-    attack_vector?: string;
-    file_line_number?: string;
-    file_name?: string;
-    file_path?: string;
-    finding_category?: string;
-    module?: string;
-    procedure?: string;
-    relative_location?: string;
-    // Dynamic Analysis findings
-    hostname?: string;
-    port?: string;
-    path?: string;
-    plugin?: string;
-    URL?: string;
-    vulnerable_parameter?: string;
-    discovered_by_vsa?: string;
-    // Manual findings
-    capec_id?: string;
-    exploit_desc?: string;
-    exploit_difficulty?: string;
-    input_vector?: string;
-    location?: string;
-    remediation_desc?: string;
-    severity_desc?: string;
-    // SCA findings
-    component_id?: string;
-    licenses?: Array<{
-      license_id: string;
-      risk_rating: string;
-    }>;
-    cve?: {
-      name: string;
-      cvss: number;
-      href: string;
-      severity: string;
-      vector: string;
-      cvss3?: {
-        score: number;
-        severity: string;
-        vector: string;
-      };
-      exploitability?: {
-        exploit_service_status: string;
-        cve_full?: string;
-        epss_status?: string;
-        epss_score?: number;
-        epss_percentile?: number;
-        epss_score_date?: string;
-        epss_model_version?: string;
-        epss_citation?: string;
-        exploit_observed?: boolean;
-        exploit_source?: string;
-        exploit_note?: string;
-      };
-    };
-    version?: string;
-    product_id?: string;
-    component_filename?: string;
-    language?: string;
-    component_path?: Array<{
-      path: string;
-    }>;
-    metadata?: string;
-  };
+  annotations?: VeracodeAnnotation[];
+  finding_status: VeracodeFindingStatus;
+  finding_details: VeracodeFindingDetails;
 }
 
 export interface VeracodePolicyCompliance {
@@ -483,6 +531,444 @@ export class VeracodeClient {
       return response.data;
     } catch (error) {
       throw new Error(`Failed to fetch policy compliance: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Get the latest SCA scan results for an application
+   */
+  async getLatestSCAResults(appId: string): Promise<{
+    scan: VeracodeScan | null;
+    findings: VeracodeFinding[];
+    summary: {
+      totalFindings: number;
+      severityBreakdown: Record<string, number>;
+      policyViolations: number;
+      highRiskComponents: number;
+    };
+  }> {
+    try {
+      // Get all SCA scans for the application
+      const scaScans = await this.getScanResults(appId, 'SCA');
+
+      if (scaScans.length === 0) {
+        return {
+          scan: null,
+          findings: [],
+          summary: {
+            totalFindings: 0,
+            severityBreakdown: {},
+            policyViolations: 0,
+            highRiskComponents: 0
+          }
+        };
+      }
+
+      // Sort by creation date to get the latest scan
+      const latestScan = scaScans.sort((a, b) =>
+        new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
+      )[0];
+
+      // Get all SCA findings for the application
+      const findings = await this.getFindings(appId, {
+        scanType: 'SCA',
+        size: 500  // Get a large number of findings
+      });
+
+      // Calculate summary statistics
+      const severityBreakdown: Record<string, number> = {};
+      let policyViolations = 0;
+      let highRiskComponents = 0;
+
+      findings.forEach(finding => {
+        const severity = finding.finding_details.severity;
+        const severityName = ['Very Low', 'Low', 'Medium', 'High', 'Very High'][severity] || `Level ${severity}`;
+
+        severityBreakdown[severityName] = (severityBreakdown[severityName] || 0) + 1;
+
+        if (finding.violates_policy) {
+          policyViolations++;
+        }
+
+        if (severity >= 3) { // High and Very High severity
+          highRiskComponents++;
+        }
+      });
+
+      return {
+        scan: latestScan,
+        findings,
+        summary: {
+          totalFindings: findings.length,
+          severityBreakdown,
+          policyViolations,
+          highRiskComponents
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch latest SCA results: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Get SCA findings with enhanced filtering and details
+   */
+  async getSCAFindings(appId: string, options?: {
+    includeTransitiveDependencies?: boolean;
+    includeDirectDependencies?: boolean;
+    severityGte?: number;
+    cvssGte?: number;
+    onlyPolicyViolations?: boolean;
+    onlyNewFindings?: boolean;
+    includeLicenseInfo?: boolean;
+    page?: number;
+    size?: number;
+  }): Promise<VeracodeFinding[]> {
+    try {
+      const findingOptions: any = {
+        scanType: 'SCA',
+        includeAnnotations: true,
+        includeExpirationDate: true,
+        size: options?.size || 500,
+        page: options?.page || 0
+      };
+
+      // Add SCA-specific filters
+      if (options?.includeTransitiveDependencies && options?.includeDirectDependencies) {
+        findingOptions.scaDependencyMode = 'BOTH';
+      } else if (options?.includeTransitiveDependencies) {
+        findingOptions.scaDependencyMode = 'TRANSITIVE';
+      } else if (options?.includeDirectDependencies) {
+        findingOptions.scaDependencyMode = 'DIRECT';
+      }
+
+      if (options?.severityGte !== undefined) {
+        findingOptions.severityGte = options.severityGte;
+      }
+
+      if (options?.cvssGte !== undefined) {
+        findingOptions.cvssGte = options.cvssGte;
+      }
+
+      if (options?.onlyPolicyViolations) {
+        findingOptions.policyViolation = true;
+      }
+
+      if (options?.onlyNewFindings) {
+        findingOptions.newFindingsOnly = true;
+      }
+
+      return await this.getFindings(appId, findingOptions);
+    } catch (error) {
+      throw new Error(`Failed to fetch SCA findings: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Get SCA findings by application name with enhanced filtering
+   */
+  async getSCAFindingsByName(name: string, options?: {
+    includeTransitiveDependencies?: boolean;
+    includeDirectDependencies?: boolean;
+    severityGte?: number;
+    cvssGte?: number;
+    onlyPolicyViolations?: boolean;
+    onlyNewFindings?: boolean;
+    includeLicenseInfo?: boolean;
+    page?: number;
+    size?: number;
+  }): Promise<VeracodeFinding[]> {
+    try {
+      // First search for applications with this name
+      const searchResults = await this.searchApplications(name);
+
+      if (searchResults.length === 0) {
+        throw new Error(`No application found with name: ${name}`);
+      }
+
+      // If multiple results, look for exact match first
+      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
+
+      // If no exact match, use the first result but warn about it
+      if (!targetApp) {
+        targetApp = searchResults[0];
+        console.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`);
+      }
+
+      // Get SCA findings using the GUID
+      return await this.getSCAFindings(targetApp.guid, options);
+    } catch (error) {
+      throw new Error(`Failed to fetch SCA findings by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Type guard to check if finding details are SCA-specific
+   */
+  isSCAFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeSCAFinding } {
+    return finding.scan_type === 'SCA';
+  }
+
+  /**
+   * Type guard to check if finding details are Static Analysis
+   */
+  isStaticFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeStaticFinding } {
+    return finding.scan_type === 'STATIC';
+  }
+
+  /**
+   * Type guard to check if finding details are Dynamic Analysis
+   */
+  isDynamicFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeDynamicFinding } {
+    return finding.scan_type === 'DYNAMIC';
+  }
+
+  /**
+   * Type guard to check if finding details are Manual
+   */
+  isManualFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeManualFinding } {
+    return finding.scan_type === 'MANUAL';
+  }
+
+  /**
+   * Enhanced findings retrieval with proper typing and detailed information
+   */
+  async getEnhancedFindings(
+    appId: string,
+    options?: {
+      scanType?: 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA';
+      severity?: number;
+      severityGte?: number;
+      cwe?: number[];
+      cvss?: number;
+      cvssGte?: number;
+      cve?: string;
+      context?: 'APPLICATION' | 'SANDBOX';
+      findingCategory?: number[];
+      includeAnnotations?: boolean;
+      includeExpirationDate?: boolean;
+      mitigatedAfter?: string;
+      newFindingsOnly?: boolean;
+      scaDependencyMode?: 'UNKNOWN' | 'DIRECT' | 'TRANSITIVE' | 'BOTH';
+      scaScanMode?: 'UPLOAD' | 'AGENT' | 'BOTH';
+      policyViolation?: boolean;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<{
+    findings: VeracodeFinding[];
+    summary: {
+      totalFindings: number;
+      byType: Record<string, number>;
+      bySeverity: Record<string, number>;
+      policyViolations: number;
+      newFindings: number;
+    };
+  }> {
+    try {
+      const findings = await this.getFindings(appId, {
+        scanType: options?.scanType,
+        severity: options?.severity,
+        severityGte: options?.severityGte,
+        cwe: options?.cwe,
+        cvss: options?.cvss,
+        cvssGte: options?.cvssGte,
+        cve: options?.cve,
+        context: options?.context,
+        findingCategory: options?.findingCategory,
+        includeAnnotations: options?.includeAnnotations ?? true,
+        includeExpirationDate: options?.includeExpirationDate ?? true,
+        mitigatedAfter: options?.mitigatedAfter,
+        newFindingsOnly: options?.newFindingsOnly,
+        scaDependencyMode: options?.scaDependencyMode,
+        scaScanMode: options?.scaScanMode,
+        policyViolation: options?.policyViolation,
+        page: options?.page,
+        size: options?.size
+      });
+
+      // Generate summary statistics
+      const byType: Record<string, number> = {};
+      const bySeverity: Record<string, number> = {};
+      let policyViolations = 0;
+      let newFindings = 0;
+
+      findings.forEach(finding => {
+        // Count by scan type
+        byType[finding.scan_type] = (byType[finding.scan_type] || 0) + 1;
+
+        // Count by severity
+        const severity = finding.finding_details.severity;
+        const severityName = ['Very Low', 'Low', 'Medium', 'High', 'Very High'][severity] || `Level ${severity}`;
+        bySeverity[severityName] = (bySeverity[severityName] || 0) + 1;
+
+        // Count policy violations
+        if (finding.violates_policy) {
+          policyViolations++;
+        }
+
+        // Count new findings
+        if (finding.finding_status.new) {
+          newFindings++;
+        }
+      });
+
+      return {
+        findings,
+        summary: {
+          totalFindings: findings.length,
+          byType,
+          bySeverity,
+          policyViolations,
+          newFindings
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch enhanced findings: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Get SCA findings with comprehensive details including exploitability
+   */
+  async getComprehensiveSCAFindings(appId: string, options?: {
+    includeTransitiveDependencies?: boolean;
+    includeDirectDependencies?: boolean;
+    severityGte?: number;
+    cvssGte?: number;
+    onlyPolicyViolations?: boolean;
+    onlyNewFindings?: boolean;
+    onlyWithExploits?: boolean;
+    includeLicenseInfo?: boolean;
+    page?: number;
+    size?: number;
+  }): Promise<{
+    findings: VeracodeFinding[];
+    scaAnalysis: {
+      totalComponents: number;
+      vulnerableComponents: number;
+      highRiskComponents: number;
+      exploitableFindings: number;
+      licensingIssues: number;
+      directDependencies: number;
+      transitiveDependencies: number;
+      severityBreakdown: Record<string, number>;
+      topVulnerabilities: Array<{
+        cve: string;
+        component: string;
+        version: string;
+        cvss: number;
+        exploitable: boolean;
+      }>;
+    };
+  }> {
+    try {
+      const enhancedResult = await this.getEnhancedFindings(appId, {
+        scanType: 'SCA',
+        includeAnnotations: true,
+        includeExpirationDate: true,
+        severityGte: options?.severityGte,
+        cvssGte: options?.cvssGte,
+        policyViolation: options?.onlyPolicyViolations,
+        newFindingsOnly: options?.onlyNewFindings,
+        scaDependencyMode: options?.includeTransitiveDependencies && options?.includeDirectDependencies ? 'BOTH' :
+          options?.includeTransitiveDependencies ? 'TRANSITIVE' :
+            options?.includeDirectDependencies ? 'DIRECT' : undefined,
+        page: options?.page,
+        size: options?.size || 500
+      });
+
+      const findings = enhancedResult.findings;
+
+      // Filter for exploitable findings if requested
+      const filteredFindings = options?.onlyWithExploits ?
+        findings.filter(f => this.isSCAFinding(f) && f.finding_details.cve?.exploitability?.exploit_observed) :
+        findings;
+
+      // Analyze SCA-specific data
+      const componentMap = new Map<string, Set<string>>();
+      let vulnerableComponents = 0;
+      let highRiskComponents = 0;
+      let exploitableFindings = 0;
+      let licensingIssues = 0;
+      let directDependencies = 0;
+      let transitiveDependencies = 0;
+      const topVulnerabilities: Array<{
+        cve: string;
+        component: string;
+        version: string;
+        cvss: number;
+        exploitable: boolean;
+      }> = [];
+
+      filteredFindings.forEach(finding => {
+        if (this.isSCAFinding(finding)) {
+          const details = finding.finding_details;
+
+          // Track unique components
+          const componentKey = `${details.component_filename}:${details.version}`;
+          if (!componentMap.has(componentKey)) {
+            componentMap.set(componentKey, new Set());
+          }
+
+          // Count vulnerabilities per component
+          if (details.cve) {
+            componentMap.get(componentKey)!.add(details.cve.name);
+            vulnerableComponents++;
+
+            // Track top vulnerabilities
+            topVulnerabilities.push({
+              cve: details.cve.name,
+              component: details.component_filename || 'Unknown',
+              version: details.version || 'Unknown',
+              cvss: details.cve.cvss,
+              exploitable: details.cve.exploitability?.exploit_observed || false
+            });
+          }
+
+          // Count high-risk components (severity 4-5)
+          if (details.severity >= 4) {
+            highRiskComponents++;
+          }
+
+          // Count exploitable findings
+          if (details.cve?.exploitability?.exploit_observed) {
+            exploitableFindings++;
+          }
+
+          // Count licensing issues
+          if (details.licenses && details.licenses.some(l => parseInt(l.risk_rating) > 2)) {
+            licensingIssues++;
+          }
+
+          // Count dependency types based on metadata
+          if (details.metadata?.includes('DIRECT')) {
+            directDependencies++;
+          } else if (details.metadata?.includes('TRANSITIVE')) {
+            transitiveDependencies++;
+          }
+        }
+      });
+
+      // Sort top vulnerabilities by CVSS score
+      topVulnerabilities.sort((a, b) => b.cvss - a.cvss);
+
+      return {
+        findings: filteredFindings,
+        scaAnalysis: {
+          totalComponents: componentMap.size,
+          vulnerableComponents,
+          highRiskComponents,
+          exploitableFindings,
+          licensingIssues,
+          directDependencies,
+          transitiveDependencies,
+          severityBreakdown: enhancedResult.summary.bySeverity,
+          topVulnerabilities: topVulnerabilities.slice(0, 10) // Top 10 vulnerabilities
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch comprehensive SCA findings: ${this.getErrorMessage(error)}`);
     }
   }
 

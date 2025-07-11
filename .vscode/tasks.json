@@ -48,7 +48,7 @@
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"build/query-apps.js"
+				"examples/query-apps.js"
 			],
 			"group": "test",
 			"presentation": {
@@ -67,7 +67,7 @@
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"build/test-search.js"
+				"examples/test-search.js"
 			],
 			"group": "test",
 			"presentation": {
@@ -80,6 +80,73 @@
 			},
 			"dependsOn": "Build Veracode MCP Server",
 			"problemMatcher": []
+		},
+		{
+			"label": "Example: Get SCA Results (Custom App)",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"examples/get-sca-results.js",
+				"${input:applicationName}"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Example: Get SCA Results (Custom App)",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"examples/get-sca-results.js",
+				"${input:applicationName}"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Example: Find SCA Apps",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"examples/find-sca-apps.js"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		}
+	],
+	"inputs": [
+		{
+			"id": "applicationName",
+			"description": "Enter the application name to analyze",
+			"default": "YourAppName",
+			"type": "promptString"
 		}
 	]
 }

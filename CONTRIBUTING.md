@@ -5,7 +5,7 @@ Thank you for your interest in contributing to the Veracode MCP Server! This doc
 ## 🚀 Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/yourusername/veracode-mcp-server.git`
+2. Clone your fork: `git clone https://github.com/yourusername/VeracodeMCP.git`
 3. Install dependencies: `npm install`
 4. Create a branch: `git checkout -b feature/your-feature-name`
 

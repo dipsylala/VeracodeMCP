@@ -1,13 +1,21 @@
 #!/usr/bin/env node
 
-import { VeracodeClient } from "../src/veracode-client.js";
+import { VeracodeClient } from "../build/veracode-client.js";
 import * as dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
 
 async function testVeracodeConnection() {
-  console.log("🔍 Testing Veracode API connection...");
+  // Optional search term from command line arguments
+  const searchTerm = process.argv[2];
+
+  if (searchTerm) {
+    console.log(`🔍 Testing Veracode API connection and searching for "${searchTerm}"...`);
+  } else {
+    console.log("🔍 Testing Veracode API connection...");
+    console.log("💡 Tip: You can search for specific apps using: node query-apps.js \"search-term\"\n");
+  }
 
   const apiId = process.env.VERACODE_API_ID;
   const apiKey = process.env.VERACODE_API_KEY;
@@ -22,10 +30,16 @@ async function testVeracodeConnection() {
   try {
     const client = new VeracodeClient(apiId, apiKey);
 
-    console.log("📱 Fetching applications from Veracode...");
-    const applications = await client.getApplications();
-
-    console.log(`\n✅ Found ${applications.length} applications:\n`);
+    let applications;
+    if (searchTerm) {
+      console.log(`📱 Searching for applications matching "${searchTerm}"...`);
+      applications = await client.searchApplications(searchTerm);
+      console.log(`\n✅ Found ${applications.length} matching applications:\n`);
+    } else {
+      console.log("📱 Fetching applications from Veracode...");
+      applications = await client.getApplications();
+      console.log(`\n✅ Found ${applications.length} applications:\n`);
+    }
 
     if (applications.length === 0) {
       console.log("No applications found in your Veracode account.");

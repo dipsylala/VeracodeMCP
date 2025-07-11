@@ -12,12 +12,12 @@
     "build:unix": "tsc && chmod +x build/index.js",
     "dev": "tsc --watch",
     "start": "node build/index.js",
-    "query-apps": "npm run build && node build/examples/query-apps.js",
-    "test-search": "npm run build && node build/examples/test-search.js",
-    "test-connection": "npm run build && node build/query-apps.js",
-    "client": "npm run build && node build/generic-mcp-client.js",
-    "validate": "npm run build && npm run test-connection",
-    "clean": "rm -rf build/"
+    "clean": "rm -rf build/",
+    "test:connection": "npm run build && node examples/query-apps.js",
+    "test:search": "npm run build && node examples/test-search.js",
+    "example:sca-results": "npm run build && echo \"Usage: node examples/get-sca-results.js <app-name>\" && echo \"Example: node examples/get-sca-results.js \\\"YourAppName\\\"\"",
+    "example:find-sca-apps": "npm run build && node examples/find-sca-apps.js",
+    "example:list-apps": "npm run build && node examples/list-apps.js"
   },
   "keywords": [
     "mcp",
@@ -30,12 +30,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/veracode-mcp-server.git"
+    "url": "https://github.com/dipsylala/VeracodeMCP.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/veracode-mcp-server/issues"
+    "url": "https://github.com/dipsylala/VeracodeMCP/issues"
   },
-  "homepage": "https://github.com/yourusername/veracode-mcp-server#readme",
+  "homepage": "https://github.com/dipsylala/VeracodeMCP#readme",
   "devDependencies": {
     "@types/node": "^24.0.13",
     "typescript": "^5.8.3"

@@ -1,88 +1,80 @@
-# Veracode MCP Server### 💻 **Command-Line Client** (for scripts & automation)
-- All the same tools available via command-line interface
-- Perfect for CI/CD pipelines, scripts, and automated workflows
+# Veracode MCP Server
 
-> 🔍 **Read-Only Focus**: This server provides **read-only access** to Veracode data. It does not support creating, modifying, or deleting applications, scans, or findings. This design ensures safe integration with AI assistants and automation workflows without risk of unintended changes to your Veracode account.> ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
+> ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
 
-A Model Context Protocol (MCP) server that integrates with the Veracode API to provide access to application security information, scan results, and policy compliance data.
+A Model Context Protocol (MCP) server that integrates with the Veracode API to provide AI assistants and automation tools with read-only access to application security information, scan results, and compliance data.
 
-> ✅ **Current Status**: This project provides both a **fully functional MCP server** for Claude Desktop integration AND a **command-line client** for standalone usage.
+> ✅ **Production Ready**: Fully functional MCP server for Claude Desktop integration with comprehensive SCA analysis capabilities.
 
-## ✨ Features
+## 📚 Documentation
 
-This project provides **two ways** to access Veracode data:
+- **[📋 TESTING.md](TESTING.md)** - Comprehensive testing guide to verify your installation
+- **[🏗️ DESIGN.md](DESIGN.md)** - Architecture and implementation details
+- **[🔗 Integration Guides](VSCODE_INTEGRATION.md)** - VS Code and other IDE integrations
 
-### 🖥️ **MCP Server** (for Claude Desktop & AI assistants)
-- **get-applications**: List all applications in your Veracode account
-- **search-applications**: Search applications by name  
-- **get-application-details**: Get detailed information about a specific application
-- **get-application-details-by-name**: Get application details by name
-- **get-scan-results**: Get scan results for an application
-- **get-findings**: Get detailed findings from scans with filtering
-- **get-findings-by-name**: Get findings by application name
-- **get-policy-compliance**: Check policy compliance status
+## ✨ Key Features
 
-### � **Command-Line Client** (for scripts & automation)
-- All the same tools available via command-line interface
-- Perfect for CI/CD pipelines, scripts, and automated workflows
+### 🤖 AI Assistant Integration
+- **MCP Server**: Direct integration with Claude Desktop and other MCP-compatible AI tools
+- **Natural Language Queries**: Ask about your applications, findings, and security posture
+- **Real-time Data**: Access live Veracode data through conversational interface
 
+### 🔍 Comprehensive Security Analysis
+- **SCA Analysis**: Software Composition Analysis with exploitability data (EPSS scores) - integrated with static scans
+- **Static Analysis**: SAST findings with detailed vulnerability information
+- **Combined Results**: Single static scans contain both SAST and SCA findings
+- **Policy Compliance**: Check compliance status against Veracode policies
+- **Risk Assessment**: Enhanced risk scoring and prioritization
 
-## 📸 Example Run
+### 🛠️ Developer Tools
+- **Command-Line Interface**: Scriptable access for automation and CI/CD
+- **TypeScript Support**: Full type safety and IntelliSense support
+- **VS Code Integration**: Tasks and examples for streamlined development
 
-Here's the command-line client in action, retrieving findings for the Verademo-COBOL application:
+### 🔒 Security First
+- **Read-Only Access**: No write operations - safe for AI assistant integration
+- **HMAC Authentication**: Secure API authentication using Veracode standards
+- **Credential Protection**: Environment-based credential management
+
+## 📸 Example: SCA Analysis
 
 ![Veracode MCP Client Test Run](images/test.png)
 
-This example shows:
-- ✅ Successful connection to Veracode API
-- 🔍 Finding 16 security findings for Verademo-COBOL
-- 🚨 Critical OS Command Injection vulnerability (Severity 5)
-- ⚠️ Hard-coded password issue (Severity 3)
-- 📋 Detailed findings with CWE classifications and policy violations
-
-## 📋 Prerequisites
-
-- Node.js 16 or higher
-- Veracode API credentials (API ID and API Key)
-- Access to Veracode platform with appropriate permissions
+This example shows comprehensive SCA analysis capabilities:
+- ✅ Real-time connection to Veracode API
+- 🔍 Software composition analysis with vulnerability details
+- 🚨 Critical vulnerability identification with EPSS scores
+- ⚠️ License risk assessment and policy violations
+- 📋 Detailed component and dependency analysis
 
 ## 🚀 Quick Start
 
-1. **Clone and install**:
-   ```bash
-   git clone https://github.com/dipsylala/VeracodeMCP.git
-   cd VeracodeMCP
-   npm install
-   ```
+### 1. Installation
+```bash
+git clone https://github.com/dipsylala/VeracodeMCP.git
+cd VeracodeMCP
+npm install
+npm run build
+```
 
-2. **Configure credentials**:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your Veracode API credentials
-   ```
+### 2. Configuration
+Create a `.env` file with your Veracode API credentials:
+```env
+VERACODE_API_ID=your-api-id-here
+VERACODE_API_KEY=your-api-key-here
+```
 
-3. **Build and test**:
-   ```bash
-   npm run build
-   npm run validate
-   ```
+### 3. Verification
+```bash
+# Test your setup
+npm run example:list-apps
 
-4. **Try the command-line client**:
-   ```bash
-   # List all applications
-   npm run client get-applications
-   
-   # Search for a specific application
-   npm run client search-applications --name "YourAppName"
-   
-   # Get findings for an application
-   npm run client get-findings-by-name --name "YourAppName"
-   ```
+# Get comprehensive SCA analysis
+npm run example:sca-results
+```
 
-### � MCP Server Setup (Claude Desktop Integration)
-
-Add this configuration to your `claude_desktop_config.json`:
-
+### 4. Claude Desktop Integration
+Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
@@ -99,220 +91,138 @@ Add this configuration to your `claude_desktop_config.json`:
 }
 ```
 
-Then restart Claude Desktop and ask: *"What applications do I have in my Veracode account?"*
+Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my applications?"*
+
+> 📋 **Need Help?** See [TESTING.md](TESTING.md) for comprehensive setup verification and troubleshooting.
 
 ## 🔑 Getting Veracode API Credentials
 
 1. Log in to your Veracode account
 2. Go to **Account Settings** > **API Credentials**
 3. Generate a new API ID and Key pair
-4. Ensure the credentials have the necessary permissions:
-   - Read access to Applications
-   - Read access to Scan Results
-   - Read access to Findings
-   - Read access to Policy Compliance
-   
-> 💡 **Note**: Only **read permissions** are required. This server does not perform any write operations on your Veracode account.
+4. Ensure the credentials have **read permissions** for:
+   - Applications
+   - Scan Results  
+   - Findings
+   - Policy Compliance
 
-## 🔧 Configuration
+> 💡 **Note**: Only **read permissions** are required. This server performs no write operations.
 
-### Environment Variables
+## 🛠️ Available Tools
 
-Create a `.env` file in the project root:
+### MCP Tools (Claude Desktop)
+- `get-applications` - List all applications
+- `search-applications` - Search applications by name
+- `get-application-details` - Get detailed application information
+- `get-scan-results` - Get scan results for an application
+- `get-findings` - Get detailed findings with filtering
+- `get-latest-sca-results` - Get latest SCA scan results
+- `get-sca-results-by-name` - Get SCA results by application name
+- `get-comprehensive-sca-analysis` - Advanced SCA analysis with exploitability
 
-```env
-VERACODE_API_ID=your-api-id-here
-VERACODE_API_KEY=your-api-key-here
-LOG_LEVEL=info
+### Command-Line Examples
+```bash
+# List all applications
+npm run example:list-apps
+
+# Find applications with SCA scans
+npm run example:find-sca-apps
+
+# Get SCA results for specific application  
+npm run example:sca-results
+
+# Test connection and basic functionality
+npm run test:connection
 ```
-
-### Claude for Desktop Integration
-
-Add this configuration to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "veracode": {
-      "command": "node",
-      "args": ["build/index.js"],
-      "cwd": "/absolute/path/to/VeracodeMCP",
-      "env": {
-        "VERACODE_API_ID": "your-api-id",
-        "VERACODE_API_KEY": "your-api-key"
-      }
-    }
-  }
-}
-```
-
-**Configuration file locations:**
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
 ## 📖 Usage Examples
 
-### Command-Line Client
+### With Claude Desktop
+Use natural language queries:
+- *"What applications do I have in my Veracode account?"*
+- *"Show me SCA vulnerabilities for MyApp with high EPSS scores"*
+- *"What are the licensing risks in my applications?"*
+- *"Which components have known exploits?"*
 
-You can use the command-line client to interact with your Veracode account:
-
+### Command Line Interface
 ```bash
-# List all applications
-node build/generic-mcp-client.js get-applications
+# Get comprehensive SCA analysis
+node examples/get-sca-results.js "MyApplication"
+
+# Find all apps with SCA data
+node examples/find-sca-apps.js
 
 # Search for applications
-node build/generic-mcp-client.js search-applications --name "MyApp"
+node examples/query-apps.js "SearchTerm"
 
-# Get application details
-node build/generic-mcp-client.js get-application-details-by-name --name "MyApp"
-
-# Get findings with filtering
-node build/generic-mcp-client.js get-findings-by-name --name "MyApp" --severity_gte 4
-
-# Get policy compliance
-node build/generic-mcp-client.js get-policy-compliance --app_id "your-app-id"
+# List all available applications
+node examples/list-apps.js
 ```
 
-### �️ MCP Server Integration (Claude Desktop)
+## 🔧 Development
 
-Use natural language queries with Claude Desktop:
+### Prerequisites
+- Node.js 18 or higher
+- Veracode API credentials with appropriate permissions
+- TypeScript knowledge for modifications
 
-- *"What applications do I have in my Veracode account?"*
-- *"Show me details for application MyApp"*
-- *"What are the latest scan results for my main application?"*
-- *"Show me high severity findings for MyApp"*
-- *"What's the policy compliance status for my application?"*
-
-## 🛠 Development
-
-### Running in Development Mode
-
+### Development Scripts
 ```bash
-# Watch mode for automatic rebuilding
-npm run dev
-
-# In another terminal, run tests
-npm test
+npm run build          # Compile TypeScript
+npm run dev            # Watch mode for development
+npm run clean          # Clean build directory
+npm start              # Start MCP server
 ```
 
-### Available Scripts
+### VS Code Integration
+The project includes VS Code tasks for streamlined development:
+- Build and test tasks
+- Integrated terminal examples
+- Input prompts for application names
 
-- `npm run build` - Build the TypeScript project
-- `npm run dev` - Run in watch mode for development
-- `npm run client` - Run the command-line client (followed by tool and arguments)
-- `npm run validate` - Build and test connection to Veracode API
-- `npm run clean` - Clean build directory
-- `npm start` - Start the MCP server (🚧 in development)
-
-## 🔌 API Integration
-
-This server integrates with the following Veracode API endpoints:
-
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /appsec/v1/applications` | List applications |
-| `GET /appsec/v1/applications/{app_id}` | Get application details |
-| `GET /appsec/v1/applications/{app_id}/scans` | Get scan results |
-| `GET /appsec/v2/applications/{app_id}/findings` | Get findings |
-| `GET /appsec/v1/applications/{app_id}/policy` | Get policy compliance |
-
-### Authentication
-
-Uses HMAC SHA-256 authentication as required by the Veracode API. Authentication is handled automatically using your configured API credentials.
-
-## 🚨 Error Handling
-
-The server includes comprehensive error handling for:
-
-- ❌ Invalid API credentials
-- 🌐 Network connectivity issues
-- ⏱️ API rate limiting
-- 🔍 Missing or invalid application IDs
-- 🔒 Insufficient permissions
-
-## ⚡ Rate Limiting
-
-Please be aware of Veracode API rate limits. The server does not implement client-side rate limiting, so ensure your usage patterns comply with Veracode's API usage policies.
+See [VSCODE_INTEGRATION.md](VSCODE_INTEGRATION.md) for setup details.
 
 ## 🔒 Security Considerations
 
-- **Read-Only Operations**: This server only performs read operations on your Veracode data - no modifications are possible
-- **API Credentials**: Never commit your `.env` file or API credentials to version control
-- **Access Control**: Your Veracode API credentials determine what data this server can access
-- **Rate Limiting**: Be mindful of Veracode API rate limits when making frequent requests
-- **Local Use**: This server is designed for local development and testing environments
-- **Network Security**: When deploying, ensure proper network security measures are in place
-- **AI Safety**: Read-only design makes it safe to integrate with AI assistants without risk of unintended changes
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Authentication Errors**
-   - Verify API ID and Key are correct
-   - Check API credentials have necessary permissions
-   - Ensure credentials are not expired
-
-2. **Network Errors**
-   - Check internet connection
-   - Verify firewall settings allow HTTPS connections
-   - Check if corporate proxy is blocking requests
-
-3. **Permission Errors**
-   - Ensure API credentials have access to required resources
-   - Verify account permissions in Veracode platform
-
-### Debug Mode
-
-Enable debug logging:
-
-```bash
-LOG_LEVEL=debug npm start
-```
-
-### Manual Testing
-
-Test the server manually:
-
-```bash
-# Build first
-npm run build
-
-# Set credentials (Windows PowerShell)
-$env:VERACODE_API_ID = "your-id"
-$env:VERACODE_API_KEY = "your-key"
-
-# Run server (waits for stdin/stdout communication)
-npm start
-```
+- **Read-Only Operations**: No write capabilities - safe for AI integration
+- **Credential Security**: Environment variables for sensitive data
+- **Rate Limiting**: Respects Veracode API rate limits
+- **Error Handling**: Comprehensive error handling without credential exposure
+- **Network Security**: HTTPS-only API communication
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
+3. Make your changes following TypeScript best practices
 4. Add tests if applicable
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
+5. Update documentation as needed
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
+
+See [DESIGN.md](DESIGN.md) for architecture details and extension points.
 
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 📚 Resources
+## 📚 Additional Resources
 
 - [Veracode API Documentation](https://help.veracode.com/r/c_rest_api)
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
 - [Claude for Desktop](https://claude.ai/download)
+- [Project Testing Guide](TESTING.md)
+- [Architecture Overview](DESIGN.md)
 
 ## 🎯 Project Status
 
-### ✅ **COMPLETE & READY FOR PUBLICATION**
-- ✅ **Full MCP Server** - Works with Claude Desktop RIGHT NOW
-- ✅ **Command-Line Client** - Perfect for automation
-- ✅ **8 Veracode API tools** - Comprehensive coverage
-- ✅ **Production-ready** - Error handling, authentication, validation
-- ✅ **TypeScript support** - Type-safe development
-- ✅ **Documentation** - Complete setup guides
+### ✅ Production Ready
+- **Full MCP Server** - Works with Claude Desktop
+- **Comprehensive SCA Analysis** - EPSS scores, exploitability data, license risks
+- **Command-Line Tools** - Perfect for automation and CI/CD
+- **Type-Safe Development** - Full TypeScript support
+- **Extensive Documentation** - Testing, design, and integration guides
+- **Universal Examples** - Works with any Veracode environment
+
+> 🚀 **Ready to Use**: Clone, configure credentials, and start analyzing your Veracode data with AI assistance!
