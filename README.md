@@ -1,4 +1,8 @@
-# Veracode MCP Server
+# Veracode MCP Server and 💻 **Command-Line Client** (for scripts & automation)
+- All the same tools available via command-line interface
+- Perfect for CI/CD pipelines, scripts, and automated workflows
+
+> 🔍 **Read-Only Focus**: This server provides **read-only access** to Veracode data. It does not support creating, modifying, or deleting applications, scans, or findings. This design ensures safe integration with AI assistants and automation workflows without risk of unintended changes to your Veracode account.
 
 > ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
 
@@ -209,7 +213,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📚 Additional Resources
 
-- [Veracode API Documentation](https://help.veracode.com/r/c_rest_api)
+- [Veracode API Documentation](https://docs.veracode.com/r/c_rest_intro)
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
 - [Claude for Desktop](https://claude.ai/download)
 - [Project Testing Guide](TESTING.md)
