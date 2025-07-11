@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "veracode": {
+      "command": "node",
+      "args": [
+        "./build/index.js"
+      ],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "VERACODE_API_ID": "VERACODE_API_ID",
+        "VERACODE_API_KEY": "VERACODE_API_KEY"
+      }
+    }
+  }
+}

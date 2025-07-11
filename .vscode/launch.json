@@ -1,0 +1,44 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Veracode MCP Server",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/index.js",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env",
+            "preLaunchTask": "Build Veracode MCP Server",
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
+            "sourceMaps": true
+        },
+        {
+            "name": "Debug Query Apps Script",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/query-apps.js",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env",
+            "preLaunchTask": "Build Veracode MCP Server",
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
+            "sourceMaps": true
+        },
+        {
+            "name": "Debug Search Test",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/test-search.js",
+            "console": "integratedTerminal",
+            "envFile": "${workspaceFolder}/.env",
+            "preLaunchTask": "Build Veracode MCP Server",
+            "outFiles": [
+                "${workspaceFolder}/build/**/*.js"
+            ],
+            "sourceMaps": true
+        }
+    ]
+}

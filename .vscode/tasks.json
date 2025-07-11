@@ -1,0 +1,85 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Veracode MCP Server",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"build"
+			],
+			"group": "build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"isBackground": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			}
+		},
+		{
+			"label": "Start Veracode MCP Server",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"build/index.js"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"isBackground": true,
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test Veracode Connection",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"build/query-apps.js"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test Veracode Search",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"build/test-search.js"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		}
+	]
+}

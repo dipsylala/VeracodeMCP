@@ -1,0 +1,40 @@
+{
+  "name": "veracode-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Veracode API integration to access application details and scan results",
+  "main": "build/index.js",
+  "type": "module",
+  "bin": {
+    "veracode-mcp-server": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "build:unix": "tsc && chmod +x build/index.js",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "query-apps": "npm run build && node build/examples/query-apps.js",
+    "test-search": "npm run build && node build/examples/test-search.js",
+    "client": "npm run build && node build/generic-mcp-client.js"
+  },
+  "keywords": [
+    "mcp",
+    "veracode",
+    "security",
+    "scanning",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.0.13",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "@types/crypto-js": "^4.2.2",
+    "axios": "^1.10.0",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^17.2.0",
+    "zod": "^3.25.76"
+  }
+}
