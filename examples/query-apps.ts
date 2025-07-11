@@ -8,25 +8,25 @@ dotenv.config();
 
 async function testVeracodeConnection() {
   console.log("🔍 Testing Veracode API connection...");
-  
+
   const apiId = process.env.VERACODE_API_ID;
   const apiKey = process.env.VERACODE_API_KEY;
-  
+
   if (!apiId || !apiKey) {
     console.error("❌ Missing API credentials in .env file");
     process.exit(1);
   }
-  
+
   console.log(`📡 Using API ID: ${apiId.substring(0, 8)}...`);
-  
+
   try {
     const client = new VeracodeClient(apiId, apiKey);
-    
+
     console.log("📱 Fetching applications from Veracode...");
     const applications = await client.getApplications();
-    
+
     console.log(`\n✅ Found ${applications.length} applications:\n`);
-    
+
     if (applications.length === 0) {
       console.log("No applications found in your Veracode account.");
       console.log("This could mean:");
@@ -44,10 +44,10 @@ async function testVeracodeConnection() {
         console.log("");
       });
     }
-    
+
   } catch (error) {
     console.error("❌ Error fetching applications:", error instanceof Error ? error.message : String(error));
-    
+
     if (error instanceof Error) {
       if (error.message.includes("Authentication failed")) {
         console.log("\n💡 Troubleshooting tips:");

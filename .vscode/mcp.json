@@ -7,8 +7,8 @@
       ],
       "cwd": "${workspaceFolder}",
       "env": {
-        "VERACODE_API_ID": "VERACODE_API_ID",
-        "VERACODE_API_KEY": "VERACODE_API_KEY"
+        "VERACODE_API_ID": "${env:VERACODE_API_ID}",
+        "VERACODE_API_KEY": "${env:VERACODE_API_KEY}"
       }
     }
   }

@@ -1,5 +1,7 @@
 # Veracode MCP Server
 
+> ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
+
 A Model Context Protocol (MCP) server that integrates with the Veracode API to provide access to application security information, scan results, and policy compliance data.
 
 ## ✨ Features
@@ -158,11 +160,11 @@ Please be aware of Veracode API rate limits. The server does not implement clien
 
 ## 🔒 Security Considerations
 
-- ✅ Never commit your API credentials to version control
-- ✅ Use environment variables or secure configuration management
-- ✅ Ensure your `.env` file is included in `.gitignore`
-- ✅ Regularly rotate your API credentials
-- ✅ Use principle of least privilege for API access
+- **API Credentials**: Never commit your `.env` file or API credentials to version control
+- **Access Control**: Your Veracode API credentials determine what data this server can access
+- **Rate Limiting**: Be mindful of Veracode API rate limits when making frequent requests
+- **Local Use**: This server is designed for local development and testing environments
+- **Network Security**: When deploying, ensure proper network security measures are in place
 
 ## 🐛 Troubleshooting
 

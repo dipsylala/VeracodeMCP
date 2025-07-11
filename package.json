@@ -14,7 +14,10 @@
     "start": "node build/index.js",
     "query-apps": "npm run build && node build/examples/query-apps.js",
     "test-search": "npm run build && node build/examples/test-search.js",
-    "client": "npm run build && node build/generic-mcp-client.js"
+    "test-connection": "npm run build && node build/query-apps.js",
+    "client": "npm run build && node build/generic-mcp-client.js",
+    "validate": "npm run build && npm run test-connection",
+    "clean": "rm -rf build/"
   },
   "keywords": [
     "mcp",
@@ -23,8 +26,16 @@
     "scanning",
     "api"
   ],
-  "author": "",
+  "author": "Dipsylala",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/veracode-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/veracode-mcp-server/issues"
+  },
+  "homepage": "https://github.com/yourusername/veracode-mcp-server#readme",
   "devDependencies": {
     "@types/node": "^24.0.13",
     "typescript": "^5.8.3"
