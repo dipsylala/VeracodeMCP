@@ -1,6 +1,8 @@
-# Veracode MCP Server
+# Veracode MCP Server### 💻 **Command-Line Client** (for scripts & automation)
+- All the same tools available via command-line interface
+- Perfect for CI/CD pipelines, scripts, and automated workflows
 
-> ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
+> 🔍 **Read-Only Focus**: This server provides **read-only access** to Veracode data. It does not support creating, modifying, or deleting applications, scans, or findings. This design ensures safe integration with AI assistants and automation workflows without risk of unintended changes to your Veracode account.> ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
 
 A Model Context Protocol (MCP) server that integrates with the Veracode API to provide access to application security information, scan results, and policy compliance data.
 
@@ -109,6 +111,8 @@ Then restart Claude Desktop and ask: *"What applications do I have in my Veracod
    - Read access to Scan Results
    - Read access to Findings
    - Read access to Policy Compliance
+   
+> 💡 **Note**: Only **read permissions** are required. This server does not perform any write operations on your Veracode account.
 
 ## 🔧 Configuration
 
@@ -233,11 +237,13 @@ Please be aware of Veracode API rate limits. The server does not implement clien
 
 ## 🔒 Security Considerations
 
+- **Read-Only Operations**: This server only performs read operations on your Veracode data - no modifications are possible
 - **API Credentials**: Never commit your `.env` file or API credentials to version control
 - **Access Control**: Your Veracode API credentials determine what data this server can access
 - **Rate Limiting**: Be mindful of Veracode API rate limits when making frequent requests
 - **Local Use**: This server is designed for local development and testing environments
 - **Network Security**: When deploying, ensure proper network security measures are in place
+- **AI Safety**: Read-only design makes it safe to integrate with AI assistants without risk of unintended changes
 
 ## 🐛 Troubleshooting
 
