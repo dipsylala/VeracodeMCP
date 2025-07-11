@@ -150,6 +150,49 @@ class GenericMCPClient {
                         }
                     };
 
+                case "get-scan-results-by-name":
+                    if (!toolCall.args?.name) {
+                        return { success: false, error: "Missing required argument: name" };
+                    }
+                    // First search for applications with this name
+                    const searchResults = await this.veracodeClient.searchApplications(toolCall.args.name);
+                    if (searchResults.length === 0) {
+                        return { success: false, error: `No application found with name: ${toolCall.args.name}` };
+                    }
+
+                    // If multiple results, look for exact match first
+                    let targetApp = searchResults.find((app: any) =>
+                        app.profile.name.toLowerCase() === toolCall.args!.name.toLowerCase()
+                    );
+
+                    // If no exact match, use the first result but warn about it
+                    if (!targetApp) {
+                        targetApp = searchResults[0];
+                        console.warn(`No exact match found for "${toolCall.args.name}". Using first result: "${targetApp.profile.name}"`);
+                    }
+
+                    result = await this.veracodeClient.getScanResults(
+                        targetApp.guid,
+                        toolCall.args.scan_type
+                    );
+                    return {
+                        success: true,
+                        data: {
+                            application_name: toolCall.args.name,
+                            app_id: targetApp.guid,
+                            scan_type_filter: toolCall.args.scan_type,
+                            count: result.length,
+                            scans: result.map((scan: any) => ({
+                                scan_id: scan.scan_id,
+                                scan_type: scan.scan_type,
+                                status: scan.status,
+                                policy_compliance_status: scan.policy_compliance_status,
+                                created_date: scan.created_date,
+                                modified_date: scan.modified_date
+                            }))
+                        }
+                    };
+
                 case "get-findings":
                     if (!toolCall.args?.app_id) {
                         return { success: false, error: "Missing required argument: app_id" };
@@ -301,7 +344,7 @@ class GenericMCPClient {
                 default:
                     return {
                         success: false,
-                        error: `Unknown tool: ${toolCall.tool}. Available tools: get-applications, search-applications, get-application-details, get-scan-results, get-findings, get-policy-compliance`
+                        error: `Unknown tool: ${toolCall.tool}. Available tools: get-applications, search-applications, get-application-details, get-application-details-by-name, get-scan-results, get-scan-results-by-name, get-findings, get-findings-by-name, get-policy-compliance`
                     };
             }
 
@@ -430,12 +473,16 @@ async function main() {
         console.log("  get-application-details --app_id <app_id>");
         console.log("  get-application-details-by-name --name <app_name>");
         console.log("  get-scan-results --app_id <app_id> [--scan_type <type>]");
+        console.log("  get-scan-results-by-name --name <app_name> [--scan_type <type>]");
         console.log("  get-findings --app_id <app_id> [--scan_type <type>] [--severity <severity>]");
         console.log("  get-policy-compliance --app_id <app_id>");
         console.log("\nExamples:");
         console.log("  node build/generic-mcp-client.js search-applications --name goat");
         console.log("  node build/generic-mcp-client.js get-applications");
         console.log("  node build/generic-mcp-client.js get-application-details --app_id 12345");
+        console.log("\n📝 For application names with special characters, use JSON input:");
+        console.log("  echo '{\"tool\":\"search-applications\",\"args\":{\"name\":\"bob\\\" &&\"}}' | node build/generic-mcp-client.js --json");
+        console.log("  echo '{\"tool\":\"get-scan-results-by-name\",\"args\":{\"name\":\"& test\"}}' | node build/generic-mcp-client.js --json");
         return;
     }
 
