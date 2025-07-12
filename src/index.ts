@@ -487,11 +487,19 @@ server.tool(
             type: "text",
             text: `Policy Compliance for Application ${app_id}:\n\n` +
               `Overall Status: ${compliance.policy_compliance_status}\n` +
-              `Policy Name: ${compliance.policy_name}\n` +
-              `Policy Version: ${compliance.policy_version}\n` +
-              `Evaluation Date: ${compliance.policy_evaluation_date}\n` +
-              `Grace Period Expired: ${compliance.grace_period_expired ? "Yes" : "No"}\n` +
-              `Scan Overdue: ${compliance.scan_overdue ? "Yes" : "No"}`
+              `Total Findings: ${compliance.total_findings}\n` +
+              `Policy Violations: ${compliance.policy_violations}\n` +
+              `Compliance Percentage: ${compliance.summary.compliance_percentage}%\n\n` +
+              `Summary:\n` +
+              `• Critical Violations: ${compliance.summary.has_critical_violations ? "Yes" : "No"}\n` +
+              `• High Severity Violations: ${compliance.summary.has_high_violations ? "Yes" : "No"}\n` +
+              `• Total Open Violations: ${compliance.summary.total_open_violations}\n\n` +
+              `Findings by Severity:\n` +
+              Object.entries(compliance.findings_by_severity).map(([severity, count]) => `• ${severity}: ${count}`).join('\n') +
+              (Object.keys(compliance.violations_by_severity).length > 0 ?
+                `\n\nPolicy Violations by Severity:\n` +
+                Object.entries(compliance.violations_by_severity).map(([severity, count]) => `• ${severity}: ${count}`).join('\n') :
+                '\n\nNo policy violations found')
           }
         ]
       };
@@ -540,11 +548,19 @@ server.tool(
             type: "text",
             text: `Policy Compliance for Application ${app.profile.name}:\n\n` +
               `Overall Status: ${compliance.policy_compliance_status}\n` +
-              `Policy Name: ${compliance.policy_name}\n` +
-              `Policy Version: ${compliance.policy_version}\n` +
-              `Evaluation Date: ${compliance.policy_evaluation_date}\n` +
-              `Grace Period Expired: ${compliance.grace_period_expired ? "Yes" : "No"}\n` +
-              `Scan Overdue: ${compliance.scan_overdue ? "Yes" : "No"}`
+              `Total Findings: ${compliance.total_findings}\n` +
+              `Policy Violations: ${compliance.policy_violations}\n` +
+              `Compliance Percentage: ${compliance.summary.compliance_percentage}%\n\n` +
+              `Summary:\n` +
+              `• Critical Violations: ${compliance.summary.has_critical_violations ? "Yes" : "No"}\n` +
+              `• High Severity Violations: ${compliance.summary.has_high_violations ? "Yes" : "No"}\n` +
+              `• Total Open Violations: ${compliance.summary.total_open_violations}\n\n` +
+              `Findings by Severity:\n` +
+              Object.entries(compliance.findings_by_severity).map(([severity, count]) => `• ${severity}: ${count}`).join('\n') +
+              (Object.keys(compliance.violations_by_severity).length > 0 ?
+                `\n\nPolicy Violations by Severity:\n` +
+                Object.entries(compliance.violations_by_severity).map(([severity, count]) => `• ${severity}: ${count}`).join('\n') :
+                '\n\nNo policy violations found')
           }
         ]
       };

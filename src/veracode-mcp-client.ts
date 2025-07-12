@@ -93,11 +93,58 @@ class VeracodeMCPClient {
                             id: result.guid,
                             legacy_id: result.id,
                             business_criticality: result.profile.business_criticality,
-                            teams: result.profile.teams?.map((team: any) => team.team_name) || [],
+                            teams: result.profile.teams?.map((team: any) => ({
+                                name: team.team_name,
+                                guid: team.guid,
+                                team_id: team.team_id
+                            })) || [],
                             tags: result.profile.tags ? result.profile.tags.split(',').map((tag: string) => tag.trim()) : [],
                             description: result.profile.description,
                             created_date: result.created,
-                            modified_date: result.modified
+                            modified_date: result.modified,
+                            last_completed_scan_date: result.last_completed_scan_date,
+                            business_unit: result.profile.business_unit ? {
+                                name: result.profile.business_unit.name,
+                                guid: result.profile.business_unit.guid,
+                                id: result.profile.business_unit.id
+                            } : null,
+                            business_owners: result.profile.business_owners?.map((owner: any) => ({
+                                name: owner.name,
+                                email: owner.email
+                            })) || [],
+                            settings: result.profile.settings ? {
+                                sca_enabled: result.profile.settings.sca_enabled,
+                                dynamic_scan_approval_not_required: result.profile.settings.dynamic_scan_approval_not_required,
+                                static_scan_dependencies_allowed: result.profile.settings.static_scan_dependencies_allowed,
+                                nextday_consultation_allowed: result.profile.settings.nextday_consultation_allowed
+                            } : null,
+                            custom_fields: result.profile.custom_fields?.map((field: any) => ({
+                                name: field.name,
+                                value: field.value
+                            })) || [],
+                            custom_field_values: result.profile.custom_field_values?.map((fieldValue: any) => ({
+                                field_name: fieldValue.app_custom_field_name?.name,
+                                value: fieldValue.value,
+                                id: fieldValue.id
+                            })) || [],
+                            policies: result.profile.policies?.map((policy: any) => ({
+                                name: policy.name,
+                                guid: policy.guid,
+                                is_default: policy.is_default,
+                                compliance_status: policy.policy_compliance_status
+                            })) || [],
+                            git_repo_url: result.profile.git_repo_url,
+                            archer_app_name: result.profile.archer_app_name,
+                            custom_kms_alias: result.profile.custom_kms_alias,
+                            app_profile_url: result.app_profile_url,
+                            results_url: result.results_url,
+                            scans: result.scans?.map((scan: any) => ({
+                                scan_type: scan.scan_type,
+                                status: scan.status,
+                                internal_status: scan.internal_status,
+                                modified_date: scan.modified_date,
+                                scan_url: scan.scan_url
+                            })) || []
                         }
                     };
 
@@ -113,14 +160,57 @@ class VeracodeMCPClient {
                             id: result.guid,
                             legacy_id: result.id,
                             business_criticality: result.profile.business_criticality,
-                            teams: result.profile.teams?.map((team: any) => team.team_name) || [],
+                            teams: result.profile.teams?.map((team: any) => ({
+                                name: team.team_name,
+                                guid: team.guid,
+                                team_id: team.team_id
+                            })) || [],
                             tags: result.profile.tags ? result.profile.tags.split(',').map((tag: string) => tag.trim()) : [],
                             description: result.profile.description,
                             created_date: result.created,
                             modified_date: result.modified,
+                            last_completed_scan_date: result.last_completed_scan_date,
+                            business_unit: result.profile.business_unit ? {
+                                name: result.profile.business_unit.name,
+                                guid: result.profile.business_unit.guid,
+                                id: result.profile.business_unit.id
+                            } : null,
+                            business_owners: result.profile.business_owners?.map((owner: any) => ({
+                                name: owner.name,
+                                email: owner.email
+                            })) || [],
+                            settings: result.profile.settings ? {
+                                sca_enabled: result.profile.settings.sca_enabled,
+                                dynamic_scan_approval_not_required: result.profile.settings.dynamic_scan_approval_not_required,
+                                static_scan_dependencies_allowed: result.profile.settings.static_scan_dependencies_allowed,
+                                nextday_consultation_allowed: result.profile.settings.nextday_consultation_allowed
+                            } : null,
+                            custom_fields: result.profile.custom_fields?.map((field: any) => ({
+                                name: field.name,
+                                value: field.value
+                            })) || [],
+                            custom_field_values: result.profile.custom_field_values?.map((fieldValue: any) => ({
+                                field_name: fieldValue.app_custom_field_name?.name,
+                                value: fieldValue.value,
+                                id: fieldValue.id
+                            })) || [],
                             policies: result.profile.policies?.map((policy: any) => ({
                                 name: policy.name,
+                                guid: policy.guid,
+                                is_default: policy.is_default,
                                 compliance_status: policy.policy_compliance_status
+                            })) || [],
+                            git_repo_url: result.profile.git_repo_url,
+                            archer_app_name: result.profile.archer_app_name,
+                            custom_kms_alias: result.profile.custom_kms_alias,
+                            app_profile_url: result.app_profile_url,
+                            results_url: result.results_url,
+                            scans: result.scans?.map((scan: any) => ({
+                                scan_type: scan.scan_type,
+                                status: scan.status,
+                                internal_status: scan.internal_status,
+                                modified_date: scan.modified_date,
+                                scan_url: scan.scan_url
                             })) || []
                         }
                     };
@@ -232,27 +322,131 @@ class VeracodeMCPClient {
                                 violates_policy: toolCall.args.violates_policy
                             },
                             count: result.length,
-                            findings: result.slice(0, 25).map((finding: any) => ({ // Limit to 25 for performance
-                                scan_type: finding.scan_type,
-                                description: finding.description.substring(0, 200) + (finding.description.length > 200 ? '...' : ''),
-                                severity: finding.finding_details.severity,
-                                cwe_id: finding.finding_details.cwe?.id,
-                                cwe_name: finding.finding_details.cwe?.name,
-                                cve: finding.finding_details.cve?.name,
-                                cvss: finding.finding_details.cve?.cvss || finding.finding_details.cvss,
-                                status: finding.finding_status.status,
-                                resolution: finding.finding_status.resolution,
-                                first_found_date: finding.finding_status.first_found_date,
-                                last_seen_date: finding.finding_status.last_seen_date,
-                                violates_policy: finding.violates_policy,
-                                context_type: finding.context_type,
-                                count: finding.count,
-                                // Include specific details based on scan type
-                                file_name: finding.finding_details.file_name,
-                                file_path: finding.finding_details.file_path,
-                                component_filename: finding.finding_details.component_filename,
-                                version: finding.finding_details.version
-                            })),
+                            findings: result.slice(0, 25).map((finding: any) => { // Limit to 25 for performance
+                                const mappedFinding: any = {
+                                    // Core finding identification
+                                    flaw_id: finding.issue_id,
+                                    scan_type: finding.scan_type,
+                                    description: finding.description,
+                                    build_id: finding.build_id,
+                                    context_guid: finding.context_guid,
+                                    context_type: finding.context_type,
+                                    count: finding.count,
+                                    violates_policy: finding.violates_policy,
+
+                                    // Finding status information
+                                    status: finding.finding_status?.status,
+                                    resolution: finding.finding_status?.resolution,
+                                    resolution_status: finding.finding_status?.resolution_status,
+                                    mitigation_review_status: finding.finding_status?.mitigation_review_status,
+                                    first_found_date: finding.finding_status?.first_found_date,
+                                    last_seen_date: finding.finding_status?.last_seen_date,
+                                    new: finding.finding_status?.new,
+                                    grace_period_expires_date: finding.grace_period_expires_date,
+
+                                    // CWE information
+                                    cwe_id: finding.finding_details?.cwe?.id,
+                                    cwe_name: finding.finding_details?.cwe?.name,
+                                    cwe_href: finding.finding_details?.cwe?.href,
+
+                                    // Severity and scoring
+                                    severity: finding.finding_details?.severity,
+                                    exploitability: finding.finding_details?.exploitability,
+
+                                    // CVE and CVSS information
+                                    cve: finding.finding_details?.cve?.name,
+                                    cvss: finding.finding_details?.cve?.cvss || finding.finding_details?.cvss,
+                                    cvss_vector: finding.finding_details?.cve?.vector,
+                                    cvss3_score: finding.finding_details?.cve?.cvss3?.score,
+                                    cvss3_severity: finding.finding_details?.cve?.cvss3?.severity,
+                                    cvss3_vector: finding.finding_details?.cve?.cvss3?.vector,
+                                    cve_href: finding.finding_details?.cve?.href,
+
+                                    // Annotations (mitigations/comments)
+                                    annotations: finding.annotations?.map((annotation: any) => ({
+                                        action: annotation.action,
+                                        comment: annotation.comment,
+                                        created: annotation.created,
+                                        user_name: annotation.user_name,
+                                        remaining_risk: annotation.remaining_risk,
+                                        specifics: annotation.specifics,
+                                        technique: annotation.technique,
+                                        verification: annotation.verification
+                                    })) || []
+                                };
+
+                                // Scan type specific details
+                                if (finding.scan_type === 'STATIC') {
+                                    // Static Analysis specific fields
+                                    mappedFinding.attack_vector = finding.finding_details?.attack_vector;
+                                    mappedFinding.file_line_number = finding.finding_details?.file_line_number;
+                                    mappedFinding.file_name = finding.finding_details?.file_name;
+                                    mappedFinding.file_path = finding.finding_details?.file_path;
+                                    mappedFinding.finding_category = finding.finding_details?.finding_category;
+                                    mappedFinding.module = finding.finding_details?.module;
+                                    mappedFinding.procedure = finding.finding_details?.procedure;
+                                    mappedFinding.relative_location = finding.finding_details?.relative_location;
+                                } else if (finding.scan_type === 'DYNAMIC') {
+                                    // Dynamic Analysis specific fields
+                                    mappedFinding.attack_vector = finding.finding_details?.attack_vector;
+                                    mappedFinding.hostname = finding.finding_details?.hostname;
+                                    mappedFinding.port = finding.finding_details?.port;
+                                    mappedFinding.path = finding.finding_details?.path;
+                                    mappedFinding.plugin = finding.finding_details?.plugin;
+                                    mappedFinding.finding_category = finding.finding_details?.finding_category;
+                                    mappedFinding.url = finding.finding_details?.URL;
+                                    mappedFinding.vulnerable_parameter = finding.finding_details?.vulnerable_parameter;
+                                    mappedFinding.discovered_by_vsa = finding.finding_details?.discovered_by_vsa;
+                                } else if (finding.scan_type === 'MANUAL') {
+                                    // Manual Testing specific fields
+                                    mappedFinding.capec_id = finding.finding_details?.capec_id;
+                                    mappedFinding.exploit_desc = finding.finding_details?.exploit_desc;
+                                    mappedFinding.exploit_difficulty = finding.finding_details?.exploit_difficulty;
+                                    mappedFinding.input_vector = finding.finding_details?.input_vector;
+                                    mappedFinding.location = finding.finding_details?.location;
+                                    mappedFinding.module = finding.finding_details?.module;
+                                    mappedFinding.remediation_desc = finding.finding_details?.remediation_desc;
+                                    mappedFinding.severity_desc = finding.finding_details?.severity_desc;
+                                } else if (finding.scan_type === 'SCA') {
+                                    // SCA specific fields
+                                    mappedFinding.component_id = finding.finding_details?.component_id;
+                                    mappedFinding.component_filename = finding.finding_details?.component_filename;
+                                    mappedFinding.version = finding.finding_details?.version;
+                                    mappedFinding.language = finding.finding_details?.language;
+                                    mappedFinding.product_id = finding.finding_details?.product_id;
+                                    mappedFinding.metadata = finding.finding_details?.metadata;
+
+                                    // Component paths
+                                    mappedFinding.component_paths = finding.finding_details?.["component_path(s)"]?.map((pathObj: any) => pathObj.path) ||
+                                        finding.finding_details?.component_path?.map((pathObj: any) => pathObj.path) || [];
+
+                                    // License information
+                                    mappedFinding.licenses = finding.finding_details?.licenses?.map((license: any) => ({
+                                        license_id: license.license_id,
+                                        risk_rating: license.risk_rating
+                                    })) || [];
+
+                                    // Enhanced CVE exploitability data for SCA
+                                    if (finding.finding_details?.cve?.exploitability) {
+                                        const exploitability = finding.finding_details.cve.exploitability;
+                                        mappedFinding.exploitability_data = {
+                                            exploit_service_status: exploitability.exploit_service_status,
+                                            cve_full: exploitability.cve_full,
+                                            epss_status: exploitability.epss_status,
+                                            epss_score: exploitability.epss_score,
+                                            epss_percentile: exploitability.epss_percentile,
+                                            epss_score_date: exploitability.epss_score_date,
+                                            epss_model_version: exploitability.epss_model_version,
+                                            epss_citation: exploitability.epss_citation,
+                                            exploit_observed: exploitability.exploit_observed,
+                                            exploit_source: exploitability.exploit_source,
+                                            exploit_note: exploitability.exploit_note
+                                        };
+                                    }
+                                }
+
+                                return mappedFinding;
+                            }),
                             total_findings: result.length,
                             showing: Math.min(25, result.length)
                         }
@@ -297,27 +491,131 @@ class VeracodeMCPClient {
                                 violates_policy: toolCall.args.violates_policy
                             },
                             count: result.length,
-                            findings: result.slice(0, 25).map((finding: any) => ({ // Limit to 25 for performance
-                                scan_type: finding.scan_type,
-                                description: finding.description.substring(0, 200) + (finding.description.length > 200 ? '...' : ''),
-                                severity: finding.finding_details.severity,
-                                cwe_id: finding.finding_details.cwe?.id,
-                                cwe_name: finding.finding_details.cwe?.name,
-                                cve: finding.finding_details.cve?.name,
-                                cvss: finding.finding_details.cve?.cvss || finding.finding_details.cvss,
-                                status: finding.finding_status.status,
-                                resolution: finding.finding_status.resolution,
-                                first_found_date: finding.finding_status.first_found_date,
-                                last_seen_date: finding.finding_status.last_seen_date,
-                                violates_policy: finding.violates_policy,
-                                context_type: finding.context_type,
-                                count: finding.count,
-                                // Include specific details based on scan type
-                                file_name: finding.finding_details.file_name,
-                                file_path: finding.finding_details.file_path,
-                                component_filename: finding.finding_details.component_filename,
-                                version: finding.finding_details.version
-                            })),
+                            findings: result.slice(0, 25).map((finding: any) => { // Limit to 25 for performance
+                                const mappedFinding: any = {
+                                    // Core finding identification
+                                    flaw_id: finding.issue_id,
+                                    scan_type: finding.scan_type,
+                                    description: finding.description,
+                                    build_id: finding.build_id,
+                                    context_guid: finding.context_guid,
+                                    context_type: finding.context_type,
+                                    count: finding.count,
+                                    violates_policy: finding.violates_policy,
+
+                                    // Finding status information
+                                    status: finding.finding_status?.status,
+                                    resolution: finding.finding_status?.resolution,
+                                    resolution_status: finding.finding_status?.resolution_status,
+                                    mitigation_review_status: finding.finding_status?.mitigation_review_status,
+                                    first_found_date: finding.finding_status?.first_found_date,
+                                    last_seen_date: finding.finding_status?.last_seen_date,
+                                    new: finding.finding_status?.new,
+                                    grace_period_expires_date: finding.grace_period_expires_date,
+
+                                    // CWE information
+                                    cwe_id: finding.finding_details?.cwe?.id,
+                                    cwe_name: finding.finding_details?.cwe?.name,
+                                    cwe_href: finding.finding_details?.cwe?.href,
+
+                                    // Severity and scoring
+                                    severity: finding.finding_details?.severity,
+                                    exploitability: finding.finding_details?.exploitability,
+
+                                    // CVE and CVSS information
+                                    cve: finding.finding_details?.cve?.name,
+                                    cvss: finding.finding_details?.cve?.cvss || finding.finding_details?.cvss,
+                                    cvss_vector: finding.finding_details?.cve?.vector,
+                                    cvss3_score: finding.finding_details?.cve?.cvss3?.score,
+                                    cvss3_severity: finding.finding_details?.cve?.cvss3?.severity,
+                                    cvss3_vector: finding.finding_details?.cve?.cvss3?.vector,
+                                    cve_href: finding.finding_details?.cve?.href,
+
+                                    // Annotations (mitigations/comments)
+                                    annotations: finding.annotations?.map((annotation: any) => ({
+                                        action: annotation.action,
+                                        comment: annotation.comment,
+                                        created: annotation.created,
+                                        user_name: annotation.user_name,
+                                        remaining_risk: annotation.remaining_risk,
+                                        specifics: annotation.specifics,
+                                        technique: annotation.technique,
+                                        verification: annotation.verification
+                                    })) || []
+                                };
+
+                                // Scan type specific details
+                                if (finding.scan_type === 'STATIC') {
+                                    // Static Analysis specific fields
+                                    mappedFinding.attack_vector = finding.finding_details?.attack_vector;
+                                    mappedFinding.file_line_number = finding.finding_details?.file_line_number;
+                                    mappedFinding.file_name = finding.finding_details?.file_name;
+                                    mappedFinding.file_path = finding.finding_details?.file_path;
+                                    mappedFinding.finding_category = finding.finding_details?.finding_category;
+                                    mappedFinding.module = finding.finding_details?.module;
+                                    mappedFinding.procedure = finding.finding_details?.procedure;
+                                    mappedFinding.relative_location = finding.finding_details?.relative_location;
+                                } else if (finding.scan_type === 'DYNAMIC') {
+                                    // Dynamic Analysis specific fields
+                                    mappedFinding.attack_vector = finding.finding_details?.attack_vector;
+                                    mappedFinding.hostname = finding.finding_details?.hostname;
+                                    mappedFinding.port = finding.finding_details?.port;
+                                    mappedFinding.path = finding.finding_details?.path;
+                                    mappedFinding.plugin = finding.finding_details?.plugin;
+                                    mappedFinding.finding_category = finding.finding_details?.finding_category;
+                                    mappedFinding.url = finding.finding_details?.URL;
+                                    mappedFinding.vulnerable_parameter = finding.finding_details?.vulnerable_parameter;
+                                    mappedFinding.discovered_by_vsa = finding.finding_details?.discovered_by_vsa;
+                                } else if (finding.scan_type === 'MANUAL') {
+                                    // Manual Testing specific fields
+                                    mappedFinding.capec_id = finding.finding_details?.capec_id;
+                                    mappedFinding.exploit_desc = finding.finding_details?.exploit_desc;
+                                    mappedFinding.exploit_difficulty = finding.finding_details?.exploit_difficulty;
+                                    mappedFinding.input_vector = finding.finding_details?.input_vector;
+                                    mappedFinding.location = finding.finding_details?.location;
+                                    mappedFinding.module = finding.finding_details?.module;
+                                    mappedFinding.remediation_desc = finding.finding_details?.remediation_desc;
+                                    mappedFinding.severity_desc = finding.finding_details?.severity_desc;
+                                } else if (finding.scan_type === 'SCA') {
+                                    // SCA specific fields
+                                    mappedFinding.component_id = finding.finding_details?.component_id;
+                                    mappedFinding.component_filename = finding.finding_details?.component_filename;
+                                    mappedFinding.version = finding.finding_details?.version;
+                                    mappedFinding.language = finding.finding_details?.language;
+                                    mappedFinding.product_id = finding.finding_details?.product_id;
+                                    mappedFinding.metadata = finding.finding_details?.metadata;
+
+                                    // Component paths
+                                    mappedFinding.component_paths = finding.finding_details?.["component_path(s)"]?.map((pathObj: any) => pathObj.path) ||
+                                        finding.finding_details?.component_path?.map((pathObj: any) => pathObj.path) || [];
+
+                                    // License information
+                                    mappedFinding.licenses = finding.finding_details?.licenses?.map((license: any) => ({
+                                        license_id: license.license_id,
+                                        risk_rating: license.risk_rating
+                                    })) || [];
+
+                                    // Enhanced CVE exploitability data for SCA
+                                    if (finding.finding_details?.cve?.exploitability) {
+                                        const exploitability = finding.finding_details.cve.exploitability;
+                                        mappedFinding.exploitability_data = {
+                                            exploit_service_status: exploitability.exploit_service_status,
+                                            cve_full: exploitability.cve_full,
+                                            epss_status: exploitability.epss_status,
+                                            epss_score: exploitability.epss_score,
+                                            epss_percentile: exploitability.epss_percentile,
+                                            epss_score_date: exploitability.epss_score_date,
+                                            epss_model_version: exploitability.epss_model_version,
+                                            epss_citation: exploitability.epss_citation,
+                                            exploit_observed: exploitability.exploit_observed,
+                                            exploit_source: exploitability.exploit_source,
+                                            exploit_note: exploitability.exploit_note
+                                        };
+                                    }
+                                }
+
+                                return mappedFinding;
+                            }),
                             total_findings: result.length,
                             showing: Math.min(25, result.length)
                         }
@@ -333,11 +631,14 @@ class VeracodeMCPClient {
                         data: {
                             app_id: toolCall.args.app_id,
                             policy_compliance_status: result.policy_compliance_status,
-                            policy_name: result.policy_name,
-                            policy_version: result.policy_version,
-                            evaluation_date: result.policy_evaluation_date,
-                            grace_period_expired: result.grace_period_expired,
-                            scan_overdue: result.scan_overdue
+                            total_findings: result.total_findings,
+                            policy_violations: result.policy_violations,
+                            compliance_percentage: result.summary.compliance_percentage,
+                            has_critical_violations: result.summary.has_critical_violations,
+                            has_high_violations: result.summary.has_high_violations,
+                            total_open_violations: result.summary.total_open_violations,
+                            findings_by_severity: result.findings_by_severity,
+                            violations_by_severity: result.violations_by_severity
                         }
                     };
 
@@ -379,7 +680,8 @@ class VeracodeMCPClient {
                 output += `  Teams: ${app.teams.join(", ") || "None"}\n`;
                 output += `  Created: ${app.created_date}\n\n`;
             });
-        } else if (data.scans) {
+        } else if (data.scans && data.count !== undefined) {
+            // This is scan results data (has count property)
             output += `📊 Found ${data.count} scan${data.count !== 1 ? 's' : ''} for application ${data.app_id}`;
             if (data.scan_type_filter) {
                 output += ` (${data.scan_type_filter} scans only)`;
@@ -409,49 +711,310 @@ class VeracodeMCPClient {
             output += `\nShowing first ${data.showing}:\n\n`;
 
             data.findings.forEach((finding: any) => {
-                output += `• ${finding.scan_type} Finding\n`;
+                output += `• ${finding.scan_type} Finding`;
+                if (finding.flaw_id) {
+                    output += ` (Flaw ID: ${finding.flaw_id})`;
+                }
+                output += `\n`;
+
+                // Core vulnerability information
                 if (finding.cwe_id) {
                     output += `  CWE-${finding.cwe_id}: ${finding.cwe_name}\n`;
                 }
-                output += `  Severity: ${finding.severity}\n`;
-                output += `  Status: ${finding.status}\n`;
-                output += `  Policy Violation: ${finding.violates_policy ? 'Yes' : 'No'}\n`;
-                if (finding.first_found_date) {
-                    output += `  First Found: ${finding.first_found_date}\n`;
-                }
-                if (finding.file_name) {
-                    output += `  File: ${finding.file_name}\n`;
-                }
-                if (finding.component_filename) {
-                    output += `  Component: ${finding.component_filename} (v${finding.version || 'unknown'})\n`;
-                }
-                if (finding.cve) {
-                    output += `  CVE: ${finding.cve}\n`;
-                }
-                if (finding.cvss) {
-                    output += `  CVSS: ${finding.cvss}\n`;
+                output += `  Severity: ${finding.severity}`;
+                if (finding.exploitability !== undefined) {
+                    output += ` (Exploitability: ${finding.exploitability})`;
                 }
                 output += `\n`;
+
+                output += `  Status: ${finding.status}`;
+                if (finding.resolution && finding.resolution !== 'UNRESOLVED') {
+                    output += ` (${finding.resolution})`;
+                }
+                output += `\n`;
+
+                output += `  Policy Violation: ${finding.violates_policy ? 'Yes' : 'No'}\n`;
+
+                // CVE and CVSS information
+                if (finding.cve) {
+                    output += `  CVE: ${finding.cve}`;
+                    if (finding.cvss) {
+                        output += ` (CVSS: ${finding.cvss}`;
+                        if (finding.cvss3_score && finding.cvss3_score !== finding.cvss) {
+                            output += `, v3: ${finding.cvss3_score}`;
+                        }
+                        output += `)`;
+                    }
+                    output += `\n`;
+                } else if (finding.cvss) {
+                    output += `  CVSS: ${finding.cvss}\n`;
+                }
+
+                // Dates
+                if (finding.first_found_date) {
+                    const firstFound = new Date(finding.first_found_date).toLocaleDateString();
+                    output += `  First Found: ${firstFound}`;
+                    if (finding.last_seen_date && finding.last_seen_date !== finding.first_found_date) {
+                        const lastSeen = new Date(finding.last_seen_date).toLocaleDateString();
+                        output += ` (Last Seen: ${lastSeen})`;
+                    }
+                    output += `\n`;
+                }
+
+                // Context information
+                if (finding.context_type && finding.context_type !== 'APPLICATION') {
+                    output += `  Context: ${finding.context_type}\n`;
+                }
+                if (finding.count && finding.count > 1) {
+                    output += `  Occurrence Count: ${finding.count}\n`;
+                }
+
+                // Scan type specific information
+                if (finding.scan_type === 'STATIC') {
+                    if (finding.file_name) {
+                        output += `  File: ${finding.file_name}`;
+                        if (finding.file_line_number) {
+                            output += `:${finding.file_line_number}`;
+                        }
+                        output += `\n`;
+                    }
+                    if (finding.file_path && finding.file_path !== finding.file_name) {
+                        output += `  Path: ${finding.file_path}\n`;
+                    }
+                    if (finding.procedure) {
+                        output += `  Procedure: ${finding.procedure}\n`;
+                    }
+                    if (finding.module) {
+                        output += `  Module: ${finding.module}\n`;
+                    }
+                } else if (finding.scan_type === 'DYNAMIC') {
+                    if (finding.url) {
+                        output += `  URL: ${finding.url}\n`;
+                    } else if (finding.hostname) {
+                        output += `  Host: ${finding.hostname}`;
+                        if (finding.port) {
+                            output += `:${finding.port}`;
+                        }
+                        if (finding.path) {
+                            output += `${finding.path}`;
+                        }
+                        output += `\n`;
+                    }
+                    if (finding.vulnerable_parameter) {
+                        output += `  Vulnerable Parameter: ${finding.vulnerable_parameter}\n`;
+                    }
+                    if (finding.plugin) {
+                        output += `  Plugin: ${finding.plugin}\n`;
+                    }
+                } else if (finding.scan_type === 'MANUAL') {
+                    if (finding.location) {
+                        output += `  Location: ${finding.location}\n`;
+                    }
+                    if (finding.input_vector) {
+                        output += `  Input Vector: ${finding.input_vector}\n`;
+                    }
+                    if (finding.exploit_difficulty) {
+                        output += `  Exploit Difficulty: ${finding.exploit_difficulty}\n`;
+                    }
+                } else if (finding.scan_type === 'SCA') {
+                    if (finding.component_filename) {
+                        output += `  Component: ${finding.component_filename}`;
+                        if (finding.version) {
+                            output += ` (v${finding.version})`;
+                        }
+                        output += `\n`;
+                    }
+                    if (finding.language) {
+                        output += `  Language: ${finding.language}\n`;
+                    }
+                    if (finding.licenses && finding.licenses.length > 0) {
+                        const licenseInfo = finding.licenses.map((l: any) => `${l.license_id} (risk: ${l.risk_rating})`).join(', ');
+                        output += `  Licenses: ${licenseInfo}\n`;
+                    }
+                    if (finding.component_paths && finding.component_paths.length > 0) {
+                        output += `  Paths: ${finding.component_paths.slice(0, 2).join(', ')}`;
+                        if (finding.component_paths.length > 2) {
+                            output += ` (+${finding.component_paths.length - 2} more)`;
+                        }
+                        output += `\n`;
+                    }
+
+                    // Exploitability data for SCA findings
+                    if (finding.exploitability_data) {
+                        const exp = finding.exploitability_data;
+                        if (exp.exploit_observed !== undefined) {
+                            output += `  Exploit Available: ${exp.exploit_observed ? 'Yes' : 'No'}`;
+                            if (exp.exploit_source) {
+                                output += ` (${exp.exploit_source})`;
+                            }
+                            output += `\n`;
+                        }
+                        if (exp.epss_score !== undefined) {
+                            output += `  EPSS Score: ${exp.epss_score} (${(exp.epss_percentile * 100).toFixed(1)}th percentile)\n`;
+                        }
+                    }
+                }
+
+                // Annotations/mitigations
+                if (finding.annotations && finding.annotations.length > 0) {
+                    const recentAnnotations = finding.annotations.slice(-2); // Show last 2 annotations
+                    output += `  Recent Actions:\n`;
+                    recentAnnotations.forEach((annotation: any) => {
+                        output += `    ${annotation.action} by ${annotation.user_name}`;
+                        if (annotation.created) {
+                            const date = new Date(annotation.created).toLocaleDateString();
+                            output += ` (${date})`;
+                        }
+                        if (annotation.comment) {
+                            const shortComment = annotation.comment.length > 50 ?
+                                annotation.comment.substring(0, 50) + '...' : annotation.comment;
+                            output += `: ${shortComment}`;
+                        }
+                        output += `\n`;
+                    });
+                }
+
+                // Grace period information
+                if (finding.grace_period_expires_date) {
+                    const expiryDate = new Date(finding.grace_period_expires_date).toLocaleDateString();
+                    output += `  Grace Period Expires: ${expiryDate}\n`;
+                }
+
+                // Description (truncated for readability)
+                if (finding.description) {
+                    const truncatedDesc = finding.description.length > 150 ?
+                        finding.description.substring(0, 150) + '...' : finding.description;
+                    output += `  Description: ${truncatedDesc}\n`;
+                }
+
+                output += `\n`;
             });
-        } else if (data.name) {
+        } else if (data.name && !data.applications) {
             // Single application details
             output += `📋 Application Details:\n\n`;
             output += `Name: ${data.name}\n`;
             output += `ID: ${data.id}\n`;
+            output += `Legacy ID: ${data.legacy_id}\n`;
             output += `Business Criticality: ${data.business_criticality}\n`;
             output += `Description: ${data.description || "No description"}\n`;
-            output += `Teams: ${data.teams.join(", ") || "None"}\n`;
-            output += `Tags: ${data.tags.join(", ") || "None"}\n`;
+
+            // Team information
+            if (data.teams && data.teams.length > 0) {
+                output += `Teams:\n`;
+                data.teams.forEach((team: any) => {
+                    output += `  • ${team.name || team} (${team.guid || 'N/A'})\n`;
+                });
+            } else {
+                output += `Teams: None\n`;
+            }
+
+            output += `Tags: ${data.tags?.join(", ") || "None"}\n`;
+
+            // Business unit and owners
+            if (data.business_unit) {
+                output += `Business Unit: ${data.business_unit.name} (${data.business_unit.guid})\n`;
+            }
+
+            if (data.business_owners && data.business_owners.length > 0) {
+                output += `Business Owners:\n`;
+                data.business_owners.forEach((owner: any) => {
+                    output += `  • ${owner.name} (${owner.email})\n`;
+                });
+            }
+
+            // Application settings
+            if (data.settings) {
+                output += `Settings:\n`;
+                output += `  • SCA Enabled: ${data.settings.sca_enabled ? "Yes" : "No"}\n`;
+                output += `  • Dynamic Scan Approval Required: ${data.settings.dynamic_scan_approval_not_required ? "No" : "Yes"}\n`;
+                output += `  • Static Scan Dependencies Allowed: ${data.settings.static_scan_dependencies_allowed ? "Yes" : "No"}\n`;
+                output += `  • Nextday Consultation Allowed: ${data.settings.nextday_consultation_allowed ? "Yes" : "No"}\n`;
+            }
+
+            // Policy information
+            if (data.policies && data.policies.length > 0) {
+                output += `Policies:\n`;
+                data.policies.forEach((policy: any) => {
+                    output += `  • ${policy.name} (${policy.compliance_status || 'N/A'})${policy.is_default ? ' [Default]' : ''}\n`;
+                });
+            }
+
+            // Custom fields
+            if (data.custom_fields && data.custom_fields.length > 0) {
+                output += `Custom Fields:\n`;
+                data.custom_fields.forEach((field: any) => {
+                    output += `  • ${field.name}: ${field.value}\n`;
+                });
+            }
+
+            if (data.custom_field_values && data.custom_field_values.length > 0) {
+                output += `Custom Field Values:\n`;
+                data.custom_field_values.forEach((fieldValue: any) => {
+                    output += `  • ${fieldValue.field_name}: ${fieldValue.value}\n`;
+                });
+            }
+
+            // Recent scans
+            if (data.scans && data.scans.length > 0) {
+                output += `Recent Scans:\n`;
+                data.scans.slice(0, 5).forEach((scan: any) => {
+                    output += `  • ${scan.scan_type}: ${scan.status} (${scan.modified_date})\n`;
+                });
+                if (data.scans.length > 5) {
+                    output += `  ... and ${data.scans.length - 5} more scans\n`;
+                }
+            }
+
+            // Additional information
+            if (data.git_repo_url) {
+                output += `Git Repository: ${data.git_repo_url}\n`;
+            }
+            if (data.archer_app_name) {
+                output += `Archer App Name: ${data.archer_app_name}\n`;
+            }
+            if (data.custom_kms_alias) {
+                output += `KMS Alias: ${data.custom_kms_alias}\n`;
+            }
+
             output += `Created: ${data.created_date}\n`;
             output += `Modified: ${data.modified_date}\n`;
+            if (data.last_completed_scan_date) {
+                output += `Last Completed Scan: ${data.last_completed_scan_date}\n`;
+            }
+
+            if (data.app_profile_url) {
+                output += `Profile URL: ${data.app_profile_url}\n`;
+            }
+            if (data.results_url) {
+                output += `Results URL: ${data.results_url}\n`;
+            }
         } else if (data.policy_compliance_status) {
             // Policy compliance
             output += `📋 Policy Compliance for ${data.app_id}:\n\n`;
             output += `Status: ${data.policy_compliance_status}\n`;
-            output += `Policy: ${data.policy_name} (v${data.policy_version})\n`;
-            output += `Evaluation Date: ${data.evaluation_date}\n`;
-            output += `Grace Period Expired: ${data.grace_period_expired ? "Yes" : "No"}\n`;
-            output += `Scan Overdue: ${data.scan_overdue ? "Yes" : "No"}\n`;
+            output += `Total Findings: ${data.total_findings}\n`;
+            output += `Policy Violations: ${data.policy_violations}\n`;
+            output += `Compliance Percentage: ${data.compliance_percentage}%\n\n`;
+            output += `Summary:\n`;
+            output += `• Critical Violations: ${data.has_critical_violations ? "Yes" : "No"}\n`;
+            output += `• High Severity Violations: ${data.has_high_violations ? "Yes" : "No"}\n`;
+            output += `• Total Open Violations: ${data.total_open_violations}\n\n`;
+
+            if (data.findings_by_severity && Object.keys(data.findings_by_severity).length > 0) {
+                output += `Findings by Severity:\n`;
+                Object.entries(data.findings_by_severity).forEach(([severity, count]) => {
+                    output += `• ${severity}: ${count}\n`;
+                });
+            }
+
+            if (data.violations_by_severity && Object.keys(data.violations_by_severity).length > 0) {
+                output += `\nPolicy Violations by Severity:\n`;
+                Object.entries(data.violations_by_severity).forEach(([severity, count]) => {
+                    output += `• ${severity}: ${count}\n`;
+                });
+            } else {
+                output += `\nNo policy violations found\n`;
+            }
         }
 
         return output;

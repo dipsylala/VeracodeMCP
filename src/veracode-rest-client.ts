@@ -187,12 +187,17 @@ export interface VeracodeFinding {
 }
 
 export interface VeracodePolicyCompliance {
-  policy_compliance_status: string;
-  policy_name: string;
-  policy_version: string;
-  policy_evaluation_date: string;
-  grace_period_expired: boolean;
-  scan_overdue: boolean;
+  policy_compliance_status: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS';
+  total_findings: number;
+  policy_violations: number;
+  findings_by_severity: Record<string, number>;
+  violations_by_severity: Record<string, number>;
+  summary: {
+    has_critical_violations: boolean;
+    has_high_violations: boolean;
+    total_open_violations: number;
+    compliance_percentage: number;
+  };
 }
 
 export class VeracodeClient {
@@ -523,15 +528,90 @@ export class VeracodeClient {
   }
 
   /**
-   * Get policy compliance status for an application
+   * Get policy compliance status for an application by analyzing findings
+   * Policy compliance is determined by whether findings violate policy
    */
-  async getPolicyCompliance(appId: string): Promise<VeracodePolicyCompliance> {
+  async getPolicyCompliance(appId: string): Promise<{
+    policy_compliance_status: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS';
+    total_findings: number;
+    policy_violations: number;
+    findings_by_severity: Record<string, number>;
+    violations_by_severity: Record<string, number>;
+    summary: {
+      has_critical_violations: boolean;
+      has_high_violations: boolean;
+      total_open_violations: number;
+      compliance_percentage: number;
+    };
+  }> {
     try {
-      const response = await this.apiClient.get(`appsec/v1/applications/${appId}/policy`);
-      return response.data;
+      // Get all findings for the application
+      const findings = await this.getFindings(appId, {
+        size: 500 // Get a large number of findings
+      });
+
+      let policyViolations = 0;
+      const findingsBySeverity: Record<string, number> = {};
+      const violationsBySeverity: Record<string, number> = {};
+      let hasCriticalViolations = false;
+      let hasHighViolations = false;
+
+      findings.forEach(finding => {
+        const severity = finding.finding_details.severity;
+        const severityName = this.getSeverityName(severity);
+
+        // Count all findings by severity
+        findingsBySeverity[severityName] = (findingsBySeverity[severityName] || 0) + 1;
+
+        // Count policy violations
+        if (finding.violates_policy && finding.finding_status.status === 'OPEN') {
+          policyViolations++;
+          violationsBySeverity[severityName] = (violationsBySeverity[severityName] || 0) + 1;
+
+          // Check for critical and high severity violations
+          if (severity === 5) hasCriticalViolations = true;
+          if (severity === 4) hasHighViolations = true;
+        }
+      });
+
+      // Determine compliance status
+      let complianceStatus: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS';
+      if (policyViolations === 0) {
+        complianceStatus = 'PASS';
+      } else if (hasCriticalViolations || (hasHighViolations && policyViolations > 10)) {
+        complianceStatus = 'FAIL';
+      } else {
+        complianceStatus = 'CONDITIONAL_PASS';
+      }
+
+      const compliancePercentage = findings.length > 0
+        ? Math.round(((findings.length - policyViolations) / findings.length) * 100)
+        : 100;
+
+      return {
+        policy_compliance_status: complianceStatus,
+        total_findings: findings.length,
+        policy_violations: policyViolations,
+        findings_by_severity: findingsBySeverity,
+        violations_by_severity: violationsBySeverity,
+        summary: {
+          has_critical_violations: hasCriticalViolations,
+          has_high_violations: hasHighViolations,
+          total_open_violations: policyViolations,
+          compliance_percentage: compliancePercentage
+        }
+      };
     } catch (error) {
-      throw new Error(`Failed to fetch policy compliance: ${this.getErrorMessage(error)}`);
+      throw new Error(`Failed to analyze policy compliance: ${this.getErrorMessage(error)}`);
     }
+  }
+
+  /**
+   * Helper method to get severity name from numeric value
+   */
+  private getSeverityName(severity: number): string {
+    const severityNames = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
+    return severityNames[severity] || `Level ${severity}`;
   }
 
   /**
