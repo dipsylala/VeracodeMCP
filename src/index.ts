@@ -3,7 +3,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { VeracodeClient, VeracodeFinding, VeracodeSCAFinding, VeracodeStaticFinding, VeracodeDynamicFinding, VeracodeManualFinding } from "./veracode-client.js";
+import { VeracodeClient, VeracodeFinding, VeracodeSCAFinding, VeracodeStaticFinding, VeracodeDynamicFinding, VeracodeManualFinding } from "./veracode-rest-client.js";
 import * as dotenv from "dotenv";
 
 // Load environment variables
@@ -107,10 +107,10 @@ server.tool(
   }
 );
 
-// Tool: Get Application Details
+// Tool: Get Application Details by ID
 server.tool(
-  "get-application-details",
-  "Get detailed information about a specific application",
+  "get-application-details-by-id",
+  "Get detailed information about a specific application by ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
   },
@@ -191,10 +191,10 @@ server.tool(
   }
 );
 
-// Tool: Get Scan Results
+// Tool: Get Scan Results by ID
 server.tool(
-  "get-scan-results",
-  "Get scan results for an application",
+  "get-scan-results-by-id",
+  "Get scan results for an application by ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
     scan_type: z.enum(["STATIC", "DYNAMIC", "SCA", "MANUAL"]).optional().describe("Type of scan to filter by"),
@@ -243,10 +243,10 @@ server.tool(
   }
 );
 
-// Tool: Get Findings
+// Tool: Get Findings by ID
 server.tool(
-  "get-findings",
-  "Get detailed findings from scans with comprehensive details",
+  "get-findings-by-id",
+  "Get detailed findings from scans with comprehensive details by application ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
     scan_type: z.enum(["STATIC", "DYNAMIC", "SCA", "MANUAL"]).optional().describe("Type of scan to filter by"),
@@ -470,10 +470,10 @@ server.tool(
   }
 );
 
-// Tool: Get Policy Compliance
+// Tool: Get Policy Compliance by ID
 server.tool(
-  "get-policy-compliance",
-  "Check policy compliance status for an application",
+  "get-policy-compliance-by-id",
+  "Check policy compliance status for an application by ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
   },
@@ -508,10 +508,63 @@ server.tool(
   }
 );
 
-// Tool: Get Latest SCA Results
+// Tool: Get Policy Compliance by Name
 server.tool(
-  "get-latest-sca-results",
-  "Get the latest SCA scan results and findings for an application",
+  "get-policy-compliance-by-name",
+  "Check policy compliance status for an application by name",
+  {
+    name: z.string().describe("Application name to search for"),
+  },
+  async ({ name }) => {
+    try {
+      // First find the application
+      const applications = await veracodeClient.searchApplications(name);
+
+      if (applications.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No application found with name: ${name}`
+            }
+          ]
+        };
+      }
+
+      const app = applications[0];
+      const compliance = await veracodeClient.getPolicyCompliance(app.guid);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Policy Compliance for Application ${app.profile.name}:\n\n` +
+              `Overall Status: ${compliance.policy_compliance_status}\n` +
+              `Policy Name: ${compliance.policy_name}\n` +
+              `Policy Version: ${compliance.policy_version}\n` +
+              `Evaluation Date: ${compliance.policy_evaluation_date}\n` +
+              `Grace Period Expired: ${compliance.grace_period_expired ? "Yes" : "No"}\n` +
+              `Scan Overdue: ${compliance.scan_overdue ? "Yes" : "No"}`
+          }
+        ]
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error fetching policy compliance by name: ${error instanceof Error ? error.message : String(error)}`
+          }
+        ]
+      };
+    }
+  }
+);
+
+// Tool: Get Latest SCA Results by ID
+server.tool(
+  "get-latest-sca-results-by-id",
+  "Get the latest SCA scan results and findings for an application by ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
   },
@@ -663,10 +716,10 @@ server.tool(
   }
 );
 
-// Tool: Get Enhanced SCA Findings
+// Tool: Get Enhanced SCA Findings by ID
 server.tool(
-  "get-enhanced-sca-findings",
-  "Get SCA findings with enhanced filtering options",
+  "get-enhanced-sca-findings-by-id",
+  "Get SCA findings with enhanced filtering options by application ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
     include_transitive: z.boolean().optional().describe("Include transitive dependencies"),
@@ -737,7 +790,6 @@ server.tool(
                     `   Status: ${finding.finding_status.status}\n` +
                     `   Policy Violation: ${finding.violates_policy ? 'Yes' : 'No'}\n` +
                     `   First Found: ${finding.finding_status.first_found_date}\n` +
-                    `   New Finding: ${finding.finding_status.new ? 'Yes' : 'No'}\n` +
                     (scaDetails.cve ?
                       `   CVE: ${scaDetails.cve.name}\n` +
                       `   CVSS: ${scaDetails.cve.cvss} (${scaDetails.cve.severity})\n` : '') +
@@ -765,10 +817,10 @@ server.tool(
   }
 );
 
-// Tool: Get Comprehensive SCA Analysis
+// Tool: Get Comprehensive SCA Analysis by ID
 server.tool(
-  "get-comprehensive-sca-analysis",
-  "Get comprehensive SCA analysis with detailed vulnerability and component information",
+  "get-comprehensive-sca-analysis-by-id",
+  "Get comprehensive SCA analysis with detailed vulnerability and component information by application ID",
   {
     app_id: z.string().describe("Application ID (GUID)"),
     include_transitive: z.boolean().optional().describe("Include transitive dependencies"),
@@ -920,6 +972,73 @@ server.tool(
           {
             type: "text",
             text: `Error fetching comprehensive SCA analysis: ${error instanceof Error ? error.message : String(error)}`
+          }
+        ]
+      };
+    }
+  }
+);
+
+// Tool: Get Scan Results by Name
+server.tool(
+  "get-scan-results-by-name",
+  "Get scan results for an application by name",
+  {
+    name: z.string().describe("Application name to search for"),
+    scan_type: z.enum(["STATIC", "DYNAMIC", "SCA", "MANUAL"]).optional().describe("Type of scan to filter by"),
+  },
+  async ({ name, scan_type }) => {
+    try {
+      // First find the application
+      const applications = await veracodeClient.searchApplications(name);
+
+      if (applications.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No application found with name: ${name}`
+            }
+          ]
+        };
+      }
+
+      const app = applications[0];
+      const scans = await veracodeClient.getScanResults(app.guid, scan_type);
+
+      if (scans.length === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `No scans found for application ${app.profile.name}${scan_type ? ` with scan type ${scan_type}` : ""}`
+            }
+          ]
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Scan Results for Application ${app.profile.name}:\n\n` +
+              scans.map(scan =>
+                `• Scan ID: ${scan.scan_id}\n` +
+                `  Type: ${scan.scan_type}\n` +
+                `  Status: ${scan.status}\n` +
+                `  Created: ${scan.created_date}\n` +
+                `  Modified: ${scan.modified_date}\n` +
+                `  Policy Compliance: ${scan.policy_compliance_status || "N/A"}\n`
+              ).join("\n")
+          }
+        ]
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error fetching scan results by name: ${error instanceof Error ? error.message : String(error)}`
           }
         ]
       };

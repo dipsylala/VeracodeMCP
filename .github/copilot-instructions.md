@@ -15,7 +15,7 @@ This is an MCP (Model Context Protocol) server project that integrates with the 
 
 ## API Integration Notes
 
-- Veracode uses HMAC authentication for API access
+- Veracode uses VERACODE-HMAC-SHA-256 authentication for API access
 - API rate limiting should be considered
 - Support both REST API v3 and Results API endpoints
 - Handle both JSON and XML responses depending on the endpoint

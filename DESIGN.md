@@ -28,8 +28,8 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
 ```
 src/
 ├── index.ts                 # MCP Server Entry Point
-├── veracode-client.ts       # Veracode API Client
-└── generic-mcp-client.ts    # MCP Testing Client
+├── veracode-rest-client.ts       # Veracode API Client
+└── veracode-mcp-client.ts    # Command-Line Client
 
 examples/
 ├── get-sca-results.js       # SCA Results Example
@@ -61,12 +61,12 @@ examples/
 - `get-sca-results-by-name`: Get SCA results by application name
 - `get-comprehensive-sca-analysis`: Advanced SCA analysis with exploitability data
 
-### 2. Veracode API Client (`src/veracode-client.ts`)
+### 2. Veracode API Client (`src/veracode-rest-client.ts`)
 
 **Purpose**: Abstraction layer for Veracode API interactions with comprehensive type safety.
 
 **Key Features**:
-- HMAC authentication implementation
+- VERACODE-HMAC-SHA-256 authentication implementation
 - Type-safe API responses with comprehensive interfaces
 - Enhanced SCA analysis capabilities
 - Error handling and retry logic
@@ -78,7 +78,7 @@ examples/
 - SCA Results API
 - Results API (XML-based legacy endpoints)
 
-### 3. Generic MCP Client (`src/generic-mcp-client.ts`)
+### 3. Veracode MCP Client (`src/veracode-mcp-client.ts`)
 
 **Purpose**: Testing utility for validating MCP server functionality.
 
@@ -139,13 +139,13 @@ interface VeracodeSCAFinding {
 
 ## Authentication Design
 
-### HMAC Authentication Flow
+### VERACODE-HMAC-SHA-256 Authentication Flow
 
 ```
 1. API Request Preparation
    ├── Generate timestamp
    ├── Create request data string
-   ├── Generate HMAC-SHA256 signature
+   ├── Generate VERACODE-HMAC-SHA-256 signature
    └── Set Authorization header
 
 2. Request Execution
@@ -163,7 +163,7 @@ interface VeracodeSCAFinding {
 
 - API credentials stored in environment variables
 - No credential logging or exposure
-- Secure HMAC signature generation
+- Secure VERACODE-HMAC-SHA-256 signature generation
 - Proper error message sanitization
 
 ## Data Flow Design
@@ -335,7 +335,7 @@ npm run start        # Start MCP server
 
 1. Define input schema with Zod
 2. Implement tool handler in `index.ts`
-3. Add corresponding method to `veracode-client.ts`
+3. Add corresponding method to `veracode-rest-client.ts`
 4. Create example usage script
 5. Update documentation
 
@@ -403,7 +403,7 @@ The architecture supports:
 - `@modelcontextprotocol/sdk`: MCP framework implementation
 - `axios`: HTTP client for API requests
 - `zod`: Schema validation and type safety
-- `crypto`: HMAC authentication implementation
+- `crypto`: VERACODE-HMAC-SHA-256 authentication implementation
 
 ### Development Dependencies
 

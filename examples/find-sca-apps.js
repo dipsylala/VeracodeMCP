@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { VeracodeClient } from '../build/veracode-client.js';
+import { VeracodeClient } from '../build/veracode-rest-client.js';
 import * as dotenv from 'dotenv';
 
 // Load environment variables

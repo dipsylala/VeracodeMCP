@@ -37,7 +37,7 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 ### 🔒 Security First
 - **Read-Only Access**: No write operations - safe for AI assistant integration
-- **HMAC Authentication**: Secure API authentication using Veracode standards
+- **VERACODE-HMAC-SHA-256 Authentication**: Secure API authentication using Veracode standards
 - **Credential Protection**: Environment-based credential management
 
 ## 📸 Example: SCA Analysis
@@ -117,12 +117,18 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 ### MCP Tools (Claude Desktop)
 - `get-applications` - List all applications
 - `search-applications` - Search applications by name
-- `get-application-details` - Get detailed application information
-- `get-scan-results` - Get scan results for an application
-- `get-findings` - Get detailed findings with filtering
-- `get-latest-sca-results` - Get latest SCA scan results
-- `get-sca-results-by-name` - Get SCA results by application name
-- `get-comprehensive-sca-analysis` - Advanced SCA analysis with exploitability
+- `get-application-details-by-id` - Get detailed application information by ID
+- `get-application-details-by-name` - Get detailed application information by name
+- `get-scan-results-by-id` - Get scan results for an application by ID
+- `get-scan-results-by-name` - Get scan results for an application by name
+- `get-findings-by-id` - Get detailed findings with filtering by application ID
+- `get-findings-by-name` - Get detailed findings with filtering by application name
+- `get-policy-compliance-by-id` - Check policy compliance by application ID
+- `get-policy-compliance-by-name` - Check policy compliance by application name
+- `get-latest-sca-results-by-id` - Get latest SCA scan results by application ID
+- `get-latest-sca-results-by-name` - Get latest SCA scan results by application name
+- `get-enhanced-sca-findings-by-id` - Enhanced SCA findings with filtering by application ID
+- `get-comprehensive-sca-analysis-by-id` - Advanced SCA analysis with exploitability by application ID
 
 ### Command-Line Examples
 ```bash
@@ -150,17 +156,35 @@ Use natural language queries:
 
 ### Command Line Interface
 ```bash
-# Get comprehensive SCA analysis
-node examples/get-sca-results.js "MyApplication"
-
-# Find all apps with SCA data
-node examples/find-sca-apps.js
+# List all applications
+node build/veracode-mcp-client.js get-applications
 
 # Search for applications
-node examples/query-apps.js "SearchTerm"
+node build/veracode-mcp-client.js search-applications --name "MyApp"
 
-# List all available applications
-node examples/list-apps.js
+# Get application details by ID
+node build/veracode-mcp-client.js get-application-details-by-id --app_id "your-app-id"
+
+# Get application details by name
+node build/veracode-mcp-client.js get-application-details-by-name --name "MyApp"
+
+# Get scan results by ID
+node build/veracode-mcp-client.js get-scan-results-by-id --app_id "your-app-id"
+
+# Get scan results by name
+node build/veracode-mcp-client.js get-scan-results-by-name --name "MyApp"
+
+# Get findings with filtering by ID
+node build/veracode-mcp-client.js get-findings-by-id --app_id "your-app-id" --severity_gte 4
+
+# Get findings with filtering by name
+node build/veracode-mcp-client.js get-findings-by-name --name "MyApp" --severity_gte 4
+
+# Get policy compliance by ID
+node build/veracode-mcp-client.js get-policy-compliance-by-id --app_id "your-app-id"
+
+# Get policy compliance by name
+node build/veracode-mcp-client.js get-policy-compliance-by-name --name "MyApp"
 ```
 
 ## 🔧 Development

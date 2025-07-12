@@ -197,7 +197,7 @@ node examples/get-sca-results.js "AppWithManyFindings"
 ### Test 10: Credential Security
 1. Verify `.env` file is in `.gitignore`
 2. Check that credentials don't appear in logs
-3. Confirm API calls use HMAC authentication
+3. Confirm API calls use VERACODE-HMAC-SHA-256 authentication
 
 **Expected Result**:
 - ✅ No credentials visible in terminal output
@@ -210,7 +210,7 @@ node examples/get-sca-results.js "AppWithManyFindings"
 ```bash
 # Test with the generic MCP client
 npm run build
-node build/generic-mcp-client.js
+node build/veracode-mcp-client.js
 ```
 
 **Expected Result**:

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { VeracodeClient } from "./veracode-client.js";
+import { VeracodeClient } from "./veracode-rest-client.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -16,7 +16,7 @@ interface ToolResult {
     error?: string;
 }
 
-class GenericMCPClient {
+class VeracodeMCPClient {
     private veracodeClient: VeracodeClient;
 
     constructor() {
@@ -460,13 +460,13 @@ class GenericMCPClient {
 
 // Main function to handle command line arguments
 async function main() {
-    const client = new GenericMCPClient();
+    const client = new VeracodeMCPClient();
 
     // Parse command line arguments
     const args = process.argv.slice(2);
 
     if (args.length === 0) {
-        console.log("📖 Usage: node generic-mcp-client.js <tool> [args...]");
+        console.log("📖 Usage: node veracode-mcp-client.js <tool> [args...]");
         console.log("\nAvailable tools:");
         console.log("  get-applications");
         console.log("  search-applications --name <search_term>");
@@ -477,12 +477,12 @@ async function main() {
         console.log("  get-findings --app_id <app_id> [--scan_type <type>] [--severity <severity>]");
         console.log("  get-policy-compliance --app_id <app_id>");
         console.log("\nExamples:");
-        console.log("  node build/generic-mcp-client.js search-applications --name goat");
-        console.log("  node build/generic-mcp-client.js get-applications");
-        console.log("  node build/generic-mcp-client.js get-application-details --app_id 12345");
+        console.log("  node build/veracode-mcp-client.js search-applications --name goat");
+        console.log("  node build/veracode-mcp-client.js get-applications");
+        console.log("  node build/veracode-mcp-client.js get-application-details --app_id 12345");
         console.log("\n📝 For application names with special characters, use JSON input:");
-        console.log("  echo '{\"tool\":\"search-applications\",\"args\":{\"name\":\"bob\\\" &&\"}}' | node build/generic-mcp-client.js --json");
-        console.log("  echo '{\"tool\":\"get-scan-results-by-name\",\"args\":{\"name\":\"& test\"}}' | node build/generic-mcp-client.js --json");
+        console.log("  echo '{\"tool\":\"search-applications\",\"args\":{\"name\":\"bob\\\" &&\"}}' | node build/veracode-mcp-client.js --json");
+        console.log("  echo '{\"tool\":\"get-scan-results-by-name\",\"args\":{\"name\":\"& test\"}}' | node build/veracode-mcp-client.js --json");
         return;
     }
 
@@ -509,7 +509,7 @@ async function main() {
 
 // Handle JSON input for programmatic usage
 if (process.argv.includes('--json')) {
-    const client = new GenericMCPClient();
+    const client = new VeracodeMCPClient();
 
     process.stdin.setEncoding('utf8');
     let input = '';

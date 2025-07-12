@@ -1,7 +1,7 @@
 /**
  * Test the search applications functionality
  */
-import { VeracodeClient } from "../build/veracode-client.js";
+import { VeracodeClient } from "../build/veracode-rest-client.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
