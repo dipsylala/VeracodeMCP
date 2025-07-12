@@ -75,6 +75,9 @@ Create a `.env` file with your Veracode API credentials:
 VERACODE_API_ID=your-api-id-here
 VERACODE_API_KEY=your-api-key-here
 
+# Optional: Debug logging (shows detailed execution flow)
+LOG_LEVEL=debug
+
 # Optional: Regional API Configuration
 # Commercial region (default): api.veracode.com
 # European region: api.veracode.eu  
@@ -84,6 +87,8 @@ VERACODE_API_KEY=your-api-key-here
 # Optional: Custom platform URL (auto-derived from API base URL)
 # VERACODE_PLATFORM_URL=https://analysiscenter.veracode.com
 ```
+
+> 🔍 **Debug Logging**: Set `LOG_LEVEL=debug` to see detailed execution flow including API calls, timing data, and data processing steps. Useful for troubleshooting and understanding the tool's operation.
 
 > 🌍 **Regional Configuration**: The server automatically supports multiple Veracode regions. Set `VERACODE_API_BASE_URL` to target different regions:
 > - **Commercial** (default): `https://api.veracode.com`
@@ -148,11 +153,13 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 - `get-application-details-by-id` - Get detailed application information by ID
 - `get-application-details-by-name` - Get detailed application information by name
 
-#### 🔍 **Scan Results & Basic Findings**
-- `get-scan-results-by-id` - Get scan results for an application by ID
+#### 🔍 **Scan Results & Findings**
+- `get-scan-results` - Get scan results for an application by ID
 - `get-scan-results-by-name` - Get scan results for an application by name
-- `get-findings-by-id` - Get basic findings summary and metadata by application ID
-- `get-findings-by-name` - Get basic findings summary and metadata by application name
+- `get-findings` - Get findings with filtering options
+- `get-findings-by-id` - Get findings summary and metadata by application ID
+- `get-findings-by-name` - Get findings summary and metadata by application name
+- `get-findings-paginated` - Get paginated findings results
 
 #### 🚨 **Detailed Flaw Analysis (Use for Specific Flaw IDs)**
 - `get-static-flaw-info-by-id` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information including data paths and call stack for specific flaw IDs
@@ -163,10 +170,9 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 - `get-policy-compliance-by-name` - Check policy compliance by application name
 
 #### 🔐 **Software Composition Analysis (SCA)**
-- `get-latest-sca-results-by-id` - Get latest SCA scan results by application ID
-- `get-latest-sca-results-by-name` - Get latest SCA scan results by application name
-- `get-enhanced-sca-findings-by-id` - Enhanced SCA findings with filtering by application ID
-- `get-comprehensive-sca-analysis-by-id` - Advanced SCA analysis with exploitability by application ID
+- `get-sca-results-by-name` - **🎯 COMPREHENSIVE SCA** - Get detailed SCA analysis including exploitability, licensing, and component risk assessment by application name
+- `get-sca-summary` - Get high-level SCA overview with risk metrics and component statistics
+- `get-sca-apps` - List all applications with SCA scanning enabled, including risk analysis
 
 #### 🧠 **AI Agent Guidance**
 > **For AI assistants**: When users ask about specific flaw IDs or need detailed technical analysis of vulnerabilities, use `get-static-flaw-info-by-name` or `get-static-flaw-info-by-id`. These tools provide:
@@ -218,35 +224,30 @@ node build/veracode-mcp-client.js get-applications
 # Search for applications
 node build/veracode-mcp-client.js search-applications --name "MyApp"
 
-# Get application details by ID
+# Get application details by ID or name
 node build/veracode-mcp-client.js get-application-details-by-id --app_id "your-app-id"
-
-# Get application details by name
 node build/veracode-mcp-client.js get-application-details-by-name --name "MyApp"
 
-# Get scan results by ID
+# Get scan results by ID or name
 node build/veracode-mcp-client.js get-scan-results-by-id --app_id "your-app-id"
-
-# Get scan results by name
 node build/veracode-mcp-client.js get-scan-results-by-name --name "MyApp"
 
-# Get findings with filtering by ID
-node build/veracode-mcp-client.js get-findings-by-id --app_id "your-app-id" --severity_gte 4
-
-# Get findings with filtering by name
-node build/veracode-mcp-client.js get-findings-by-name --name "MyApp" --severity_gte 4
+# Get comprehensive SCA analysis by name (RECOMMENDED for SCA)
+node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
+node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp" --severity_gte 4 --only_exploitable true
 
 # Get policy compliance by ID
-node build/veracode-mcp-client.js get-policy-compliance --app_id "your-app-id"
+node build/veracode-mcp-client.js get-policy-compliance-by-id --app_id "your-app-id"
 
-# Get detailed static flaw analysis by name
+# Get detailed static flaw analysis by name or ID
 node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
-
-# Get detailed static flaw analysis by ID
 node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id "your-app-id" --issue_id "123"
+
+# Enable debug logging for troubleshooting
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
 ```
 
-> 💡 **Note**: The CLI client includes the most commonly used tools. For access to all tools (including SCA analysis, policy compliance by name, etc.), use the Claude Desktop integration or extend the CLI client.
+> 💡 **SCA Analysis**: Use `get-sca-results-by-name` for comprehensive Software Composition Analysis including exploitability data, licensing risks, and component vulnerability details. This is the most comprehensive SCA tool available in the CLI.
 
 ## 🔧 Development
 

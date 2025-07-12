@@ -14,6 +14,9 @@ Create a `.env` file in the project root:
 ```env
 VERACODE_API_ID=your_api_id_here
 VERACODE_API_KEY=your_api_key_here
+
+# Optional: Enable debug logging for detailed execution flow
+LOG_LEVEL=debug
 ```
 
 **Note**: Your API credentials must have appropriate permissions to access applications and scan results.
@@ -80,8 +83,10 @@ The server provides these tools that can be tested via MCP clients:
 4. **get-scan-results** - Get scan results for an application
 5. **get-findings** - Get detailed findings from scans
 6. **get-latest-sca-results** - Get latest SCA scan results
-7. **get-sca-results-by-name** - Get SCA results by application name
-8. **get-comprehensive-sca-analysis** - Detailed SCA analysis with exploitability data
+7. **get-sca-results-by-name** - **🎯 COMPREHENSIVE SCA** - Get detailed SCA analysis by application name
+8. **get-sca-summary** - Get high-level SCA overview with risk metrics
+9. **get-sca-apps** - List all applications with SCA scanning enabled
+10. **get-comprehensive-sca-analysis** - Detailed SCA analysis with exploitability data
 
 ## SCA-Specific Testing
 
@@ -101,15 +106,27 @@ node examples/find-sca-apps.js "YourAppFilter"
 
 ### Test 7: Get SCA Results (if you have apps with SCA scans)
 ```bash
-# Replace "YourAppName" with an actual application name from your environment
+# Using the new comprehensive CLI tool (RECOMMENDED)
+node build/veracode-mcp-client.js get-sca-results-by-name --name "YourAppName"
+
+# With filtering options
+node build/veracode-mcp-client.js get-sca-results-by-name --name "YourAppName" --severity_gte 4 --only_exploitable true
+
+# Using the example script (alternative)
 node examples/get-sca-results.js "YourAppName"
+
+# Enable debug logging to see detailed execution flow
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "YourAppName"
 ```
 
 **Expected Result**:
 - ✅ Finds the specified application
-- ✅ Retrieves SCA scan results
-- ✅ Shows vulnerability details, severity breakdown, and policy violations
-- ✅ Displays component information and licensing details
+- ✅ Retrieves comprehensive SCA analysis including:
+  - Vulnerability details with CVE information
+  - Exploitability data and risk scores
+  - Component analysis and licensing information
+  - Severity breakdown and policy violations
+- ✅ With debug logging: Shows detailed API calls, timing, and data processing steps
 
 ## Important Notes About SCA Integration
 
@@ -164,9 +181,56 @@ node examples/get-sca-results.js "YourAppName"
 2. Verify you're not behind a restrictive firewall
 3. Test API access directly via Veracode's web interface
 
+### Issue 6: Debug logging not working
+**Symptoms**: LOG_LEVEL=debug shows no debug output
+**Solution**:
+1. Ensure `LOG_LEVEL=debug` is set before the command: `LOG_LEVEL=debug node ...`
+2. Add to `.env` file: `echo "LOG_LEVEL=debug" >> .env`
+3. Verify the environment variable is set: `echo $LOG_LEVEL` (Linux/Mac) or `echo %LOG_LEVEL%` (Windows)
+4. Look for debug output in stderr (error stream) - may appear as red text in some terminals
+
+### Issue 7: SCA CLI tool not available
+**Symptoms**: "get-sca-results-by-name" command not found
+**Solution**:
+1. Ensure project is built: `npm run build`
+2. Use full path: `node build/veracode-mcp-client.js get-sca-results-by-name --name "AppName"`
+3. Check that build directory contains updated files: `ls -la build/`
+
+### Test 8: Debug Logging Verification
+```bash
+# Test debug logging with any CLI command
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-applications
+
+# Test with SCA analysis for comprehensive debug output
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "YourAppName"
+
+# Test different log levels
+LOG_LEVEL=info node build/veracode-mcp-client.js get-applications
+LOG_LEVEL=warn node build/veracode-mcp-client.js get-applications
+LOG_LEVEL=error node build/veracode-mcp-client.js get-applications
+```
+
+**Expected Result**:
+- ✅ **DEBUG level**: Shows detailed execution flow including:
+  - API request URLs, response codes, and data sizes
+  - Application search and matching logic
+  - Timing information for each operation
+  - Data processing and analysis steps
+- ✅ **INFO level**: Shows normal operational messages
+- ✅ **WARN level**: Shows warnings and errors only
+- ✅ **ERROR level**: Shows only error messages
+
+**Example Debug Output**:
+```
+[2025-07-12T21:10:09.259Z] DEBUG [API]: Getting findings by application name
+  Data: { "name": "YourApp", "options": { "scanType": "SCA" } }
+[2025-07-12T21:10:09.648Z] DEBUG [CLIENT]: API Response received
+  Data: { "method": "GET", "status": 200, "dataSize": 2174, "executionTime": 389 }
+```
+
 ## VS Code Integration Testing
 
-### Test 8: VS Code Tasks
+### Test 9: VS Code Tasks
 If using VS Code:
 1. Open Command Palette (`Ctrl+Shift+P`)
 2. Type "Tasks: Run Task"
@@ -174,24 +238,33 @@ If using VS Code:
    - "Build Veracode MCP Server"
    - "Test Veracode Connection"
    - "Example: Get SCA Results (Custom App)"
+   - "Example: Find SCA Apps"
 
 **Expected Result**:
 - ✅ All tasks execute without errors
 - ✅ Custom app task prompts for application name
 - ✅ Results display in integrated terminal
+- ✅ SCA-specific tasks work correctly
 
 ## Performance Verification
 
-### Test 9: Large Dataset Handling
+### Test 10: Large Dataset Handling
 ```bash
 # Test with applications that have many findings
 node examples/get-sca-results.js "AppWithManyFindings"
+
+# Test with the CLI tool
+node build/veracode-mcp-client.js get-sca-results-by-name --name "AppWithManyFindings"
+
+# Test with debug logging to see performance metrics
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "AppWithManyFindings"
 ```
 
 **Expected Result**:
 - ✅ Handles large result sets gracefully
-- ✅ Provides pagination or limits results appropriately
+- ✅ Provides filtering options to limit results appropriately
 - ✅ Completes within reasonable time (< 30 seconds)
+- ✅ Debug logging shows timing and performance data
 
 ## Security Verification
 
@@ -209,15 +282,22 @@ node examples/get-sca-results.js "AppWithManyFindings"
 
 ### Test 11: Generic MCP Client (Advanced)
 ```bash
-# Test with the generic MCP client
+# Test with the comprehensive CLI client
 npm run build
-node build/veracode-mcp-client.js
+node build/veracode-mcp-client.js get-applications
+
+# Test SCA functionality
+node build/veracode-mcp-client.js get-sca-results-by-name --name "YourApp"
+
+# Test with debug logging
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "YourApp"
 ```
 
 **Expected Result**:
-- ✅ MCP client connects to server
-- ✅ Lists available tools
+- ✅ CLI client shows available tools
 - ✅ Can execute tool calls successfully
+- ✅ SCA tools provide comprehensive analysis
+- ✅ Debug logging shows detailed execution flow
 
 ## Test Results Documentation
 
@@ -228,7 +308,8 @@ Mark each completed test:
 - [ ] List All Applications
 - [ ] Start MCP Server
 - [ ] Find Apps with SCA Scans
-- [ ] Get SCA Results
+- [ ] Get SCA Results (CLI Tool)
+- [ ] Debug Logging Verification
 - [ ] VS Code Tasks
 - [ ] Performance Verification
 - [ ] Security Verification

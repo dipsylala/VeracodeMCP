@@ -12,6 +12,7 @@ This is an MCP (Model Context Protocol) server project that integrates with the 
 - Implement proper error handling for API calls
 - Use environment variables for sensitive configuration like API credentials
 - Follow Veracode API documentation for proper endpoint usage
+- When testing locally, assume it is being run in PowerShell before trying linux commands.
 
 ## API Integration Notes
 
@@ -19,13 +20,5 @@ This is an MCP (Model Context Protocol) server project that integrates with the 
 - API rate limiting should be considered
 - Support both REST API v3 and Results API endpoints
 - Handle both JSON and XML responses depending on the endpoint
-
-## MCP Tools to Implement
-
-1. `get-applications` - List all applications
-2. `get-application-details` - Get detailed information about a specific application
-3. `get-scan-results` - Get scan results for an application
-4. `get-findings` - Get detailed findings from scans
-5. `get-policy-compliance` - Check policy compliance status
 
 You can find more info and examples at https://modelcontextprotocol.io/llms-full.txt

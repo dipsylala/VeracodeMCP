@@ -5,22 +5,35 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { VeracodeClient } from "./veracode-rest-client.js";
 import { toolRegistry } from "./tools/tool.registry.js";
 import { ToolContext } from "./types/tool.types.js";
+import { logger } from "./utils/logger.js";
 import * as dotenv from "dotenv";
 
 // Load environment variables
 dotenv.config();
+logger.reinitialize(); // Reinitialize after env is loaded
+
+logger.info("Starting Veracode MCP Server", "STARTUP");
+logger.debug("Environment loaded", "STARTUP", {
+  hasApiId: !!process.env.VERACODE_API_ID,
+  hasApiKey: !!process.env.VERACODE_API_KEY,
+  logLevel: process.env.LOG_LEVEL || 'info',
+  apiBaseUrl: process.env.VERACODE_API_BASE_URL || 'default'
+});
 
 // Validate required environment variables
 const requiredEnvVars = ["VERACODE_API_ID", "VERACODE_API_KEY"];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-  console.error(`Missing required environment variables: ${missingVars.join(", ")}`);
-  console.error("Please set these variables in your .env file or environment");
+  logger.error(`Missing required environment variables: ${missingVars.join(", ")}`, "STARTUP");
+  logger.error("Please set these variables in your .env file or environment", "STARTUP");
   process.exit(1);
 }
 
+logger.debug("Environment validation passed", "STARTUP");
+
 // Create Veracode client instance
+logger.debug("Creating Veracode client", "STARTUP");
 const veracodeClient = new VeracodeClient(
   process.env.VERACODE_API_ID!,
   process.env.VERACODE_API_KEY!
@@ -31,7 +44,10 @@ const toolContext: ToolContext = {
   veracodeClient
 };
 
+logger.debug("Tool context created", "STARTUP");
+
 // Create MCP server instance
+logger.debug("Creating MCP server", "STARTUP");
 const server = new McpServer({
   name: "veracode-mcp-server",
   version: "1.0.0",
@@ -43,17 +59,35 @@ const server = new McpServer({
 
 // Register all tools from the tool registry
 const allTools = toolRegistry.getAllTools();
-console.error(`Registering ${allTools.length} tools...`);
+logger.info(`Registering ${allTools.length} tools`, "STARTUP");
 
 for (const tool of allTools) {
+  logger.debug(`Registering tool: ${tool.name}`, "TOOL_REGISTRY", {
+    description: tool.description,
+    hasSchema: !!tool.schema
+  });
+
   server.tool(
     tool.name,
     tool.description,
     tool.schema,
     async (args: any) => {
+      const startTime = Date.now();
+      logger.toolExecution(tool.name, args);
+
       try {
         const result = await tool.handler(args, toolContext);
-        
+        const executionTime = Date.now() - startTime;
+
+        logger.toolResult(tool.name, result.success, executionTime,
+          result.data ? JSON.stringify(result.data).length : undefined);
+
+        logger.debug(`Tool ${tool.name} result`, "TOOL_RESULT", {
+          success: result.success,
+          hasData: !!result.data,
+          hasError: !!result.error
+        });
+
         return {
           content: [
             {
@@ -63,7 +97,11 @@ for (const tool of allTools) {
           ],
         };
       } catch (error) {
+        const executionTime = Date.now() - startTime;
         const errorMessage = error instanceof Error ? error.message : String(error);
+
+        logger.toolError(tool.name, error);
+
         return {
           content: [
             {
@@ -82,19 +120,24 @@ for (const tool of allTools) {
 
 // Log tool registration summary
 const categorySummary = toolRegistry.getCategorySummary();
-console.error('Tool registration summary:');
+logger.info('Tool registration summary', "STARTUP");
 for (const [category, count] of Object.entries(categorySummary)) {
-  console.error(`  ${category}: ${count} tools`);
+  logger.info(`  ${category}: ${count} tools`, "STARTUP");
 }
 
 // Start the server
 async function main() {
+  logger.debug("Starting server transport", "STARTUP");
   const transport = new StdioServerTransport();
+
+  logger.debug("Connecting to MCP transport", "STARTUP");
   await server.connect(transport);
-  console.error("Veracode MCP Server is running...");
+
+  logger.info("Veracode MCP Server is running", "STARTUP");
+  logger.debug("Server ready to accept requests", "STARTUP");
 }
 
 main().catch((error) => {
-  console.error("Server error:", error);
+  logger.error("Server startup failed", "STARTUP", error);
   process.exit(1);
 });

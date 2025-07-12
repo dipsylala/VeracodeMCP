@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
 import * as crypto from "crypto";
+import { logger } from './utils/logger.js';
 
 export interface VeracodeApplication {
   guid: string;
@@ -286,6 +287,12 @@ export class VeracodeClient {
     apiBaseUrl?: string;
     platformBaseUrl?: string;
   }) {
+    logger.debug("Initializing VeracodeClient", "CLIENT", {
+      hasApiId: !!apiId,
+      hasApiKey: !!apiKey,
+      options
+    });
+
     this.apiId = apiId;
     this.apiKey = apiKey;
 
@@ -293,6 +300,8 @@ export class VeracodeClient {
     const apiBaseUrl = options?.apiBaseUrl ||
       process.env.VERACODE_API_BASE_URL ||
       "https://api.veracode.com/";
+
+    logger.debug("API base URL determined", "CLIENT", { apiBaseUrl });
 
     // Auto-derive platform URL from API URL if not explicitly provided
     if (options?.platformBaseUrl) {
@@ -304,15 +313,47 @@ export class VeracodeClient {
       this.platformBaseUrl = this.derivePlatformUrl(apiBaseUrl);
     }
 
+    logger.debug("Platform URL configured", "CLIENT", { platformBaseUrl: this.platformBaseUrl });
+
     this.apiClient = axios.create({
       baseURL: apiBaseUrl,
       timeout: 30000,
+    });
+
+    logger.debug("Axios client created", "CLIENT", {
+      baseURL: apiBaseUrl,
+      timeout: 30000
     });
 
     // Add request interceptor for HMAC authentication
     this.apiClient.interceptors.request.use((config) => {
       return this.addHMACAuthentication(config);
     });
+
+    // Add response interceptor for logging
+    this.apiClient.interceptors.response.use(
+      (response) => {
+        logger.debug("API Response received", "CLIENT", {
+          method: response.config.method?.toUpperCase(),
+          url: response.config.url,
+          status: response.status,
+          dataSize: response.data ? JSON.stringify(response.data).length : 0
+        });
+        return response;
+      },
+      (error) => {
+        logger.error("API Request failed", "CLIENT", {
+          method: error.config?.method?.toUpperCase(),
+          url: error.config?.url,
+          status: error.response?.status,
+          message: error.message,
+          data: error.response?.data
+        });
+        return Promise.reject(error);
+      }
+    );
+
+    logger.info("VeracodeClient initialized successfully", "CLIENT");
   }
 
   /**
@@ -431,12 +472,24 @@ export class VeracodeClient {
    * Get list of all applications
    */
   async getApplications(): Promise<VeracodeApplication[]> {
+    const startTime = Date.now();
+    logger.debug("Getting all applications", "API");
+
     try {
+      logger.apiRequest("GET", "appsec/v1/applications");
       const response = await this.apiClient.get("appsec/v1/applications");
+      const responseTime = Date.now() - startTime;
+
       const applications = response.data._embedded?.applications || [];
+      logger.apiResponse("GET", "appsec/v1/applications", response.status, responseTime, applications.length);
+
+      logger.debug("Processing application data", "API", {
+        count: applications.length,
+        hasEmbedded: !!response.data._embedded
+      });
 
       // Convert relative URLs to full platform URLs
-      return applications.map((app: any) => ({
+      const processedApps = applications.map((app: any) => ({
         ...app,
         app_profile_url: this.convertToFullUrl(app.app_profile_url),
         results_url: this.convertToFullUrl(app.results_url),
@@ -445,7 +498,16 @@ export class VeracodeClient {
           scan_url: this.convertToFullUrl(scan.scan_url)
         }))
       }));
+
+      logger.debug("Applications retrieved and processed", "API", {
+        totalCount: processedApps.length,
+        executionTime: responseTime
+      });
+
+      return processedApps;
     } catch (error) {
+      const responseTime = Date.now() - startTime;
+      logger.apiError("GET", "appsec/v1/applications", error);
       throw new Error(`Failed to fetch applications: ${this.getErrorMessage(error)}`);
     }
   }
@@ -692,13 +754,34 @@ export class VeracodeClient {
       size?: number;
     }
   ): Promise<VeracodeFinding[]> {
+    const startTime = Date.now();
+    logger.debug("Getting findings by application name", "API", {
+      name,
+      options: {
+        scanType: options?.scanType,
+        severityGte: options?.severityGte,
+        cvssGte: options?.cvssGte,
+        size: options?.size,
+        newFindingsOnly: options?.newFindingsOnly,
+        policyViolation: options?.policyViolation
+      }
+    });
+
     try {
       // First search for applications with this name
+      logger.debug("Searching for application", "API", { name });
       const searchResults = await this.searchApplications(name);
 
       if (searchResults.length === 0) {
+        logger.warn("No application found with name", "API", { name });
         throw new Error(`No application found with name: ${name}`);
       }
+
+      logger.debug("Application search results", "API", {
+        name,
+        resultsCount: searchResults.length,
+        applications: searchResults.map(app => ({ name: app.profile.name, guid: app.guid }))
+      });
 
       // If multiple results, look for exact match first
       let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
@@ -706,12 +789,41 @@ export class VeracodeClient {
       // If no exact match, use the first result but warn about it
       if (!targetApp) {
         targetApp = searchResults[0];
-        console.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`);
+        logger.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`, "API");
+      } else {
+        logger.debug("Exact application match found", "API", {
+          searchName: name,
+          foundName: targetApp.profile.name,
+          guid: targetApp.guid
+        });
       }
 
       // Get findings using the GUID
-      return await this.getFindingsById(targetApp.guid, options);
+      logger.debug("Fetching findings for application", "API", {
+        appName: targetApp.profile.name,
+        appGuid: targetApp.guid,
+        options
+      });
+
+      const findings = await this.getFindingsById(targetApp.guid, options);
+      const executionTime = Date.now() - startTime;
+
+      logger.debug("Findings retrieved successfully", "API", {
+        appName: targetApp.profile.name,
+        findingsCount: findings.length,
+        scanType: options?.scanType,
+        executionTime
+      });
+
+      return findings;
     } catch (error) {
+      const executionTime = Date.now() - startTime;
+      logger.error("Failed to fetch findings by name", "API", {
+        name,
+        options,
+        executionTime,
+        error
+      });
       throw new Error(`Failed to fetch findings by name: ${this.getErrorMessage(error)}`);
     }
   }
