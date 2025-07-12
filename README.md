@@ -17,7 +17,7 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 ### 🏗️ Technical Documentation
 - **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
-- **[� HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
+- **[📝 HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
 - **[✅ CALL_VERIFICATION_REPORT.md](docs/CALL_VERIFICATION_REPORT.md)** - MCP-to-REST client integration verification
 - **[📊 PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** - Current project status and recent changes
 
