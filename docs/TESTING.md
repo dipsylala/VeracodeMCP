@@ -47,7 +47,8 @@ node examples/query-apps.js "Test"
 
 ### Test 3: List All Available Applications
 ```bash
-npm run example:list-apps
+# Using the example script directly
+node examples/list-apps.js
 ```
 
 **Expected Result**:

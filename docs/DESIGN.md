@@ -27,16 +27,34 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
 
 ```
 src/
-├── index.ts                 # MCP Server Entry Point
-├── veracode-rest-client.ts       # Veracode API Client
-└── veracode-mcp-client.ts    # Command-Line Client
+├── index.ts                      # MCP Server Entry Point  
+├── veracode-rest-client.ts       # Veracode API REST Client
+├── veracode-mcp-client.ts        # MCP Client (CLI Interface)
+├── tools/                        # MCP Tool Implementations
+│   ├── tool.registry.ts          # Tool Registration System
+│   ├── application.tools.ts      # Application Management Tools
+│   ├── findings.tools.ts         # Findings & Vulnerability Tools  
+│   ├── scan.tools.ts             # Scan Management Tools
+│   ├── sca.tools.ts              # Software Composition Analysis Tools
+│   ├── static-analysis.tools.ts  # Static Analysis Tools
+│   └── policy.tools.ts           # Policy Compliance Tools
+└── types/
+    └── tool.types.ts             # TypeScript Type Definitions
 
-examples/
-├── get-sca-results.js       # SCA Results Example
-├── find-sca-apps.js         # SCA Discovery Example
-├── query-apps.js            # Application Search Example
-├── list-apps.js             # List All Apps Example
-└── test-search.js           # Search Testing Example
+examples/                         # Usage Examples & Test Scripts
+├── get-sca-results.js           # SCA Results Example
+├── find-sca-apps.js             # SCA Discovery Example  
+├── query-apps.js                # Application Search Example
+├── list-apps.js                 # List All Apps Example
+├── test-search.js               # Search Testing Example
+├── verify-call-chain.js         # Integration Testing
+└── inspect-api-responses.js     # API Response Analysis
+
+docs/                            # Documentation
+├── DESIGN.md                    # Architecture & Design
+├── INTEGRATION.md               # Integration Guide
+├── TESTING.md                   # Testing Guide
+└── HTML_ANALYSIS_REPORT.md      # API Response Analysis
 ```
 
 ## Core Components
@@ -46,8 +64,9 @@ examples/
 **Purpose**: Main MCP server implementation that handles tool registration and execution.
 
 **Key Responsibilities**:
-- Tool registration with the MCP framework
-- Request routing to appropriate handlers
+- Tool registration with the MCP framework using tool registry
+- Request routing to appropriate tool handlers
+- Authentication and context management
 - Response formatting and error handling
 - Input validation using Zod schemas
 
