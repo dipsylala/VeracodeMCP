@@ -17,7 +17,9 @@
     "test:search": "npm run build && node examples/test-search.js",
     "example:sca-results": "npm run build && echo \"Usage: node examples/get-sca-results.js <app-name>\" && echo \"Example: node examples/get-sca-results.js \\\"YourAppName\\\"\"",
     "example:find-sca-apps": "npm run build && node examples/find-sca-apps.js",
-    "example:list-apps": "npm run build && node examples/list-apps.js"
+    "example:list-apps": "npm run build && node examples/list-apps.js",
+    "example:get-static-flaw-info": "npm run build && echo \"Usage: node examples/get-static-flaw-info.js <app_id> <flaw_id>\" && echo \"Example: node examples/get-static-flaw-info.js your-app-id 123\"",
+    "example:compare-analysis": "npm run build && echo \"Usage: node examples/compare-analysis-approaches.js <app_name> <flaw_id>\" && echo \"Example: node examples/compare-analysis-approaches.js \\\"MyApp\\\" 123\""
   },
   "keywords": [
     "mcp",

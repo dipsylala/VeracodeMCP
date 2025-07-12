@@ -172,7 +172,7 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 - `get-static-flaw-info-by-name` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information by application name and flaw ID
 
 #### 📊 **Policy & Compliance**
-- `get-policy-compliance-by-id` - Check policy compliance by application ID
+- `get-policy-compliance` - Check policy compliance by application ID
 - `get-policy-compliance-by-name` - Check policy compliance by application name
 
 #### 🔐 **Software Composition Analysis (SCA)**
@@ -202,19 +202,16 @@ npm run example:find-sca-apps
 npm run example:sca-results
 
 # Get detailed static flaw analysis (RECOMMENDED for specific flaw investigation)
-node examples/get-static-flaw-info.js <app_id> <flaw_id>
+npm run example:get-static-flaw-info
 
 # Compare general findings vs detailed flaw analysis approaches
-node examples/compare-analysis-approaches.js <app_name> <flaw_id>
-
-# Get detailed static flaw analysis by name (BEST for specific flaw investigation)
-node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
-
-# Get detailed static flaw analysis by ID (for specific flaw investigation)  
-node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id "your-app-id" --issue_id "123"
+npm run example:compare-analysis
 
 # Test connection and basic functionality
 npm run test:connection
+
+# Test search functionality
+npm run test:search
 ```
 
 ## 📖 Usage Examples
@@ -253,11 +250,16 @@ node build/veracode-mcp-client.js get-findings-by-id --app_id "your-app-id" --se
 node build/veracode-mcp-client.js get-findings-by-name --name "MyApp" --severity_gte 4
 
 # Get policy compliance by ID
-node build/veracode-mcp-client.js get-policy-compliance-by-id --app_id "your-app-id"
+node build/veracode-mcp-client.js get-policy-compliance --app_id "your-app-id"
 
-# Get policy compliance by name
-node build/veracode-mcp-client.js get-policy-compliance-by-name --name "MyApp"
+# Get detailed static flaw analysis by name
+node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
+
+# Get detailed static flaw analysis by ID
+node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id "your-app-id" --issue_id "123"
 ```
+
+> 💡 **Note**: The CLI client includes the most commonly used tools. For access to all tools (including SCA analysis, policy compliance by name, etc.), use the Claude Desktop integration or extend the CLI client.
 
 ## 🔧 Development
 
