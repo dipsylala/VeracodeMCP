@@ -638,7 +638,7 @@ export class VeracodeClient {
   /**
    * Get findings for an application (backward compatibility)
    */
-  async getFindings(
+  async getFindingsById(
     appId: string,
     options?: {
       scanType?: string;
@@ -710,7 +710,7 @@ export class VeracodeClient {
       }
 
       // Get findings using the GUID
-      return await this.getFindings(targetApp.guid, options);
+      return await this.getFindingsById(targetApp.guid, options);
     } catch (error) {
       throw new Error(`Failed to fetch findings by name: ${this.getErrorMessage(error)}`);
     }
@@ -735,7 +735,7 @@ export class VeracodeClient {
   }> {
     try {
       // Get all findings for the application
-      const findings = await this.getFindings(appId, {
+      const findings = await this.getFindingsById(appId, {
         size: 500 // Get a large number of findings
       });
 
@@ -839,7 +839,7 @@ export class VeracodeClient {
       )[0];
 
       // Get all SCA findings for the application
-      const findings = await this.getFindings(appId, {
+      const findings = await this.getFindingsById(appId, {
         scanType: 'SCA',
         size: 500  // Get a large number of findings
       });
@@ -927,7 +927,7 @@ export class VeracodeClient {
         findingOptions.newFindingsOnly = true;
       }
 
-      return await this.getFindings(appId, findingOptions);
+      return await this.getFindingsById(appId, findingOptions);
     } catch (error) {
       throw new Error(`Failed to fetch SCA findings: ${this.getErrorMessage(error)}`);
     }
@@ -1108,7 +1108,7 @@ export class VeracodeClient {
     };
   }> {
     try {
-      const findings = await this.getFindings(appId, {
+      const findings = await this.getFindingsById(appId, {
         scanType: options?.scanType,
         severity: options?.severity,
         severityGte: options?.severityGte,

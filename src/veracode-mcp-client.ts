@@ -287,7 +287,7 @@ export class VeracodeMCPClient {
                     if (!toolCall.args?.app_id) {
                         return { success: false, error: "Missing required argument: app_id" };
                     }
-                    result = await this.veracodeClient.getFindings(
+                    result = await this.veracodeClient.getFindingsById(
                         toolCall.args.app_id,
                         {
                             scanType: toolCall.args.scan_type,
