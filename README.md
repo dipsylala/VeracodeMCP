@@ -9,9 +9,7 @@
 - **[💬 VSCODE_CHAT_INTEGRATION.md](docs/VSCODE_CHAT_INTEGRATION.md)** - VS Code Chat/Copilot MCP integration
 - **[🤝 CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contributing guidelines and development setup
 
-> 💡 **New to the project?** Start with [TESTING.md](docs/TESTING.md) → [INTEGRATION.md](docs/INTEGRATION.md) → [VSCODE_QUICK_START.md](docs/VSCODE_QUICK_START.md)**Command-Line Client** (for scripts & automation)
-- All the same tools available via command-line interface
-- Perfect for CI/CD pipelines, scripts, and automated workflows
+ - 💡 **New to developing on the project?** - Start with [TESTING.md](docs/TESTING.md) → [INTEGRATION.md](docs/INTEGRATION.md) → [VSCODE_QUICK_START.md](docs/VSCODE_QUICK_START.md)
 
 > 🔍 **Read-Only Focus**: This server provides **read-only access** to Veracode data. It does not support creating, modifying, or deleting applications, scans, or findings. This design ensures safe integration with AI assistants and automation workflows without risk of unintended changes to your Veracode account.
 
