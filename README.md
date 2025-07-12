@@ -86,9 +86,9 @@ VERACODE_API_KEY=your-api-key-here
 ```
 
 > 🌍 **Regional Configuration**: The server automatically supports multiple Veracode regions. Set `VERACODE_API_BASE_URL` to target different regions:
-> - **Commercial** (default): `https://api.veracode.com` → Platform: `https://analysiscenter.veracode.com`
-> - **European**: `https://api.veracode.eu` → Platform: `https://analysiscenter.veracode.eu`  
-> - **Federal**: `https://api.veracode.us` → Platform: `https://analysiscenter.veracode.us`
+> - **Commercial** (default): `https://api.veracode.com`
+> - **European**: `https://api.veracode.eu`
+> - **Federal**: `https://api.veracode.us`
 >
 > The platform URL is automatically derived from your API base URL, so you typically only need to set the API base URL for your region.
 
