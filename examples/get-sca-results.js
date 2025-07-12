@@ -143,7 +143,7 @@ async function getSCAResults() {
                 }
 
                 if (finding.description) {
-                    console.log(`   Description: ${finding.description.substring(0, 200)}${finding.description.length > 200 ? '...' : ''}`);
+                    console.log(`   Description: ${finding.description}`);
                 }
             });
 

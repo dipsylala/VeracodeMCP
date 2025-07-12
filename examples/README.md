@@ -23,6 +23,24 @@ This directory contains example scripts that demonstrate how to use the Veracode
   - Example: `node find-sca-apps.js` (find all apps with SCA scans)
   - Example: `node find-sca-apps.js "Test"` (find apps containing "Test" with SCA scans)
 
+### Static Analysis Examples
+
+- **`get-static-flaw-info.js`** - Get detailed data path information for static analysis findings
+  - Usage: `node get-static-flaw-info.js <app_id> <issue_id> [context]`
+  - Example: `node get-static-flaw-info.js 12345678-abcd-1234-5678-123456789012 67890`
+  - Example: `node get-static-flaw-info.js 12345678-abcd-1234-5678-123456789012 67890 sandbox-guid-here`
+  - Shows call stacks, data paths, function names, file locations, and line numbers for static findings
+
+### Analysis Comparison Examples
+
+- **`compare-analysis-approaches.js`** - Demonstrates the differences between general findings overview and detailed flaw analysis
+  - Usage: `node compare-analysis-approaches.js <app_name> <flaw_id>`
+  - Example: `node compare-analysis-approaches.js "MyApplication" "123"`
+  - Shows side-by-side comparison of:
+    - General findings (get-findings-by-name) - good for overviews and summaries
+    - Detailed flaw analysis (get-static-flaw-info-by-name) - good for technical investigation
+  - Helps understand when to use each tool type
+
 ## Running Examples
 
 ### Using npm scripts:
@@ -48,6 +66,9 @@ npm run build
 # Get SCA results for any application
 node examples/get-sca-results.js "Your-App-Name"
 node examples/get-sca-results.js "MyTestApp"
+
+# Get static flaw data paths
+node examples/get-static-flaw-info.js "app-guid-here" "issue-id-here"
 node examples/get-sca-results.js "ProductionApp"
 
 # Search for specific applications

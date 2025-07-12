@@ -6,6 +6,9 @@ export interface VeracodeApplication {
   id: number;
   created: string;
   modified: string;
+  app_profile_url?: string;
+  results_url?: string;
+  scans?: VeracodeScan[];
   profile: {
     name: string;
     business_criticality: string;
@@ -31,6 +34,9 @@ export interface VeracodeScan {
   created_date: string;
   modified_date: string;
   policy_compliance_status?: string;
+  scan_url?: string;
+  app_profile_url?: string;
+  results_url?: string;
 }
 
 // Base annotation interface
@@ -200,17 +206,106 @@ export interface VeracodePolicyCompliance {
   };
 }
 
+// Static flaw data path interfaces
+export interface VeracodeStaticFlawCall {
+  data_path: number;
+  file_name: string;
+  file_path: string;
+  function_name: string;
+  line_number: number;
+}
+
+export interface VeracodeStaticFlawDataPath {
+  module_name: string;
+  steps: number;
+  local_path: string;
+  function_name: string;
+  line_number: number;
+  calls: VeracodeStaticFlawCall[];
+}
+
+export interface VeracodeStaticFlawIssueSummary {
+  app_guid: string;
+  name: number;
+  build_id: number;
+  issue_id: number;
+  context?: string;
+}
+
+export interface VeracodeStaticFlawInfo {
+  issue_summary: VeracodeStaticFlawIssueSummary;
+  data_paths: VeracodeStaticFlawDataPath[];
+  _links?: Array<{
+    href: string;
+    name?: string;
+    templated?: boolean;
+  }>;
+}
+
+// Pagination interfaces
+export interface PageMetadata {
+  number: number;
+  size: number;
+  total_elements: number;
+  total_pages: number;
+}
+
+export interface PagedFindingsResponse {
+  _embedded?: {
+    findings: VeracodeFinding[];
+  };
+  page: PageMetadata;
+  _links?: {
+    self?: { href: string };
+    first?: { href: string };
+    last?: { href: string };
+    next?: { href: string };
+    prev?: { href: string };
+  };
+}
+
+export interface PaginatedFindingsResult {
+  findings: VeracodeFinding[];
+  pagination: {
+    current_page: number;
+    page_size: number;
+    total_pages: number;
+    total_elements: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
+}
+
 export class VeracodeClient {
   private apiClient: AxiosInstance;
   private apiId: string;
   private apiKey: string;
+  private platformBaseUrl: string;
 
-  constructor(apiId: string, apiKey: string) {
+  constructor(apiId: string, apiKey: string, options?: {
+    apiBaseUrl?: string;
+    platformBaseUrl?: string;
+  }) {
     this.apiId = apiId;
     this.apiKey = apiKey;
 
+    // Determine API base URL (region-specific)
+    const apiBaseUrl = options?.apiBaseUrl ||
+      process.env.VERACODE_API_BASE_URL ||
+      "https://api.veracode.com/";
+
+    // Auto-derive platform URL from API URL if not explicitly provided
+    if (options?.platformBaseUrl) {
+      this.platformBaseUrl = options.platformBaseUrl;
+    } else if (process.env.VERACODE_PLATFORM_URL) {
+      this.platformBaseUrl = process.env.VERACODE_PLATFORM_URL;
+    } else {
+      // Auto-derive platform URL from API base URL
+      this.platformBaseUrl = this.derivePlatformUrl(apiBaseUrl);
+    }
+
     this.apiClient = axios.create({
-      baseURL: "https://api.veracode.com/",
+      baseURL: apiBaseUrl,
       timeout: 30000,
     });
 
@@ -218,6 +313,41 @@ export class VeracodeClient {
     this.apiClient.interceptors.request.use((config) => {
       return this.addHMACAuthentication(config);
     });
+  }
+
+  /**
+   * Derive platform URL from API base URL for different regions
+   */
+  private derivePlatformUrl(apiBaseUrl: string): string {
+    try {
+      const apiUrl = new URL(apiBaseUrl);
+      const apiHost = apiUrl.hostname;
+
+      // Map API hostnames to platform hostnames
+      const regionMap: Record<string, string> = {
+        'api.veracode.com': 'analysiscenter.veracode.com',     // Commercial US
+        'api.veracode.eu': 'analysiscenter.veracode.eu',       // European
+        'api.veracode.us': 'analysiscenter.veracode.us',       // US Federal
+      };
+
+      const platformHost = regionMap[apiHost];
+      if (platformHost) {
+        return `https://${platformHost}`;
+      }
+
+      // Fallback: try to auto-derive by replacing 'api.' with 'analysiscenter.'
+      if (apiHost.startsWith('api.veracode.')) {
+        const domain = apiHost.substring('api.'.length);
+        return `https://analysiscenter.${domain}`;
+      }
+
+      // Ultimate fallback to commercial region
+      console.warn(`Unknown API host: ${apiHost}. Using commercial region platform URL.`);
+      return 'https://analysiscenter.veracode.com';
+    } catch (error) {
+      console.warn(`Invalid API base URL: ${apiBaseUrl}. Using commercial region platform URL.`);
+      return 'https://analysiscenter.veracode.com';
+    }
   }
 
   /**
@@ -252,7 +382,8 @@ export class VeracodeClient {
    */
   private async generateVeracodeAuthHeader(url: string, method: string): Promise<string> {
     const verStr = "vcode_request_version_1";
-    const data = `id=${this.apiId}&host=api.veracode.com&url=${url}&method=${method}`;
+    const apiHost = new URL(this.apiClient.defaults.baseURL || 'https://api.veracode.com/').hostname;
+    const data = `id=${this.apiId}&host=${apiHost}&url=${url}&method=${method}`;
     const timestamp = Date.now().toString();
     const nonce = crypto.randomBytes(16).toString('hex');
 
@@ -301,7 +432,8 @@ export class VeracodeClient {
    */
   private generateVeracodeAuthHeaderSync(url: string, method: string): string {
     const verStr = "vcode_request_version_1";
-    const data = `id=${this.apiId}&host=api.veracode.com&url=${url}&method=${method}`;
+    const apiHost = new URL(this.apiClient.defaults.baseURL || 'https://api.veracode.com/').hostname;
+    const data = `id=${this.apiId}&host=${apiHost}&url=${url}&method=${method}`;
     const timestamp = Date.now().toString();
     const nonce = crypto.randomBytes(16).toString('hex');
 
@@ -333,7 +465,18 @@ export class VeracodeClient {
   async getApplications(): Promise<VeracodeApplication[]> {
     try {
       const response = await this.apiClient.get("appsec/v1/applications");
-      return response.data._embedded?.applications || [];
+      const applications = response.data._embedded?.applications || [];
+
+      // Convert relative URLs to full platform URLs
+      return applications.map((app: any) => ({
+        ...app,
+        app_profile_url: this.convertToFullUrl(app.app_profile_url),
+        results_url: this.convertToFullUrl(app.results_url),
+        scans: app.scans?.map((scan: any) => ({
+          ...scan,
+          scan_url: this.convertToFullUrl(scan.scan_url)
+        }))
+      }));
     } catch (error) {
       throw new Error(`Failed to fetch applications: ${this.getErrorMessage(error)}`);
     }
@@ -346,19 +489,40 @@ export class VeracodeClient {
     try {
       const encodedName = encodeURIComponent(name);
       const response = await this.apiClient.get(`appsec/v1/applications/?name=${encodedName}`);
-      return response.data._embedded?.applications || [];
+      const applications = response.data._embedded?.applications || [];
+
+      // Convert relative URLs to full platform URLs
+      return applications.map((app: any) => ({
+        ...app,
+        app_profile_url: this.convertToFullUrl(app.app_profile_url),
+        results_url: this.convertToFullUrl(app.results_url),
+        scans: app.scans?.map((scan: any) => ({
+          ...scan,
+          scan_url: this.convertToFullUrl(scan.scan_url)
+        }))
+      }));
     } catch (error) {
       throw new Error(`Failed to search applications: ${this.getErrorMessage(error)}`);
     }
   }
-
   /**
    * Get detailed information about a specific application
    */
   async getApplicationDetails(appId: string): Promise<VeracodeApplication> {
     try {
       const response = await this.apiClient.get(`appsec/v1/applications/${appId}`);
-      return response.data;
+      const application = response.data;
+
+      // Convert relative URLs to full platform URLs
+      return {
+        ...application,
+        app_profile_url: this.convertToFullUrl(application.app_profile_url),
+        results_url: this.convertToFullUrl(application.results_url),
+        scans: application.scans?.map((scan: any) => ({
+          ...scan,
+          scan_url: this.convertToFullUrl(scan.scan_url)
+        }))
+      };
     } catch (error) {
       throw new Error(`Failed to fetch application details: ${this.getErrorMessage(error)}`);
     }
@@ -392,7 +556,6 @@ export class VeracodeClient {
       throw new Error(`Failed to fetch application details by name: ${this.getErrorMessage(error)}`);
     }
   }
-
   /**
    * Get scan results for an application
    */
@@ -411,9 +574,24 @@ export class VeracodeClient {
   }
 
   /**
-   * Get findings for an application
+   * Get scan results for an application by name
    */
-  async getFindings(
+  async getScanResultsByName(name: string, scanType?: string): Promise<VeracodeScan[]> {
+    try {
+      // First get the application details to get the app ID
+      const application = await this.getApplicationDetailsByName(name);
+
+      // Then get scan results using the app ID
+      return await this.getScanResults(application.guid, scanType);
+    } catch (error) {
+      throw new Error(`Failed to fetch scan results by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Get findings for an application with pagination metadata
+   */
+  async getFindingsPaginated(
     appId: string,
     options?: {
       scanType?: string;
@@ -435,7 +613,7 @@ export class VeracodeClient {
       page?: number;
       size?: number;
     }
-  ): Promise<VeracodeFinding[]> {
+  ): Promise<PaginatedFindingsResult> {
     try {
       let url = `appsec/v2/applications/${appId}/findings`;
       const params = new URLSearchParams();
@@ -469,11 +647,54 @@ export class VeracodeClient {
         url += `?${params.toString()}`;
       }
 
-      const response = await this.apiClient.get(url);
-      return response.data._embedded?.findings || [];
+      const response = await this.apiClient.get<PagedFindingsResponse>(url);
+      const findings = response.data._embedded?.findings || [];
+      const pageData = response.data.page;
+
+      return {
+        findings,
+        pagination: {
+          current_page: pageData.number,
+          page_size: pageData.size,
+          total_pages: pageData.total_pages,
+          total_elements: pageData.total_elements,
+          has_next: pageData.number < pageData.total_pages - 1,
+          has_previous: pageData.number > 0
+        }
+      };
     } catch (error) {
       throw new Error(`Failed to fetch findings: ${this.getErrorMessage(error)}`);
     }
+  }
+
+  /**
+   * Get findings for an application (backward compatibility)
+   */
+  async getFindings(
+    appId: string,
+    options?: {
+      scanType?: string;
+      severity?: number;
+      severityGte?: number;
+      cwe?: number[];
+      cvss?: number;
+      cvssGte?: number;
+      cve?: string;
+      context?: string;
+      findingCategory?: number[];
+      includeAnnotations?: boolean;
+      includeExpirationDate?: boolean;
+      mitigatedAfter?: string;
+      newFindingsOnly?: boolean;
+      scaDependencyMode?: 'UNKNOWN' | 'DIRECT' | 'TRANSITIVE' | 'BOTH';
+      scaScanMode?: 'UPLOAD' | 'AGENT' | 'BOTH';
+      policyViolation?: boolean;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<VeracodeFinding[]> {
+    const result = await this.getFindingsPaginated(appId, options);
+    return result.findings;
   }
 
   /**
@@ -783,6 +1004,79 @@ export class VeracodeClient {
   }
 
   /**
+   * Get detailed static flaw information including data paths for a specific finding
+   * Returns detailed data path information for static analysis findings
+   */
+  async getStaticFlawInfo(
+    appId: string,
+    issueId: string | number,
+    context?: string
+  ): Promise<VeracodeStaticFlawInfo> {
+    try {
+      let url = `appsec/v2/applications/${appId}/findings/${issueId}/static_flaw_info`;
+
+      if (context) {
+        url += `?context=${encodeURIComponent(context)}`;
+      }
+
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch static flaw info: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Get detailed static flaw information by application name and issue ID
+   * First searches for the application, then retrieves static flaw data paths
+   */
+  async getStaticFlawInfoByName(
+    name: string,
+    issueId: string | number,
+    context?: string
+  ): Promise<VeracodeStaticFlawInfo> {
+    try {
+      // First search for applications with this name
+      const searchResults = await this.searchApplications(name);
+
+      if (searchResults.length === 0) {
+        throw new Error(`No application found with name: ${name}`);
+      }
+
+      // If multiple results, look for exact match first
+      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
+
+      // If no exact match, use the first result but warn about it
+      if (!targetApp) {
+        targetApp = searchResults[0];
+        console.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`);
+      }
+
+      // Get static flaw info using the GUID
+      return await this.getStaticFlawInfo(targetApp.guid, issueId, context);
+    } catch (error) {
+      throw new Error(`Failed to fetch static flaw info by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  /**
+   * Convert relative Veracode platform URLs to full URLs
+   * Platform URLs from the API are returned as relative paths like "HomeAppProfile:44841:806568"
+   * This method converts them to full URLs like "https://web.analysiscenter.veracode.com/HomeAppProfile:44841:806568"
+   */
+  private convertToFullUrl(url: string | undefined): string | undefined {
+    if (!url) return undefined;
+
+    // If already a full URL, return as-is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+
+    // Convert relative platform URL to full URL
+    return `${this.platformBaseUrl}/auth/index.jsp#${url}`;
+  }
+
+  /**
    * Type guard to check if finding details are SCA-specific
    */
   isSCAFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeSCAFinding } {
@@ -1080,6 +1374,82 @@ export class VeracodeClient {
     } else {
       // Something else happened
       return error.message || "Unknown error occurred";
+    }
+  }
+
+  /**
+   * Get all findings for an application across multiple pages
+   * Automatically handles pagination to retrieve all findings
+   */
+  async getAllFindings(
+    appId: string,
+    options?: {
+      scanType?: string;
+      severity?: number;
+      severityGte?: number;
+      cwe?: number[];
+      cvss?: number;
+      cvssGte?: number;
+      cve?: string;
+      context?: string;
+      findingCategory?: number[];
+      includeAnnotations?: boolean;
+      includeExpirationDate?: boolean;
+      mitigatedAfter?: string;
+      newFindingsOnly?: boolean;
+      scaDependencyMode?: 'UNKNOWN' | 'DIRECT' | 'TRANSITIVE' | 'BOTH';
+      scaScanMode?: 'UPLOAD' | 'AGENT' | 'BOTH';
+      policyViolation?: boolean;
+      maxPages?: number; // Limit to prevent infinite loops
+      pageSize?: number; // Override default page size (max 500)
+    }
+  ): Promise<{
+    findings: VeracodeFinding[];
+    totalPages: number;
+    totalElements: number;
+    pagesRetrieved: number;
+    truncated: boolean;
+  }> {
+    try {
+      const maxPages = options?.maxPages || 50; // Default to 50 pages max (25,000 findings at 500 per page)
+      const pageSize = Math.min(options?.pageSize || 500, 500); // API max is 500
+
+      let allFindings: VeracodeFinding[] = [];
+      let currentPage = 0;
+      let totalPages = 1;
+      let totalElements = 0;
+      let pagesRetrieved = 0;
+
+      while (currentPage < totalPages && pagesRetrieved < maxPages) {
+        const requestOptions = {
+          ...options,
+          page: currentPage,
+          size: pageSize
+        };
+
+        const result = await this.getFindingsPaginated(appId, requestOptions);
+
+        allFindings = allFindings.concat(result.findings);
+        totalPages = result.pagination.total_pages;
+        totalElements = result.pagination.total_elements;
+        pagesRetrieved++;
+        currentPage++;
+
+        // If we got fewer findings than requested, we've reached the end
+        if (result.findings.length < pageSize) {
+          break;
+        }
+      }
+
+      return {
+        findings: allFindings,
+        totalPages,
+        totalElements,
+        pagesRetrieved,
+        truncated: pagesRetrieved >= maxPages && currentPage < totalPages
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch all findings: ${this.getErrorMessage(error)}`);
     }
   }
 }

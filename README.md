@@ -29,6 +29,7 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 - **Combined Results**: Single static scans contain both SAST and SCA findings
 - **Policy Compliance**: Check compliance status against Veracode policies
 - **Risk Assessment**: Enhanced risk scoring and prioritization
+- **Comments & Annotations**: View mitigation details, security team comments, and risk assessments
 
 ### 🛠️ Developer Tools
 - **Command-Line Interface**: Scriptable access for automation and CI/CD
@@ -66,7 +67,25 @@ Create a `.env` file with your Veracode API credentials:
 ```env
 VERACODE_API_ID=your-api-id-here
 VERACODE_API_KEY=your-api-key-here
+
+# Optional: Regional API Configuration
+# Commercial region (default): api.veracode.com
+# European region: api.veracode.eu  
+# Federal region: api.veracode.us
+# VERACODE_API_BASE_URL=https://api.veracode.com
+
+# Optional: Custom platform URL (auto-derived from API base URL)
+# VERACODE_PLATFORM_URL=https://analysiscenter.veracode.com
 ```
+
+> 🌍 **Regional Configuration**: The server automatically supports multiple Veracode regions. Set `VERACODE_API_BASE_URL` to target different regions:
+> - **Commercial** (default): `https://api.veracode.com` → Platform: `https://analysiscenter.veracode.com`
+> - **European**: `https://api.veracode.eu` → Platform: `https://analysiscenter.veracode.eu`  
+> - **Federal**: `https://api.veracode.us` → Platform: `https://analysiscenter.veracode.us`
+>
+> The platform URL is automatically derived from your API base URL, so you typically only need to set the API base URL for your region.
+
+> 📝 **Platform URL Configuration**: The `VERACODE_PLATFORM_URL` is optional and auto-derived from your API region. This setting controls how relative URLs from the API (like `HomeAppProfile:44841:806568`) are converted to full clickable URLs. Manual override is only needed for custom Veracode instances.
 
 ### 3. Verification
 ```bash
@@ -115,20 +134,41 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 ## 🛠️ Available Tools
 
 ### MCP Tools (Claude Desktop)
+
+#### 📋 **Application Management**
 - `get-applications` - List all applications
 - `search-applications` - Search applications by name
 - `get-application-details-by-id` - Get detailed application information by ID
 - `get-application-details-by-name` - Get detailed application information by name
+
+#### 🔍 **Scan Results & Basic Findings**
 - `get-scan-results-by-id` - Get scan results for an application by ID
 - `get-scan-results-by-name` - Get scan results for an application by name
-- `get-findings-by-id` - Get detailed findings with filtering by application ID
-- `get-findings-by-name` - Get detailed findings with filtering by application name
+- `get-findings-by-id` - Get basic findings summary and metadata by application ID
+- `get-findings-by-name` - Get basic findings summary and metadata by application name
+
+#### 🚨 **Detailed Flaw Analysis (Use for Specific Flaw IDs)**
+- `get-static-flaw-info-by-id` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information including data paths and call stack for specific flaw IDs
+- `get-static-flaw-info-by-name` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information by application name and flaw ID
+
+#### 📊 **Policy & Compliance**
 - `get-policy-compliance-by-id` - Check policy compliance by application ID
 - `get-policy-compliance-by-name` - Check policy compliance by application name
+
+#### 🔐 **Software Composition Analysis (SCA)**
 - `get-latest-sca-results-by-id` - Get latest SCA scan results by application ID
 - `get-latest-sca-results-by-name` - Get latest SCA scan results by application name
 - `get-enhanced-sca-findings-by-id` - Enhanced SCA findings with filtering by application ID
 - `get-comprehensive-sca-analysis-by-id` - Advanced SCA analysis with exploitability by application ID
+
+#### 🧠 **AI Agent Guidance**
+> **For AI assistants**: When users ask about specific flaw IDs or need detailed technical analysis of vulnerabilities, use `get-static-flaw-info-by-name` or `get-static-flaw-info-by-id`. These tools provide:
+> - ✅ Detailed data flow paths showing how vulnerabilities occur
+> - ✅ Call stack information for debugging
+> - ✅ Specific source code file and line number details
+> - ✅ Technical vulnerability analysis beyond basic metadata
+> 
+> Use `get-findings-by-name`/`get-findings-by-id` for general overviews and finding counts.
 
 ### Command-Line Examples
 ```bash
@@ -140,6 +180,18 @@ npm run example:find-sca-apps
 
 # Get SCA results for specific application  
 npm run example:sca-results
+
+# Get detailed static flaw analysis (RECOMMENDED for specific flaw investigation)
+node examples/get-static-flaw-info.js <app_id> <flaw_id>
+
+# Compare general findings vs detailed flaw analysis approaches
+node examples/compare-analysis-approaches.js <app_name> <flaw_id>
+
+# Get detailed static flaw analysis by name (BEST for specific flaw investigation)
+node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
+
+# Get detailed static flaw analysis by ID (for specific flaw investigation)  
+node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id "your-app-id" --issue_id "123"
 
 # Test connection and basic functionality
 npm run test:connection

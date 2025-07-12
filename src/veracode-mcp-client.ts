@@ -16,7 +16,7 @@ interface ToolResult {
     error?: string;
 }
 
-class VeracodeMCPClient {
+export class VeracodeMCPClient {
     private veracodeClient: VeracodeClient;
 
     constructor() {
@@ -298,7 +298,7 @@ class VeracodeMCPClient {
                             cvssGte: toolCall.args.cvss_gte,
                             cve: toolCall.args.cve,
                             context: toolCall.args.context,
-                            includeAnnotations: toolCall.args.include_annotations,
+                            includeAnnotations: toolCall.args.include_annotations ?? true, // Default to true to show comments
                             newFindingsOnly: toolCall.args.new_findings_only,
                             policyViolation: toolCall.args.violates_policy,
                             page: toolCall.args.page,
@@ -322,10 +322,10 @@ class VeracodeMCPClient {
                                 violates_policy: toolCall.args.violates_policy
                             },
                             count: result.length,
-                            findings: result.slice(0, 25).map((finding: any) => { // Limit to 25 for performance
+                            findings: (toolCall.args.size ? result.slice(0, parseInt(toolCall.args.size)) : result).map((finding: any) => {
                                 const mappedFinding: any = {
-                                    // Core finding identification
-                                    flaw_id: finding.issue_id,
+                                    // Core finding identification - ensure flaw_id is always available
+                                    flaw_id: finding.issue_id || finding.flaw_id || finding.id || 'N/A',
                                     scan_type: finding.scan_type,
                                     description: finding.description,
                                     build_id: finding.build_id,
@@ -448,7 +448,7 @@ class VeracodeMCPClient {
                                 return mappedFinding;
                             }),
                             total_findings: result.length,
-                            showing: Math.min(25, result.length)
+                            showing: toolCall.args.size ? Math.min(parseInt(toolCall.args.size), result.length) : result.length
                         }
                     };
 
@@ -467,7 +467,7 @@ class VeracodeMCPClient {
                             cvssGte: toolCall.args.cvss_gte,
                             cve: toolCall.args.cve,
                             context: toolCall.args.context,
-                            includeAnnotations: toolCall.args.include_annotations,
+                            includeAnnotations: toolCall.args.include_annotations ?? true, // Default to true to show comments
                             newFindingsOnly: toolCall.args.new_findings_only,
                             policyViolation: toolCall.args.violates_policy,
                             page: toolCall.args.page,
@@ -491,10 +491,10 @@ class VeracodeMCPClient {
                                 violates_policy: toolCall.args.violates_policy
                             },
                             count: result.length,
-                            findings: result.slice(0, 25).map((finding: any) => { // Limit to 25 for performance
+                            findings: (toolCall.args.size ? result.slice(0, parseInt(toolCall.args.size)) : result).map((finding: any) => {
                                 const mappedFinding: any = {
-                                    // Core finding identification
-                                    flaw_id: finding.issue_id,
+                                    // Core finding identification - ensure flaw_id is always available
+                                    flaw_id: finding.issue_id || finding.flaw_id || finding.id || 'N/A',
                                     scan_type: finding.scan_type,
                                     description: finding.description,
                                     build_id: finding.build_id,
@@ -617,7 +617,286 @@ class VeracodeMCPClient {
                                 return mappedFinding;
                             }),
                             total_findings: result.length,
-                            showing: Math.min(25, result.length)
+                            showing: toolCall.args.size ? Math.min(parseInt(toolCall.args.size), result.length) : result.length
+                        }
+                    };
+
+                case "get-findings-paginated":
+                    if (!toolCall.args?.app_id) {
+                        return { success: false, error: "Missing required argument: app_id" };
+                    }
+                    const paginatedResult = await this.veracodeClient.getFindingsPaginated(
+                        toolCall.args.app_id,
+                        {
+                            scanType: toolCall.args.scan_type,
+                            severity: toolCall.args.severity,
+                            severityGte: toolCall.args.severity_gte,
+                            cwe: toolCall.args.cwe,
+                            cvss: toolCall.args.cvss,
+                            cvssGte: toolCall.args.cvss_gte,
+                            cve: toolCall.args.cve,
+                            context: toolCall.args.context,
+                            includeAnnotations: toolCall.args.include_annotations ?? true,
+                            newFindingsOnly: toolCall.args.new_findings_only,
+                            policyViolation: toolCall.args.violates_policy,
+                            page: toolCall.args.page || 0,
+                            size: toolCall.args.size || 100
+                        }
+                    );
+                    return {
+                        success: true,
+                        data: {
+                            app_id: toolCall.args.app_id,
+                            pagination: {
+                                current_page: paginatedResult.pagination.current_page,
+                                total_pages: paginatedResult.pagination.total_pages,
+                                total_elements: paginatedResult.pagination.total_elements,
+                                page_size: paginatedResult.pagination.page_size,
+                                has_next: paginatedResult.pagination.has_next,
+                                has_previous: paginatedResult.pagination.has_previous
+                            },
+                            filters: {
+                                scan_type: toolCall.args.scan_type,
+                                severity: toolCall.args.severity,
+                                severity_gte: toolCall.args.severity_gte,
+                                cwe: toolCall.args.cwe,
+                                cvss: toolCall.args.cvss,
+                                cvss_gte: toolCall.args.cvss_gte,
+                                cve: toolCall.args.cve,
+                                context: toolCall.args.context,
+                                new_findings_only: toolCall.args.new_findings_only,
+                                violates_policy: toolCall.args.violates_policy
+                            },
+                            findings: paginatedResult.findings.map((finding: any) => {
+                                // Use the same mapping logic as the existing get-findings case
+                                const mappedFinding: any = {
+                                    flaw_id: finding.issue_id || finding.flaw_id || finding.id || 'N/A',
+                                    scan_type: finding.scan_type,
+                                    description: finding.description,
+                                    build_id: finding.build_id,
+                                    context_guid: finding.context_guid,
+                                    context_type: finding.context_type,
+                                    count: finding.count,
+                                    violates_policy: finding.violates_policy,
+
+                                    // Finding status information
+                                    status: finding.finding_status?.status,
+                                    resolution: finding.finding_status?.resolution,
+                                    resolution_status: finding.finding_status?.resolution_status,
+                                    mitigation_review_status: finding.finding_status?.mitigation_review_status,
+                                    first_found_date: finding.finding_status?.first_found_date,
+                                    last_seen_date: finding.finding_status?.last_seen_date,
+                                    new: finding.finding_status?.new,
+                                    grace_period_expires_date: finding.grace_period_expires_date,
+
+                                    // CWE information
+                                    cwe_id: finding.finding_details?.cwe?.id,
+                                    cwe_name: finding.finding_details?.cwe?.name,
+                                    cwe_href: finding.finding_details?.cwe?.href,
+
+                                    // Severity and scoring
+                                    severity: finding.finding_details?.severity,
+                                    exploitability: finding.finding_details?.exploitability,
+
+                                    // CVE and CVSS information
+                                    cve: finding.finding_details?.cve?.name,
+                                    cvss: finding.finding_details?.cve?.cvss || finding.finding_details?.cvss,
+                                    cvss_vector: finding.finding_details?.cve?.vector,
+                                    cvss3_score: finding.finding_details?.cve?.cvss3?.score,
+                                    cvss3_severity: finding.finding_details?.cve?.cvss3?.severity,
+                                    cvss3_vector: finding.finding_details?.cve?.cvss3?.vector,
+                                    cve_href: finding.finding_details?.cve?.href,
+
+                                    // Annotations
+                                    annotations: finding.annotations?.map((annotation: any) => ({
+                                        action: annotation.action,
+                                        comment: annotation.comment,
+                                        created: annotation.created,
+                                        user_name: annotation.user_name,
+                                        remaining_risk: annotation.remaining_risk,
+                                        specifics: annotation.specifics,
+                                        technique: annotation.technique,
+                                        verification: annotation.verification
+                                    })) || []
+                                };
+
+                                // Add scan type specific details
+                                if (finding.scan_type === 'STATIC') {
+                                    mappedFinding.attack_vector = finding.finding_details?.attack_vector;
+                                    mappedFinding.file_line_number = finding.finding_details?.file_line_number;
+                                    mappedFinding.file_name = finding.finding_details?.file_name;
+                                    mappedFinding.file_path = finding.finding_details?.file_path;
+                                    mappedFinding.finding_category = finding.finding_details?.finding_category;
+                                    mappedFinding.module = finding.finding_details?.module;
+                                    mappedFinding.procedure = finding.finding_details?.procedure;
+                                    mappedFinding.relative_location = finding.finding_details?.relative_location;
+                                } else if (finding.scan_type === 'DYNAMIC') {
+                                    mappedFinding.attack_vector = finding.finding_details?.attack_vector;
+                                    mappedFinding.hostname = finding.finding_details?.hostname;
+                                    mappedFinding.port = finding.finding_details?.port;
+                                    mappedFinding.path = finding.finding_details?.path;
+                                    mappedFinding.plugin = finding.finding_details?.plugin;
+                                    mappedFinding.finding_category = finding.finding_details?.finding_category;
+                                    mappedFinding.url = finding.finding_details?.URL;
+                                    mappedFinding.vulnerable_parameter = finding.finding_details?.vulnerable_parameter;
+                                    mappedFinding.discovered_by_vsa = finding.finding_details?.discovered_by_vsa;
+                                } else if (finding.scan_type === 'MANUAL') {
+                                    mappedFinding.capec_id = finding.finding_details?.capec_id;
+                                    mappedFinding.exploit_desc = finding.finding_details?.exploit_desc;
+                                    mappedFinding.exploit_difficulty = finding.finding_details?.exploit_difficulty;
+                                    mappedFinding.input_vector = finding.finding_details?.input_vector;
+                                    mappedFinding.location = finding.finding_details?.location;
+                                    mappedFinding.module = finding.finding_details?.module;
+                                    mappedFinding.remediation_desc = finding.finding_details?.remediation_desc;
+                                    mappedFinding.severity_desc = finding.finding_details?.severity_desc;
+                                } else if (finding.scan_type === 'SCA') {
+                                    mappedFinding.component_id = finding.finding_details?.component_id;
+                                    mappedFinding.component_filename = finding.finding_details?.component_filename;
+                                    mappedFinding.version = finding.finding_details?.version;
+                                    mappedFinding.language = finding.finding_details?.language;
+                                    mappedFinding.product_id = finding.finding_details?.product_id;
+                                    mappedFinding.metadata = finding.finding_details?.metadata;
+                                    mappedFinding.component_paths = finding.finding_details?.["component_path(s)"]?.map((pathObj: any) => pathObj.path) ||
+                                        finding.finding_details?.component_path?.map((pathObj: any) => pathObj.path) || [];
+                                    mappedFinding.licenses = finding.finding_details?.licenses?.map((license: any) => ({
+                                        license_id: license.license_id,
+                                        risk_rating: license.risk_rating
+                                    })) || [];
+
+                                    if (finding.finding_details?.cve?.exploitability) {
+                                        const exploitability = finding.finding_details.cve.exploitability;
+                                        mappedFinding.exploitability_data = {
+                                            exploit_service_status: exploitability.exploit_service_status,
+                                            cve_full: exploitability.cve_full,
+                                            epss_status: exploitability.epss_status,
+                                            epss_score: exploitability.epss_score,
+                                            epss_percentile: exploitability.epss_percentile,
+                                            epss_score_date: exploitability.epss_score_date,
+                                            epss_model_version: exploitability.epss_model_version,
+                                            epss_citation: exploitability.epss_citation,
+                                            exploit_observed: exploitability.exploit_observed,
+                                            exploit_source: exploitability.exploit_source,
+                                            exploit_note: exploitability.exploit_note
+                                        };
+                                    }
+                                }
+
+                                return mappedFinding;
+                            }),
+                            count: paginatedResult.findings.length
+                        }
+                    };
+
+                case "get-all-findings":
+                    if (!toolCall.args?.app_id) {
+                        return { success: false, error: "Missing required argument: app_id" };
+                    }
+                    const allFindingsResult = await this.veracodeClient.getAllFindings(
+                        toolCall.args.app_id,
+                        {
+                            scanType: toolCall.args.scan_type,
+                            severity: toolCall.args.severity,
+                            severityGte: toolCall.args.severity_gte,
+                            cwe: toolCall.args.cwe,
+                            cvss: toolCall.args.cvss,
+                            cvssGte: toolCall.args.cvss_gte,
+                            cve: toolCall.args.cve,
+                            context: toolCall.args.context,
+                            includeAnnotations: toolCall.args.include_annotations ?? true,
+                            newFindingsOnly: toolCall.args.new_findings_only,
+                            policyViolation: toolCall.args.violates_policy
+                        }
+                    );
+                    return {
+                        success: true,
+                        data: {
+                            app_id: toolCall.args.app_id,
+                            total_findings: allFindingsResult.totalElements,
+                            total_pages_processed: allFindingsResult.totalPages,
+                            filters: {
+                                scan_type: toolCall.args.scan_type,
+                                severity: toolCall.args.severity,
+                                severity_gte: toolCall.args.severity_gte,
+                                cwe: toolCall.args.cwe,
+                                cvss: toolCall.args.cvss,
+                                cvss_gte: toolCall.args.cvss_gte,
+                                cve: toolCall.args.cve,
+                                context: toolCall.args.context,
+                                new_findings_only: toolCall.args.new_findings_only,
+                                violates_policy: toolCall.args.violates_policy
+                            },
+                            findings: allFindingsResult.findings.map((finding: any) => {
+                                // Same mapping logic as above
+                                const mappedFinding: any = {
+                                    flaw_id: finding.issue_id || finding.flaw_id || finding.id || 'N/A',
+                                    scan_type: finding.scan_type,
+                                    description: finding.description,
+                                    build_id: finding.build_id,
+                                    context_guid: finding.context_guid,
+                                    context_type: finding.context_type,
+                                    count: finding.count,
+                                    violates_policy: finding.violates_policy,
+                                    status: finding.finding_status?.status,
+                                    resolution: finding.finding_status?.resolution,
+                                    resolution_status: finding.finding_status?.resolution_status,
+                                    mitigation_review_status: finding.finding_status?.mitigation_review_status,
+                                    first_found_date: finding.finding_status?.first_found_date,
+                                    last_seen_date: finding.finding_status?.last_seen_date,
+                                    new: finding.finding_status?.new,
+                                    grace_period_expires_date: finding.grace_period_expires_date,
+                                    cwe_id: finding.finding_details?.cwe?.id,
+                                    cwe_name: finding.finding_details?.cwe?.name,
+                                    cwe_href: finding.finding_details?.cwe?.href,
+                                    severity: finding.finding_details?.severity,
+                                    exploitability: finding.finding_details?.exploitability,
+                                    cve: finding.finding_details?.cve?.name,
+                                    cvss: finding.finding_details?.cve?.cvss || finding.finding_details?.cvss,
+                                    cvss_vector: finding.finding_details?.cve?.vector,
+                                    cvss3_score: finding.finding_details?.cve?.cvss3?.score,
+                                    cvss3_severity: finding.finding_details?.cve?.cvss3?.severity,
+                                    cvss3_vector: finding.finding_details?.cve?.cvss3?.vector,
+                                    cve_href: finding.finding_details?.cve?.href,
+                                    annotations: finding.annotations?.map((annotation: any) => ({
+                                        action: annotation.action,
+                                        comment: annotation.comment,
+                                        created: annotation.created,
+                                        user_name: annotation.user_name,
+                                        remaining_risk: annotation.remaining_risk,
+                                        specifics: annotation.specifics,
+                                        technique: annotation.technique,
+                                        verification: annotation.verification
+                                    })) || []
+                                };
+
+                                // Scan type specific mappings (same as above)
+                                if (finding.scan_type === 'STATIC') {
+                                    Object.assign(mappedFinding, {
+                                        attack_vector: finding.finding_details?.attack_vector,
+                                        file_line_number: finding.finding_details?.file_line_number,
+                                        file_name: finding.finding_details?.file_name,
+                                        file_path: finding.finding_details?.file_path,
+                                        finding_category: finding.finding_details?.finding_category,
+                                        module: finding.finding_details?.module,
+                                        procedure: finding.finding_details?.procedure,
+                                        relative_location: finding.finding_details?.relative_location
+                                    });
+                                } else if (finding.scan_type === 'SCA') {
+                                    Object.assign(mappedFinding, {
+                                        component_id: finding.finding_details?.component_id,
+                                        component_filename: finding.finding_details?.component_filename,
+                                        version: finding.finding_details?.version,
+                                        language: finding.finding_details?.language,
+                                        component_paths: finding.finding_details?.["component_path(s)"]?.map((pathObj: any) => pathObj.path) || [],
+                                        licenses: finding.finding_details?.licenses?.map((license: any) => ({
+                                            license_id: license.license_id,
+                                            risk_rating: license.risk_rating
+                                        })) || []
+                                    });
+                                }
+
+                                return mappedFinding;
+                            }),
+                            count: allFindingsResult.findings.length
                         }
                     };
 
@@ -642,10 +921,54 @@ class VeracodeMCPClient {
                         }
                     };
 
+                case "get-static-flaw-info":
+                    if (!toolCall.args?.app_id || !toolCall.args?.issue_id) {
+                        return { success: false, error: "Missing required arguments: app_id and issue_id" };
+                    }
+                    result = await this.veracodeClient.getStaticFlawInfo(
+                        toolCall.args.app_id,
+                        toolCall.args.issue_id,
+                        toolCall.args.context
+                    );
+                    return {
+                        success: true,
+                        data: {
+                            app_id: toolCall.args.app_id,
+                            issue_id: toolCall.args.issue_id,
+                            context: toolCall.args.context,
+                            issue_summary: result.issue_summary,
+                            data_paths: result.data_paths,
+                            total_data_paths: result.data_paths.length,
+                            _links: result._links
+                        }
+                    };
+
+                case "get-static-flaw-info-by-name":
+                    if (!toolCall.args?.name || !toolCall.args?.issue_id) {
+                        return { success: false, error: "Missing required arguments: name and issue_id" };
+                    }
+                    result = await this.veracodeClient.getStaticFlawInfoByName(
+                        toolCall.args.name,
+                        toolCall.args.issue_id,
+                        toolCall.args.context
+                    );
+                    return {
+                        success: true,
+                        data: {
+                            application_name: toolCall.args.name,
+                            issue_id: toolCall.args.issue_id,
+                            context: toolCall.args.context,
+                            issue_summary: result.issue_summary,
+                            data_paths: result.data_paths,
+                            total_data_paths: result.data_paths.length,
+                            _links: result._links
+                        }
+                    };
+
                 default:
                     return {
                         success: false,
-                        error: `Unknown tool: ${toolCall.tool}. Available tools: get-applications, search-applications, get-application-details, get-application-details-by-name, get-scan-results, get-scan-results-by-name, get-findings, get-findings-by-name, get-policy-compliance`
+                        error: `Unknown tool: ${toolCall.tool}. Available tools: get-applications, search-applications, get-application-details-by-id, get-application-details-by-name, get-scan-results-by-id, get-scan-results-by-name, get-findings-by-id, get-findings-by-name, get-findings-paginated, get-all-findings, get-policy-compliance-by-id, get-static-flaw-info-by-id, get-static-flaw-info-by-name`
                     };
             }
 
@@ -708,18 +1031,26 @@ class VeracodeMCPClient {
             if (data.filters?.violates_policy !== undefined) filters.push(data.filters.violates_policy ? 'policy violations' : 'non-violations');
 
             if (filters.length > 0) output += ` (${filters.join(', ')})`;
-            output += `\nShowing first ${data.showing}:\n\n`;
+
+            // Clear information about what's being shown
+            if (data.showing === data.total_findings) {
+                output += `\nShowing all ${data.total_findings} findings:\n\n`;
+            } else {
+                output += `\nShowing ${data.showing} of ${data.total_findings} findings:\n\n`;
+            }
 
             data.findings.forEach((finding: any) => {
                 output += `• ${finding.scan_type} Finding`;
-                if (finding.flaw_id) {
-                    output += ` (Flaw ID: ${finding.flaw_id})`;
-                }
+                // Always show flaw ID - ensure it's always displayed
+                const flawIdValue = finding.flaw_id || 'N/A';
+                output += ` (Flaw ID: ${flawIdValue})`;
                 output += `\n`;
 
                 // Core vulnerability information
                 if (finding.cwe_id) {
-                    output += `  CWE-${finding.cwe_id}: ${finding.cwe_name}\n`;
+                    output += `  CWE: ${finding.cwe_id} - ${finding.cwe_name}\n`;
+                } else if (finding.cwe_name) {
+                    output += `  CWE: ${finding.cwe_name}\n`;
                 }
                 output += `  Severity: ${finding.severity}`;
                 if (finding.exploitability !== undefined) {
@@ -832,11 +1163,10 @@ class VeracodeMCPClient {
                         output += `  Licenses: ${licenseInfo}\n`;
                     }
                     if (finding.component_paths && finding.component_paths.length > 0) {
-                        output += `  Paths: ${finding.component_paths.slice(0, 2).join(', ')}`;
-                        if (finding.component_paths.length > 2) {
-                            output += ` (+${finding.component_paths.length - 2} more)`;
-                        }
-                        output += `\n`;
+                        output += `  Paths:\n`;
+                        finding.component_paths.forEach((path: string, index: number) => {
+                            output += `    ${index + 1}. ${path}\n`;
+                        });
                     }
 
                     // Exploitability data for SCA findings
@@ -857,18 +1187,15 @@ class VeracodeMCPClient {
 
                 // Annotations/mitigations
                 if (finding.annotations && finding.annotations.length > 0) {
-                    const recentAnnotations = finding.annotations.slice(-2); // Show last 2 annotations
-                    output += `  Recent Actions:\n`;
-                    recentAnnotations.forEach((annotation: any) => {
-                        output += `    ${annotation.action} by ${annotation.user_name}`;
+                    output += `  Actions/Mitigations:\n`;
+                    finding.annotations.forEach((annotation: any, index: number) => {
+                        output += `    ${index + 1}. ${annotation.action} by ${annotation.user_name}`;
                         if (annotation.created) {
                             const date = new Date(annotation.created).toLocaleDateString();
                             output += ` (${date})`;
                         }
                         if (annotation.comment) {
-                            const shortComment = annotation.comment.length > 50 ?
-                                annotation.comment.substring(0, 50) + '...' : annotation.comment;
-                            output += `: ${shortComment}`;
+                            output += `\n       Comment: ${annotation.comment}`;
                         }
                         output += `\n`;
                     });
@@ -880,11 +1207,30 @@ class VeracodeMCPClient {
                     output += `  Grace Period Expires: ${expiryDate}\n`;
                 }
 
-                // Description (truncated for readability)
+                // Description (full description)
                 if (finding.description) {
-                    const truncatedDesc = finding.description.length > 150 ?
-                        finding.description.substring(0, 150) + '...' : finding.description;
-                    output += `  Description: ${truncatedDesc}\n`;
+                    output += `  Description: ${finding.description}\n`;
+                }
+
+                // Add annotations/comments if they exist
+                if (finding.annotations && finding.annotations.length > 0) {
+                    output += `  Comments:\n`;
+                    finding.annotations.forEach((annotation: any, annotationIndex: number) => {
+                        output += `    ${annotationIndex + 1}. ${annotation.action} by ${annotation.user_name} (${annotation.created})\n`;
+                        output += `       Comment: ${annotation.comment}\n`;
+                        if (annotation.remaining_risk) {
+                            output += `       Remaining Risk: ${annotation.remaining_risk}\n`;
+                        }
+                        if (annotation.verification) {
+                            output += `       Verification: ${annotation.verification}\n`;
+                        }
+                        if (annotation.technique) {
+                            output += `       Technique: ${annotation.technique}\n`;
+                        }
+                        if (annotation.specifics) {
+                            output += `       Specifics: ${annotation.specifics}\n`;
+                        }
+                    });
                 }
 
                 output += `\n`;
@@ -954,15 +1300,12 @@ class VeracodeMCPClient {
                 });
             }
 
-            // Recent scans
+            // All scans
             if (data.scans && data.scans.length > 0) {
-                output += `Recent Scans:\n`;
-                data.scans.slice(0, 5).forEach((scan: any) => {
+                output += `All Scans:\n`;
+                data.scans.forEach((scan: any) => {
                     output += `  • ${scan.scan_type}: ${scan.status} (${scan.modified_date})\n`;
                 });
-                if (data.scans.length > 5) {
-                    output += `  ... and ${data.scans.length - 5} more scans\n`;
-                }
             }
 
             // Additional information
@@ -1015,6 +1358,44 @@ class VeracodeMCPClient {
             } else {
                 output += `\nNo policy violations found\n`;
             }
+        } else if (data.issue_summary && data.data_paths) {
+            // Static flaw info with data paths
+            const appIdentifier = data.app_id || data.application_name || "unknown";
+            output += `🔍 Static Flaw Data Paths for application ${appIdentifier}:\n\n`;
+
+            // Issue summary
+            output += `Issue Summary:\n`;
+            output += `  Application GUID: ${data.issue_summary.app_guid}\n`;
+            output += `  Issue ID: ${data.issue_summary.issue_id}\n`;
+            output += `  Build ID: ${data.issue_summary.build_id}\n`;
+            output += `  Name: ${data.issue_summary.name}\n`;
+            if (data.issue_summary.context) {
+                output += `  Context (Sandbox): ${data.issue_summary.context}\n`;
+            }
+            output += `\n`;
+
+            // Data paths
+            output += `Data Paths (${data.total_data_paths} path${data.total_data_paths !== 1 ? 's' : ''}):\n\n`;
+
+            data.data_paths.forEach((dataPath: any, pathIndex: number) => {
+                output += `Path ${pathIndex + 1}:\n`;
+                output += `  Module: ${dataPath.module_name}\n`;
+                output += `  Function: ${dataPath.function_name}\n`;
+                output += `  Local Path: ${dataPath.local_path}\n`;
+                output += `  Line Number: ${dataPath.line_number}\n`;
+                output += `  Steps: ${dataPath.steps}\n`;
+
+                if (dataPath.calls && dataPath.calls.length > 0) {
+                    output += `  Call Stack:\n`;
+                    dataPath.calls.forEach((call: any, callIndex: number) => {
+                        output += `    ${call.data_path}. ${call.function_name}() in ${call.file_name}:${call.line_number}\n`;
+                        if (call.file_path !== call.file_name) {
+                            output += `       Path: ${call.file_path}\n`;
+                        }
+                    });
+                }
+                output += `\n`;
+            });
         }
 
         return output;
@@ -1033,16 +1414,21 @@ async function main() {
         console.log("\nAvailable tools:");
         console.log("  get-applications");
         console.log("  search-applications --name <search_term>");
-        console.log("  get-application-details --app_id <app_id>");
+        console.log("  get-application-details-by-id --app_id <app_id>");
         console.log("  get-application-details-by-name --name <app_name>");
-        console.log("  get-scan-results --app_id <app_id> [--scan_type <type>]");
+        console.log("  get-scan-results-by-id --app_id <app_id> [--scan_type <type>]");
         console.log("  get-scan-results-by-name --name <app_name> [--scan_type <type>]");
-        console.log("  get-findings --app_id <app_id> [--scan_type <type>] [--severity <severity>]");
-        console.log("  get-policy-compliance --app_id <app_id>");
+        console.log("  get-findings-by-id --app_id <app_id> [--scan_type <type>] [--severity <severity>]");
+        console.log("  get-findings-by-name --name <app_name> [--scan_type <type>] [--severity <severity>]");
+        console.log("  get-policy-compliance-by-id --app_id <app_id>");
+        console.log("  get-static-flaw-info-by-id --app_id <app_id> --issue_id <issue_id> [--context <sandbox_guid>]");
+        console.log("  get-static-flaw-info-by-name --name <app_name> --issue_id <issue_id> [--context <sandbox_guid>]");
         console.log("\nExamples:");
         console.log("  node build/veracode-mcp-client.js search-applications --name goat");
         console.log("  node build/veracode-mcp-client.js get-applications");
-        console.log("  node build/veracode-mcp-client.js get-application-details --app_id 12345");
+        console.log("  node build/veracode-mcp-client.js get-application-details-by-id --app_id 12345");
+        console.log("  node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id 12345 --issue_id 67890");
+        console.log("  node build/veracode-mcp-client.js get-static-flaw-info-by-name --name \"My App\" --issue_id 67890");
         console.log("\n📝 For application names with special characters, use JSON input:");
         console.log("  echo '{\"tool\":\"search-applications\",\"args\":{\"name\":\"bob\\\" &&\"}}' | node build/veracode-mcp-client.js --json");
         console.log("  echo '{\"tool\":\"get-scan-results-by-name\",\"args\":{\"name\":\"& test\"}}' | node build/veracode-mcp-client.js --json");

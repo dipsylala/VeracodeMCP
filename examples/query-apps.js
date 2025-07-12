@@ -55,6 +55,15 @@ async function testVeracodeConnection() {
         console.log(`   Business Criticality: ${app.profile.business_criticality}`);
         console.log(`   Created: ${app.created}`);
         console.log(`   Teams: ${app.profile.teams?.map(t => t.team_name).join(", ") || "None"}`);
+
+        // Display profile and results URLs if available
+        if (app.app_profile_url) {
+          console.log(`   📱 Profile URL: ${app.app_profile_url}`);
+        }
+        if (app.results_url) {
+          console.log(`   📊 Results URL: ${app.results_url}`);
+        }
+
         console.log("");
       });
     }
