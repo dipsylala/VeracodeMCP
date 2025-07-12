@@ -380,7 +380,7 @@ export class VeracodeClient {
   /**
    * Generate Veracode authentication header using the correct multi-step HMAC process
    */
-  private async generateVeracodeAuthHeader(url: string, method: string): Promise<string> {
+  private generateVeracodeAuthHeader(url: string, method: string): string {
     const verStr = "vcode_request_version_1";
     const apiHost = new URL(this.apiClient.defaults.baseURL || 'https://api.veracode.com/').hostname;
     const data = `id=${this.apiId}&host=${apiHost}&url=${url}&method=${method}`;
@@ -418,45 +418,13 @@ export class VeracodeClient {
     const url = config.url?.startsWith('/') ? config.url : `/${config.url || ''}`;
 
     try {
-      const authHeader = this.generateVeracodeAuthHeaderSync(url, method);
+      const authHeader = this.generateVeracodeAuthHeader(url, method);
       config.headers.set("Authorization", authHeader);
     } catch (error) {
       throw new Error(`Authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return config;
-  }
-
-  /**
-   * Generate Veracode authentication header using the correct multi-step HMAC process (synchronous version)
-   */
-  private generateVeracodeAuthHeaderSync(url: string, method: string): string {
-    const verStr = "vcode_request_version_1";
-    const apiHost = new URL(this.apiClient.defaults.baseURL || 'https://api.veracode.com/').hostname;
-    const data = `id=${this.apiId}&host=${apiHost}&url=${url}&method=${method}`;
-    const timestamp = Date.now().toString();
-    const nonce = crypto.randomBytes(16).toString('hex');
-
-    try {
-      // Convert API key from hex to bytes
-      const keyBytes = this.getByteArray(this.apiKey);
-
-      // Step 1: HMAC the nonce with the key
-      const hashedNonce = this.hmac256(this.getByteArray(nonce), keyBytes);
-
-      // Step 2: HMAC the timestamp with the result from step 1
-      const hashedTimestamp = this.hmac256(Buffer.from(timestamp, 'utf8'), hashedNonce);
-
-      // Step 3: HMAC the version string with the result from step 2
-      const hashedVerStr = this.hmac256(Buffer.from(verStr, 'utf8'), hashedTimestamp);
-
-      // Step 4: HMAC the data with the result from step 3
-      const signature = this.bufferToHex(this.hmac256(Buffer.from(data, 'utf8'), hashedVerStr));
-
-      return `VERACODE-HMAC-SHA-256 id=${this.apiId},ts=${timestamp},nonce=${nonce},sig=${signature}`;
-    } catch (error) {
-      throw new Error(`Failed to generate auth header: ${error instanceof Error ? error.message : String(error)}`);
-    }
   }
 
   /**

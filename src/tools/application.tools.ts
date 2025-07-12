@@ -22,7 +22,7 @@ export const applicationTools: ToolHandler[] = [
                             teams: app.profile.teams?.map((team: any) => team.team_name) || [],
                             created_date: app.created,
                             modified_date: app.modified,
-                            // Include profile and results URLs
+                            // Veracode platform URLs for direct access
                             app_profile_url: app.app_profile_url,
                             results_url: app.results_url
                         }))
@@ -39,19 +39,19 @@ export const applicationTools: ToolHandler[] = [
 
     {
         name: "search-applications",
-        description: "Search applications by name",
+        description: "Search for applications by name (partial match)",
         schema: {
-            name: z.string().describe("Application name to search for (partial matches supported)"),
+            name: z.string().describe("Application name (or partial name) to search for"),
         },
         handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
             try {
-                const applications = await context.veracodeClient.searchApplications(args.name);
+                const searchResults = await context.veracodeClient.searchApplications(args.name);
                 return {
                     success: true,
                     data: {
-                        search_term: args.name,
-                        count: applications.length,
-                        applications: applications.map((app: any) => ({
+                        query: args.name,
+                        count: searchResults.length,
+                        applications: searchResults.map((app: any) => ({
                             name: app.profile.name,
                             id: app.guid,
                             legacy_id: app.id,
@@ -59,7 +59,7 @@ export const applicationTools: ToolHandler[] = [
                             teams: app.profile.teams?.map((team: any) => team.team_name) || [],
                             created_date: app.created,
                             modified_date: app.modified,
-                            // Include profile and results URLs
+                            // Veracode platform URLs for direct access
                             app_profile_url: app.app_profile_url,
                             results_url: app.results_url
                         }))

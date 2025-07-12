@@ -13,7 +13,7 @@ export const scanTools: ToolHandler[] = [
             try {
                 const result = await context.veracodeClient.getScanResults(args.app_id);
 
-                // Format the response to highlight the URLs
+                // Format scan results with essential fields
                 const formattedScans = result.map((scan: any) => ({
                     scan_id: scan.scan_id,
                     scan_type: scan.scan_type,
@@ -21,7 +21,6 @@ export const scanTools: ToolHandler[] = [
                     created_date: scan.created_date,
                     modified_date: scan.modified_date,
                     policy_compliance_status: scan.policy_compliance_status,
-                    // URLs are now full platform URLs
                     scan_url: scan.scan_url,
                     app_profile_url: scan.app_profile_url,
                     results_url: scan.results_url
@@ -53,7 +52,7 @@ export const scanTools: ToolHandler[] = [
             try {
                 const result = await context.veracodeClient.getScanResultsByName(args.name);
 
-                // Format the response to highlight the URLs
+                // Format scan results with essential fields
                 const formattedScans = result.map((scan: any) => ({
                     scan_id: scan.scan_id,
                     scan_type: scan.scan_type,
@@ -61,7 +60,6 @@ export const scanTools: ToolHandler[] = [
                     created_date: scan.created_date,
                     modified_date: scan.modified_date,
                     policy_compliance_status: scan.policy_compliance_status,
-                    // URLs are now full platform URLs
                     scan_url: scan.scan_url,
                     app_profile_url: scan.app_profile_url,
                     results_url: scan.results_url

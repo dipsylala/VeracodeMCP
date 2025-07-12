@@ -1,4 +1,15 @@
-# Veracode MCP Server and 💻 **Command-Line Client** (for scripts & automation)
+# Veracode MCP Serv### 🏗️ Technical Documentation
+- **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
+- **[🔍 HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
+- **[✅ CALL_VERIFICATION_REPORT.md](docs/CALL_VERIFICATION_REPORT.md)** - MCP-to-REST client integration verification
+- **[📊 PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** - Current project status and recent changes
+
+### 🔧 Development & Integration
+- **[💻 VSCODE_INTEGRATION.md](docs/VSCODE_INTEGRATION.md)** - VS Code development environment setup
+- **[💬 VSCODE_CHAT_INTEGRATION.md](docs/VSCODE_CHAT_INTEGRATION.md)** - VS Code Chat/Copilot MCP integration
+- **[🤝 CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contributing guidelines and development setup
+
+> 💡 **New to the project?** Start with [TESTING.md](docs/TESTING.md) → [INTEGRATION.md](docs/INTEGRATION.md) → [VSCODE_QUICK_START.md](docs/VSCODE_QUICK_START.md)**Command-Line Client** (for scripts & automation)
 - All the same tools available via command-line interface
 - Perfect for CI/CD pipelines, scripts, and automated workflows
 
@@ -12,9 +23,21 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 ## 📚 Documentation
 
-- **[📋 TESTING.md](TESTING.md)** - Comprehensive testing guide to verify your installation
-- **[🏗️ DESIGN.md](DESIGN.md)** - Architecture and implementation details
-- **[🔗 Integration Guides](VSCODE_INTEGRATION.md)** - VS Code and other IDE integrations
+### 🚀 Getting Started
+- **[📋 TESTING.md](docs/TESTING.md)** - Comprehensive testing guide to verify your installation
+- **[🔗 INTEGRATION.md](docs/INTEGRATION.md)** - Claude Desktop integration setup guide
+- **[⚡ VSCODE_QUICK_START.md](docs/VSCODE_QUICK_START.md)** - Quick VS Code setup and tasks guide
+
+### 🏗️ Technical Documentation
+- **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
+- **[� HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
+- **[✅ CALL_VERIFICATION_REPORT.md](docs/CALL_VERIFICATION_REPORT.md)** - MCP-to-REST client integration verification
+- **[📊 PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** - Current project status and recent changes
+
+### 🔧 Development & Integration
+- **[💻 VSCODE_INTEGRATION.md](docs/VSCODE_INTEGRATION.md)** - VS Code development environment setup
+- **[💬 VSCODE_CHAT_INTEGRATION.md](docs/VSCODE_CHAT_INTEGRATION.md)** - VS Code Chat/Copilot MCP integration
+- **[🤝 CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contributing guidelines and development setup
 
 ## ✨ Key Features
 
@@ -41,16 +64,13 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 - **VERACODE-HMAC-SHA-256 Authentication**: Secure API authentication using Veracode standards
 - **Credential Protection**: Environment-based credential management
 
-## 📸 Example: SCA Analysis
+## 📸 Example: Summary
 
-![Veracode MCP Client Test Run](images/test.png)
+![Veracode MCP Client Test Run showing a summary](images/summary.png)
 
-This example shows comprehensive SCA analysis capabilities:
-- ✅ Real-time connection to Veracode API
-- 🔍 Software composition analysis with vulnerability details
-- 🚨 Critical vulnerability identification with EPSS scores
-- ⚠️ License risk assessment and policy violations
-- 📋 Detailed component and dependency analysis
+## 📸 Example: Assisting with prioritization
+![Veracode MCP Client Test Run showing a prioritization example](images/prioritization.png)
+
 
 ## 🚀 Quick Start
 
@@ -116,7 +136,7 @@ Add to your `claude_desktop_config.json`:
 
 Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my applications?"*
 
-> 📋 **Need Help?** See [TESTING.md](TESTING.md) for comprehensive setup verification and troubleshooting.
+> 📋 **Need Help?** See [TESTING.md](docs/TESTING.md) for comprehensive setup verification and troubleshooting.
 
 ## 🔑 Getting Veracode API Credentials
 
@@ -260,7 +280,7 @@ The project includes VS Code tasks for streamlined development:
 - Integrated terminal examples
 - Input prompts for application names
 
-See [VSCODE_INTEGRATION.md](VSCODE_INTEGRATION.md) for setup details.
+See [VSCODE_INTEGRATION.md](docs/VSCODE_INTEGRATION.md) for setup details.
 
 ## 🔒 Security Considerations
 
@@ -272,6 +292,14 @@ See [VSCODE_INTEGRATION.md](VSCODE_INTEGRATION.md) for setup details.
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for detailed information on:
+
+- Development environment setup
+- Code style and testing guidelines  
+- Pull request process
+- Architecture details and extension points
+
+**Quick Start for Contributors:**
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes following TypeScript best practices
@@ -281,7 +309,7 @@ See [VSCODE_INTEGRATION.md](VSCODE_INTEGRATION.md) for setup details.
 7. Push to the branch (`git push origin feature/amazing-feature`)
 8. Open a Pull Request
 
-See [DESIGN.md](DESIGN.md) for architecture details and extension points.
+See [DESIGN.md](docs/DESIGN.md) for architecture details and [CONTRIBUTING.md](docs/CONTRIBUTING.md) for comprehensive guidelines.
 
 ## 📄 License
 
@@ -289,11 +317,16 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📚 Additional Resources
 
+### External Documentation
 - [Veracode API Documentation](https://docs.veracode.com/r/c_rest_intro)
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
 - [Claude for Desktop](https://claude.ai/download)
-- [Project Testing Guide](TESTING.md)
-- [Architecture Overview](DESIGN.md)
+
+### Project Documentation
+- [Complete Testing Guide](docs/TESTING.md)
+- [Architecture Overview](docs/DESIGN.md)
+- [Integration Setup](docs/INTEGRATION.md)
+- [Contributing Guidelines](docs/CONTRIBUTING.md)
 
 ## 🎯 Project Status
 
