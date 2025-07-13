@@ -5,16 +5,22 @@ import { logger } from './utils/logger.js';
 export interface VeracodeApplication {
   guid: string;
   id: number;
+  oid?: number;
+  organization_id?: number;
   created: string;
   modified: string;
+  last_completed_scan_date?: string;
   app_profile_url?: string;
   results_url?: string;
   scans?: VeracodeScan[];
   profile: {
     name: string;
-    business_criticality: string;
+    business_criticality: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW' | 'VERY_LOW';
     description?: string;
     tags?: string;
+    archer_app_name?: string;
+    git_repo_url?: string;
+    custom_kms_alias?: string;
     teams?: Array<{
       guid: string;
       team_id: number;
@@ -23,21 +29,76 @@ export interface VeracodeApplication {
     policies?: Array<{
       guid: string;
       name: string;
-      policy_compliance_status: string;
+      is_default?: boolean;
+      policy_compliance_status: 'DETERMINING' | 'NOT_ASSESSED' | 'DID_NOT_PASS' | 'CONDITIONAL_PASS' | 'PASSED' | 'VENDOR_REVIEW';
+    }>;
+    business_unit?: {
+      guid: string;
+      id: number;
+      name: string;
+    };
+    business_owners?: Array<{
+      name: string;
+      email: string;
+    }>;
+    settings?: {
+      sca_enabled: boolean;
+      dynamic_scan_approval_not_required: boolean;
+      static_scan_dependencies_allowed: boolean;
+      nextday_consultation_allowed: boolean;
+    };
+    custom_fields?: Array<{
+      name: string;
+      value: string;
+    }>;
+    custom_field_values?: Array<{
+      id: number;
+      field_name_id: number;
+      value: string;
+      app_custom_field_name?: {
+        id: number;
+        name: string;
+        organization_id: number;
+        sort_order: number;
+        created: string;
+        modified: string;
+      };
     }>;
   };
 }
 
 export interface VeracodeScan {
-  scan_id: string;
-  scan_type: string;
-  status: string;
-  created_date: string;
+  scan_id?: string;
+  scan_type: 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA';
+  status: 'CREATED' | 'UNPUBLISHED' | 'DELETED' | 'PARTIAL_PUBLISH' | 'PARTIAL_UNPUBLISH' | 'INCOMPLETE' | 'SCAN_SUBMITTED' | 'IN_QUEUE' | 'STOPPING' | 'PAUSING' | 'IN_PROGRESS' | 'ANALYSIS_ERRORS' | 'SCAN_CANCELED' | 'INTERNAL_REVIEW' | 'VERIFYING_RESULTS' | 'SUBMITTED_FOR_NTO_PRE_SCAN' | 'SUBMITTED_FOR_DYNAMIC_PRE_SCAN' | 'PRE_SCAN_FAILED' | 'READY_TO_SUBMIT' | 'NTO_PENDING_SUBMISSION' | 'PRE_SCAN_COMPLETE' | 'MODULE_SELECTION_REQUIRED' | 'PENDING_VENDOR_ACCEPTANCE' | 'SHOW_OSRDB' | 'PUBLISHED' | 'PUBLISHED_TO_VENDOR' | 'PUBLISHED_TO_ENTERPRISE' | 'PENDING_ACCOUNT_APPROVAL' | 'PENDING_LEGAL_AGREEMENT' | 'SCAN_IN_PROGRESS' | 'SCAN_IN_PROGRESS_PARTIAL_RESULTS_READY' | 'PROMOTE_IN_PROGRESS' | 'PRE_SCAN_CANCELED' | 'NTO_PRE_SCAN_CANCELED' | 'SCAN_HELD_APPROVAL' | 'SCAN_HELD_LOGIN_INSTRUCTIONS' | 'SCAN_HELD_LOGIN' | 'SCAN_HELD_INSTRUCTIONS' | 'SCAN_HELD_HOLDS_FINISHED' | 'SCAN_REQUESTED' | 'TIMEFRAMEPENDING_ID' | 'PAUSED_ID' | 'STATIC_VALIDATING_UPLOAD' | 'PUBLISHED_TO_ENTERPRISEINT';
+  internal_status?: string;
+  created_date?: string;
   modified_date: string;
   policy_compliance_status?: string;
   scan_url?: string;
   app_profile_url?: string;
   results_url?: string;
+}
+
+// Query parameters for getApplications API
+export interface ApplicationQueryParams {
+  business_unit?: string;
+  custom_field_names?: string[];
+  custom_field_values?: string[];
+  legacy_id?: number;
+  modified_after?: string;
+  name?: string;
+  page?: number;
+  size?: number;
+  policy?: string;
+  policy_compliance?: 'DETERMINING' | 'NOT_ASSESSED' | 'DID_NOT_PASS' | 'CONDITIONAL_PASS' | 'VENDOR_REVIEW' | 'PASSED';
+  policy_compliance_checked_after?: string;
+  policy_guid?: string;
+  scan_status?: Array<'CREATED' | 'UNPUBLISHED' | 'DELETED' | 'PARTIAL_PUBLISH' | 'PARTIAL_UNPUBLISH' | 'INCOMPLETE' | 'SCAN_SUBMITTED' | 'IN_QUEUE' | 'STOPPING' | 'PAUSING' | 'IN_PROGRESS' | 'ANALYSIS_ERRORS' | 'SCAN_CANCELED' | 'INTERNAL_REVIEW' | 'VERIFYING_RESULTS' | 'SUBMITTED_FOR_NTO_PRE_SCAN' | 'SUBMITTED_FOR_DYNAMIC_PRE_SCAN' | 'PRE_SCAN_FAILED' | 'READY_TO_SUBMIT' | 'NTO_PENDING_SUBMISSION' | 'PRE_SCAN_COMPLETE' | 'MODULE_SELECTION_REQUIRED' | 'PENDING_VENDOR_ACCEPTANCE' | 'SHOW_OSRDB' | 'PUBLISHED' | 'PUBLISHED_TO_VENDOR' | 'PUBLISHED_TO_ENTERPRISE' | 'PENDING_ACCOUNT_APPROVAL' | 'PENDING_LEGAL_AGREEMENT' | 'SCAN_IN_PROGRESS' | 'SCAN_IN_PROGRESS_PARTIAL_RESULTS_READY' | 'PROMOTE_IN_PROGRESS' | 'PRE_SCAN_CANCELED' | 'NTO_PRE_SCAN_CANCELED' | 'SCAN_HELD_APPROVAL' | 'SCAN_HELD_LOGIN_INSTRUCTIONS' | 'SCAN_HELD_LOGIN' | 'SCAN_HELD_INSTRUCTIONS' | 'SCAN_HELD_HOLDS_FINISHED' | 'SCAN_REQUESTED' | 'TIMEFRAMEPENDING_ID' | 'PAUSED_ID' | 'STATIC_VALIDATING_UPLOAD' | 'PUBLISHED_TO_ENTERPRISEINT'>;
+  scan_type?: 'STATIC' | 'DYNAMIC' | 'MANUAL';
+  sort_by_custom_field_name?: string;
+  tag?: string;
+  team?: string;
 }
 
 // Base annotation interface
@@ -194,7 +255,7 @@ export interface VeracodeFinding {
 }
 
 export interface VeracodePolicyCompliance {
-  policy_compliance_status: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS';
+  policy_compliance_status: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS' | 'NOT_ASSESSED';
   total_findings: number;
   policy_violations: number;
   findings_by_severity: Record<string, number>;
@@ -203,7 +264,6 @@ export interface VeracodePolicyCompliance {
     has_critical_violations: boolean;
     has_high_violations: boolean;
     total_open_violations: number;
-    compliance_percentage: number;
   };
 }
 
@@ -358,9 +418,7 @@ export class VeracodeClient {
     logger.info('VeracodeClient initialized successfully', 'CLIENT');
   }
 
-  /**
-   * Derive platform URL from API base URL for different regions
-   */
+  // Derive platform URL from API base URL for different regions
   private derivePlatformUrl(apiBaseUrl: string): string {
     try {
       const apiUrl = new URL(apiBaseUrl);
@@ -393,9 +451,7 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Convert hex string to byte array
-   */
+  // Convert hex string to byte array
   private getByteArray(hex: string): Buffer {
     const bytes = [];
     for (let i = 0; i < hex.length - 1; i += 2) {
@@ -404,25 +460,19 @@ export class VeracodeClient {
     return Buffer.from(bytes);
   }
 
-  /**
-   * Convert buffer to hex string
-   */
+  // Convert buffer to hex string
   private bufferToHex(buffer: Buffer): string {
     return buffer.toString('hex');
   }
 
-  /**
-   * HMAC-SHA256 function
-   */
+  // HMAC-SHA256 function
   private hmac256(data: Buffer, key: Buffer): Buffer {
     const hmac = crypto.createHmac('sha256', key);
     hmac.update(data);
     return hmac.digest();
   }
 
-  /**
-   * Generate Veracode authentication header using the correct multi-step HMAC process
-   */
+  // Generate Veracode authentication header using the correct multi-step HMAC process
   private generateVeracodeAuthHeader(url: string, method: string): string {
     const verStr = 'vcode_request_version_1';
     const apiHost = new URL(this.apiClient.defaults.baseURL || 'https://api.veracode.com/').hostname;
@@ -452,9 +502,7 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Add HMAC authentication headers to the request
-   */
+  // Add HMAC authentication headers to the request
   private addHMACAuthentication(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
     const method = config.method?.toUpperCase() || 'GET';
     // Ensure URL starts with / for the HMAC calculation
@@ -470,20 +518,33 @@ export class VeracodeClient {
     return config;
   }
 
-  /**
-   * Get list of all applications
-   */
-  async getApplications(): Promise<VeracodeApplication[]> {
+  // Get list of all applications
+  async getApplications(params?: ApplicationQueryParams): Promise<VeracodeApplication[]> {
     const startTime = Date.now();
-    logger.debug('Getting all applications', 'API');
+    logger.debug('Getting all applications', 'API', { params });
 
     try {
-      logger.apiRequest('GET', 'appsec/v1/applications');
-      const response = await this.apiClient.get('appsec/v1/applications');
+      // Build query string from parameters
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            if (Array.isArray(value)) {
+              value.forEach(v => queryParams.append(key, v.toString()));
+            } else {
+              queryParams.append(key, value.toString());
+            }
+          }
+        });
+      }
+
+      const url = `appsec/v1/applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      logger.apiRequest('GET', url);
+      const response = await this.apiClient.get(url);
       const responseTime = Date.now() - startTime;
 
       const applications = response.data._embedded?.applications || [];
-      logger.apiResponse('GET', 'appsec/v1/applications', response.status, responseTime, applications.length);
+      logger.apiResponse('GET', url, response.status, responseTime, applications.length);
 
       logger.debug('Processing application data', 'API', {
         count: applications.length,
@@ -513,32 +574,16 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Search applications by name
-   */
+  // Search applications by name
   async searchApplications(name: string): Promise<VeracodeApplication[]> {
     try {
-      const encodedName = encodeURIComponent(name);
-      const response = await this.apiClient.get(`appsec/v1/applications/?name=${encodedName}`);
-      const applications = response.data._embedded?.applications || [];
-
-      // Convert relative URLs to full platform URLs
-      return applications.map((app: any) => ({
-        ...app,
-        app_profile_url: this.convertToFullUrl(app.app_profile_url),
-        results_url: this.convertToFullUrl(app.results_url),
-        scans: app.scans?.map((scan: any) => ({
-          ...scan,
-          scan_url: this.convertToFullUrl(scan.scan_url)
-        }))
-      }));
+      return await this.getApplications({ name });
     } catch (error) {
       throw new Error(`Failed to search applications: ${this.getErrorMessage(error)}`);
     }
   }
-  /**
-   * Get detailed information about a specific application
-   */
+
+  // Get detailed information about a specific application
   async getApplicationDetails(appId: string): Promise<VeracodeApplication> {
     try {
       const response = await this.apiClient.get(`appsec/v1/applications/${appId}`);
@@ -559,10 +604,8 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Get detailed information about an application by its name
-   * First searches for the application, then retrieves full details
-   */
+  // Get detailed information about an application by its name
+  // First searches for the application, then retrieves full details
   async getApplicationDetailsByName(name: string): Promise<VeracodeApplication> {
     try {
       // First search for applications with this name
@@ -575,21 +618,19 @@ export class VeracodeClient {
       // If multiple results, look for exact match first
       let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
 
-      // If no exact match, use the first result but warn about it
+      // If no exact match, use the first result
       if (!targetApp) {
         targetApp = searchResults[0];
-        console.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`);
       }
 
-      // Get full details using the GUID
+      // Get the full details for the selected application
       return await this.getApplicationDetails(targetApp.guid);
     } catch (error) {
       throw new Error(`Failed to fetch application details by name: ${this.getErrorMessage(error)}`);
     }
   }
-  /**
-   * Get scan results for an application
-   */
+
+  // Get scan results for an application
   async getScanResults(appId: string, scanType?: string): Promise<VeracodeScan[]> {
     try {
       let url = `appsec/v1/applications/${appId}/scans`;
@@ -604,9 +645,7 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Get scan results for an application by name
-   */
+  // Get scan results for an application by name
   async getScanResultsByName(name: string, scanType?: string): Promise<VeracodeScan[]> {
     try {
       // First get the application details to get the app ID
@@ -619,9 +658,7 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Get findings for an application with pagination metadata
-   */
+  // Get findings for an application with pagination metadata
   async getFindingsPaginated(
     appId: string,
     options?: {
@@ -696,13 +733,12 @@ export class VeracodeClient {
         }
       };
     } catch (error) {
+      logger.apiError('GET', `appsec/v2/applications/${appId}/findings`, error);
       throw new Error(`Failed to fetch findings: ${this.getErrorMessage(error)}`);
     }
   }
 
-  /**
-   * Get findings for an application (backward compatibility)
-   */
+  // Get findings for an application (backward compatibility)
   async getFindingsById(
     appId: string,
     options?: {
@@ -730,10 +766,8 @@ export class VeracodeClient {
     return result.findings;
   }
 
-  /**
-   * Get findings for an application by its name
-   * First searches for the application, then retrieves findings
-   */
+  // Get findings for an application by its name
+  // First searches for the application, then retrieves findings
   async getFindingsByName(
     name: string,
     options?: {
@@ -831,649 +865,10 @@ export class VeracodeClient {
     }
   }
 
-  /**
-   * Get policy compliance status for an application by analyzing findings
-   * Policy compliance is determined by whether findings violate policy
-   */
-  async getPolicyCompliance(appId: string): Promise<{
-    policy_compliance_status: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS';
-    total_findings: number;
-    policy_violations: number;
-    findings_by_severity: Record<string, number>;
-    violations_by_severity: Record<string, number>;
-    summary: {
-      has_critical_violations: boolean;
-      has_high_violations: boolean;
-      total_open_violations: number;
-      compliance_percentage: number;
-    };
-  }> {
-    try {
-      // Get all findings for the application
-      const findings = await this.getFindingsById(appId, {
-        size: 500 // Get a large number of findings
-      });
 
-      let policyViolations = 0;
-      const findingsBySeverity: Record<string, number> = {};
-      const violationsBySeverity: Record<string, number> = {};
-      let hasCriticalViolations = false;
-      let hasHighViolations = false;
 
-      findings.forEach(finding => {
-        const severity = finding.finding_details.severity;
-        const severityName = this.getSeverityName(severity);
-
-        // Count all findings by severity
-        findingsBySeverity[severityName] = (findingsBySeverity[severityName] || 0) + 1;
-
-        // Count policy violations
-        if (finding.violates_policy && finding.finding_status.status === 'OPEN') {
-          policyViolations++;
-          violationsBySeverity[severityName] = (violationsBySeverity[severityName] || 0) + 1;
-
-          // Check for critical and high severity violations
-          if (severity === 5) hasCriticalViolations = true;
-          if (severity === 4) hasHighViolations = true;
-        }
-      });
-
-      // Determine compliance status
-      let complianceStatus: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS';
-      if (policyViolations === 0) {
-        complianceStatus = 'PASS';
-      } else if (hasCriticalViolations || (hasHighViolations && policyViolations > 10)) {
-        complianceStatus = 'FAIL';
-      } else {
-        complianceStatus = 'CONDITIONAL_PASS';
-      }
-
-      const compliancePercentage =
-        findings.length > 0 ? Math.round(((findings.length - policyViolations) / findings.length) * 100) : 100;
-
-      return {
-        policy_compliance_status: complianceStatus,
-        total_findings: findings.length,
-        policy_violations: policyViolations,
-        findings_by_severity: findingsBySeverity,
-        violations_by_severity: violationsBySeverity,
-        summary: {
-          has_critical_violations: hasCriticalViolations,
-          has_high_violations: hasHighViolations,
-          total_open_violations: policyViolations,
-          compliance_percentage: compliancePercentage
-        }
-      };
-    } catch (error) {
-      throw new Error(`Failed to analyze policy compliance: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Helper method to get severity name from numeric value
-   */
-  private getSeverityName(severity: number): string {
-    const severityNames = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
-    return severityNames[severity] || `Level ${severity}`;
-  }
-
-  /**
-   * Get the latest SCA scan results for an application
-   */
-  async getLatestSCAResults(appId: string): Promise<{
-    scan: VeracodeScan | null;
-    findings: VeracodeFinding[];
-    summary: {
-      totalFindings: number;
-      severityBreakdown: Record<string, number>;
-      policyViolations: number;
-      highRiskComponents: number;
-    };
-  }> {
-    try {
-      // Get all SCA scans for the application
-      const scaScans = await this.getScanResults(appId, 'SCA');
-
-      if (scaScans.length === 0) {
-        return {
-          scan: null,
-          findings: [],
-          summary: {
-            totalFindings: 0,
-            severityBreakdown: {},
-            policyViolations: 0,
-            highRiskComponents: 0
-          }
-        };
-      }
-
-      // Sort by creation date to get the latest scan
-      const latestScan = scaScans.sort(
-        (a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
-      )[0];
-
-      // Get all SCA findings for the application
-      const findings = await this.getFindingsById(appId, {
-        scanType: 'SCA',
-        size: 500 // Get a large number of findings
-      });
-
-      // Calculate summary statistics
-      const severityBreakdown: Record<string, number> = {};
-      let policyViolations = 0;
-      let highRiskComponents = 0;
-
-      findings.forEach(finding => {
-        const severity = finding.finding_details.severity;
-        const severityName = ['Very Low', 'Low', 'Medium', 'High', 'Very High'][severity] || `Level ${severity}`;
-
-        severityBreakdown[severityName] = (severityBreakdown[severityName] || 0) + 1;
-
-        if (finding.violates_policy) {
-          policyViolations++;
-        }
-
-        if (severity >= 3) {
-          // High and Very High severity
-          highRiskComponents++;
-        }
-      });
-
-      return {
-        scan: latestScan,
-        findings,
-        summary: {
-          totalFindings: findings.length,
-          severityBreakdown,
-          policyViolations,
-          highRiskComponents
-        }
-      };
-    } catch (error) {
-      throw new Error(`Failed to fetch latest SCA results: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Get SCA findings with enhanced filtering and details
-   */
-  async getSCAFindings(
-    appId: string,
-    options?: {
-      includeTransitiveDependencies?: boolean;
-      includeDirectDependencies?: boolean;
-      severityGte?: number;
-      cvssGte?: number;
-      onlyPolicyViolations?: boolean;
-      onlyNewFindings?: boolean;
-      includeLicenseInfo?: boolean;
-      page?: number;
-      size?: number;
-    }
-  ): Promise<VeracodeFinding[]> {
-    try {
-      const findingOptions: any = {
-        scanType: 'SCA',
-        includeAnnotations: true,
-        includeExpirationDate: true,
-        size: options?.size || 500,
-        page: options?.page || 0
-      };
-
-      // Add SCA-specific filters
-      if (options?.includeTransitiveDependencies && options?.includeDirectDependencies) {
-        findingOptions.scaDependencyMode = 'BOTH';
-      } else if (options?.includeTransitiveDependencies) {
-        findingOptions.scaDependencyMode = 'TRANSITIVE';
-      } else if (options?.includeDirectDependencies) {
-        findingOptions.scaDependencyMode = 'DIRECT';
-      }
-
-      if (options?.severityGte !== undefined) {
-        findingOptions.severityGte = options.severityGte;
-      }
-
-      if (options?.cvssGte !== undefined) {
-        findingOptions.cvssGte = options.cvssGte;
-      }
-
-      if (options?.onlyPolicyViolations) {
-        findingOptions.policyViolation = true;
-      }
-
-      if (options?.onlyNewFindings) {
-        findingOptions.newFindingsOnly = true;
-      }
-
-      return await this.getFindingsById(appId, findingOptions);
-    } catch (error) {
-      throw new Error(`Failed to fetch SCA findings: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Get SCA findings by application name with enhanced filtering
-   */
-  async getSCAFindingsByName(
-    name: string,
-    options?: {
-      includeTransitiveDependencies?: boolean;
-      includeDirectDependencies?: boolean;
-      severityGte?: number;
-      cvssGte?: number;
-      onlyPolicyViolations?: boolean;
-      onlyNewFindings?: boolean;
-      includeLicenseInfo?: boolean;
-      page?: number;
-      size?: number;
-    }
-  ): Promise<VeracodeFinding[]> {
-    try {
-      // First search for applications with this name
-      const searchResults = await this.searchApplications(name);
-
-      if (searchResults.length === 0) {
-        throw new Error(`No application found with name: ${name}`);
-      }
-
-      // If multiple results, look for exact match first
-      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
-
-      // If no exact match, use the first result but warn about it
-      if (!targetApp) {
-        targetApp = searchResults[0];
-        console.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`);
-      }
-
-      // Get SCA findings using the GUID
-      return await this.getSCAFindings(targetApp.guid, options);
-    } catch (error) {
-      throw new Error(`Failed to fetch SCA findings by name: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Get detailed static flaw information including data paths for a specific finding
-   * Returns detailed data path information for static analysis findings
-   */
-  async getStaticFlawInfo(appId: string, issueId: string | number, context?: string): Promise<VeracodeStaticFlawInfo> {
-    try {
-      let url = `appsec/v2/applications/${appId}/findings/${issueId}/static_flaw_info`;
-
-      if (context) {
-        url += `?context=${encodeURIComponent(context)}`;
-      }
-
-      const response = await this.apiClient.get(url);
-      return response.data;
-    } catch (error) {
-      throw new Error(`Failed to fetch static flaw info: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Get detailed static flaw information by application name and issue ID
-   * First searches for the application, then retrieves static flaw data paths
-   */
-  async getStaticFlawInfoByName(
-    name: string,
-    issueId: string | number,
-    context?: string
-  ): Promise<VeracodeStaticFlawInfo> {
-    try {
-      // First search for applications with this name
-      const searchResults = await this.searchApplications(name);
-
-      if (searchResults.length === 0) {
-        throw new Error(`No application found with name: ${name}`);
-      }
-
-      // If multiple results, look for exact match first
-      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
-
-      // If no exact match, use the first result but warn about it
-      if (!targetApp) {
-        targetApp = searchResults[0];
-        console.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`);
-      }
-
-      // Get static flaw info using the GUID
-      return await this.getStaticFlawInfo(targetApp.guid, issueId, context);
-    } catch (error) {
-      throw new Error(`Failed to fetch static flaw info by name: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Convert relative Veracode platform URLs to full URLs
-   * Platform URLs from the API are returned as relative paths like "HomeAppProfile:44841:806568"
-   * This method converts them to full URLs like "https://web.analysiscenter.veracode.com/HomeAppProfile:44841:806568"
-   */
-  private convertToFullUrl(url: string | undefined): string | undefined {
-    if (!url) return undefined;
-
-    // If already a full URL, return as-is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-
-    // Convert relative platform URL to full URL
-    return `${this.platformBaseUrl}/auth/index.jsp#${url}`;
-  }
-
-  /**
-   * Type guard to check if finding details are SCA-specific
-   */
-  isSCAFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeSCAFinding } {
-    return finding.scan_type === 'SCA';
-  }
-
-  /**
-   * Type guard to check if finding details are Static Analysis
-   */
-  isStaticFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeStaticFinding } {
-    return finding.scan_type === 'STATIC';
-  }
-
-  /**
-   * Type guard to check if finding details are Dynamic Analysis
-   */
-  isDynamicFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeDynamicFinding } {
-    return finding.scan_type === 'DYNAMIC';
-  }
-
-  /**
-   * Type guard to check if finding details are Manual
-   */
-  isManualFinding(finding: VeracodeFinding): finding is VeracodeFinding & { finding_details: VeracodeManualFinding } {
-    return finding.scan_type === 'MANUAL';
-  }
-
-  /**
-   * Enhanced findings retrieval with proper typing and detailed information
-   */
-  async getEnhancedFindings(
-    appId: string,
-    options?: {
-      scanType?: 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA';
-      severity?: number;
-      severityGte?: number;
-      cwe?: number[];
-      cvss?: number;
-      cvssGte?: number;
-      cve?: string;
-      context?: 'APPLICATION' | 'SANDBOX';
-      findingCategory?: number[];
-      includeAnnotations?: boolean;
-      includeExpirationDate?: boolean;
-      mitigatedAfter?: string;
-      newFindingsOnly?: boolean;
-      scaDependencyMode?: 'UNKNOWN' | 'DIRECT' | 'TRANSITIVE' | 'BOTH';
-      scaScanMode?: 'UPLOAD' | 'AGENT' | 'BOTH';
-      policyViolation?: boolean;
-      page?: number;
-      size?: number;
-    }
-  ): Promise<{
-    findings: VeracodeFinding[];
-    summary: {
-      totalFindings: number;
-      byType: Record<string, number>;
-      bySeverity: Record<string, number>;
-      policyViolations: number;
-      newFindings: number;
-    };
-  }> {
-    try {
-      const findings = await this.getFindingsById(appId, {
-        scanType: options?.scanType,
-        severity: options?.severity,
-        severityGte: options?.severityGte,
-        cwe: options?.cwe,
-        cvss: options?.cvss,
-        cvssGte: options?.cvssGte,
-        cve: options?.cve,
-        context: options?.context,
-        findingCategory: options?.findingCategory,
-        includeAnnotations: options?.includeAnnotations ?? true,
-        includeExpirationDate: options?.includeExpirationDate ?? true,
-        mitigatedAfter: options?.mitigatedAfter,
-        newFindingsOnly: options?.newFindingsOnly,
-        scaDependencyMode: options?.scaDependencyMode,
-        scaScanMode: options?.scaScanMode,
-        policyViolation: options?.policyViolation,
-        page: options?.page,
-        size: options?.size
-      });
-
-      // Generate summary statistics
-      const byType: Record<string, number> = {};
-      const bySeverity: Record<string, number> = {};
-      let policyViolations = 0;
-      let newFindings = 0;
-
-      findings.forEach(finding => {
-        // Count by scan type
-        byType[finding.scan_type] = (byType[finding.scan_type] || 0) + 1;
-
-        // Count by severity
-        const severity = finding.finding_details.severity;
-        const severityName = ['Very Low', 'Low', 'Medium', 'High', 'Very High'][severity] || `Level ${severity}`;
-        bySeverity[severityName] = (bySeverity[severityName] || 0) + 1;
-
-        // Count policy violations
-        if (finding.violates_policy) {
-          policyViolations++;
-        }
-
-        // Count new findings
-        if (finding.finding_status.new) {
-          newFindings++;
-        }
-      });
-
-      return {
-        findings,
-        summary: {
-          totalFindings: findings.length,
-          byType,
-          bySeverity,
-          policyViolations,
-          newFindings
-        }
-      };
-    } catch (error) {
-      throw new Error(`Failed to fetch enhanced findings: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Get SCA findings with comprehensive details including exploitability
-   */
-  async getComprehensiveSCAFindings(
-    appId: string,
-    options?: {
-      includeTransitiveDependencies?: boolean;
-      includeDirectDependencies?: boolean;
-      severityGte?: number;
-      cvssGte?: number;
-      onlyPolicyViolations?: boolean;
-      onlyNewFindings?: boolean;
-      onlyWithExploits?: boolean;
-      includeLicenseInfo?: boolean;
-      page?: number;
-      size?: number;
-    }
-  ): Promise<{
-    findings: VeracodeFinding[];
-    scaAnalysis: {
-      totalComponents: number;
-      vulnerableComponents: number;
-      highRiskComponents: number;
-      exploitableFindings: number;
-      licensingIssues: number;
-      directDependencies: number;
-      transitiveDependencies: number;
-      severityBreakdown: Record<string, number>;
-      topVulnerabilities: Array<{
-        cve: string;
-        component: string;
-        version: string;
-        cvss: number;
-        exploitable: boolean;
-      }>;
-    };
-  }> {
-    try {
-      const enhancedResult = await this.getEnhancedFindings(appId, {
-        scanType: 'SCA',
-        includeAnnotations: true,
-        includeExpirationDate: true,
-        severityGte: options?.severityGte,
-        cvssGte: options?.cvssGte,
-        policyViolation: options?.onlyPolicyViolations,
-        newFindingsOnly: options?.onlyNewFindings,
-        scaDependencyMode:
-          options?.includeTransitiveDependencies && options?.includeDirectDependencies
-            ? 'BOTH'
-            : options?.includeTransitiveDependencies
-              ? 'TRANSITIVE'
-              : options?.includeDirectDependencies
-                ? 'DIRECT'
-                : undefined,
-        page: options?.page,
-        size: options?.size || 500
-      });
-
-      const findings = enhancedResult.findings;
-
-      // Filter for exploitable findings if requested
-      const filteredFindings = options?.onlyWithExploits
-        ? findings.filter(f => this.isSCAFinding(f) && f.finding_details.cve?.exploitability?.exploit_observed)
-        : findings;
-
-      // Analyze SCA-specific data
-      const componentMap = new Map<string, Set<string>>();
-      let vulnerableComponents = 0;
-      let highRiskComponents = 0;
-      let exploitableFindings = 0;
-      let licensingIssues = 0;
-      let directDependencies = 0;
-      let transitiveDependencies = 0;
-      const topVulnerabilities: Array<{
-        cve: string;
-        component: string;
-        version: string;
-        cvss: number;
-        exploitable: boolean;
-      }> = [];
-
-      filteredFindings.forEach(finding => {
-        if (this.isSCAFinding(finding)) {
-          const details = finding.finding_details;
-
-          // Track unique components
-          const componentKey = `${details.component_filename}:${details.version}`;
-          if (!componentMap.has(componentKey)) {
-            componentMap.set(componentKey, new Set());
-          }
-
-          // Count vulnerabilities per component
-          if (details.cve) {
-            componentMap.get(componentKey)!.add(details.cve.name);
-            vulnerableComponents++;
-
-            // Track top vulnerabilities
-            topVulnerabilities.push({
-              cve: details.cve.name,
-              component: details.component_filename || 'Unknown',
-              version: details.version || 'Unknown',
-              cvss: details.cve.cvss,
-              exploitable: details.cve.exploitability?.exploit_observed || false
-            });
-          }
-
-          // Count high-risk components (severity 4-5)
-          if (details.severity >= 4) {
-            highRiskComponents++;
-          }
-
-          // Count exploitable findings
-          if (details.cve?.exploitability?.exploit_observed) {
-            exploitableFindings++;
-          }
-
-          // Count licensing issues
-          if (details.licenses && details.licenses.some(l => parseInt(l.risk_rating) > 2)) {
-            licensingIssues++;
-          }
-
-          // Count dependency types based on metadata
-          if (details.metadata?.includes('DIRECT')) {
-            directDependencies++;
-          } else if (details.metadata?.includes('TRANSITIVE')) {
-            transitiveDependencies++;
-          }
-        }
-      });
-
-      // Sort top vulnerabilities by CVSS score
-      topVulnerabilities.sort((a, b) => b.cvss - a.cvss);
-
-      return {
-        findings: filteredFindings,
-        scaAnalysis: {
-          totalComponents: componentMap.size,
-          vulnerableComponents,
-          highRiskComponents,
-          exploitableFindings,
-          licensingIssues,
-          directDependencies,
-          transitiveDependencies,
-          severityBreakdown: enhancedResult.summary.bySeverity,
-          topVulnerabilities: topVulnerabilities.slice(0, 10) // Top 10 vulnerabilities
-        }
-      };
-    } catch (error) {
-      throw new Error(`Failed to fetch comprehensive SCA findings: ${this.getErrorMessage(error)}`);
-    }
-  }
-
-  /**
-   * Extract error message from axios error
-   */
-  private getErrorMessage(error: any): string {
-    if (error.response) {
-      // Server responded with error status
-      const status = error.response.status;
-      const data = error.response.data;
-
-      if (status === 401) {
-        return 'Authentication failed. Please check your API credentials.';
-      } else if (status === 403) {
-        return 'Access forbidden. You may not have permission to access this resource.';
-      } else if (status === 404) {
-        return 'Resource not found.';
-      } else if (status === 429) {
-        return 'Rate limit exceeded. Please try again later.';
-      } else if (data && typeof data === 'object') {
-        return data.message || data.error || `HTTP ${status}`;
-      } else {
-        return `HTTP ${status}`;
-      }
-    } else if (error.request) {
-      // Request made but no response received
-      return 'No response received from Veracode API. Please check your network connection.';
-    } else {
-      // Something else happened
-      return error.message || 'Unknown error occurred';
-    }
-  }
-
-  /**
-   * Get all findings for an application across multiple pages
-   * Automatically handles pagination to retrieve all findings
-   */
+  // Get findings for an application across multiple pages
+  // Automatically handles pagination to retrieve all findings
   async getAllFindings(
     appId: string,
     options?: {
@@ -1544,5 +939,179 @@ export class VeracodeClient {
     } catch (error) {
       throw new Error(`Failed to fetch all findings: ${this.getErrorMessage(error)}`);
     }
+  }
+
+  // Get policy compliance for an application
+  async getPolicyCompliance(appId: string): Promise<VeracodePolicyCompliance> {
+    try {
+      // Get the application details which includes policy information
+      const application = await this.getApplicationDetails(appId);
+
+      // Get findings to calculate policy violations
+      const findings = await this.getFindingsById(appId, { policyViolation: true });
+
+      // Extract policy compliance from application details
+      const policies = application.profile.policies || [];
+      const primaryPolicy = policies.find(p => p.is_default) || policies[0];
+
+      // Count findings by severity
+      const findingsBySeverity: Record<string, number> = {
+        '5': 0, // Very High
+        '4': 0, // High  
+        '3': 0, // Medium
+        '2': 0, // Low
+        '1': 0  // Very Low
+      };
+
+      const violationsBySeverity: Record<string, number> = {
+        '5': 0, // Very High
+        '4': 0, // High
+        '3': 0, // Medium
+        '2': 0, // Low
+        '1': 0  // Very Low
+      };
+
+      let policyViolations = 0;
+
+      findings.forEach(finding => {
+        const severity = String(finding.finding_details.severity || 0);
+        if (findingsBySeverity[severity] !== undefined) {
+          findingsBySeverity[severity]++;
+        }
+
+        if (finding.violates_policy) {
+          policyViolations++;
+          if (violationsBySeverity[severity] !== undefined) {
+            violationsBySeverity[severity]++;
+          }
+        }
+      });
+
+      const hasCriticalViolations = violationsBySeverity['5'] > 0;
+      const hasHighViolations = violationsBySeverity['4'] > 0;
+      const totalOpenViolations = policyViolations;
+
+      // Determine compliance status
+      let complianceStatus: 'PASS' | 'FAIL' | 'CONDITIONAL_PASS' = 'NOT_ASSESSED' as any;
+      if (primaryPolicy) {
+        const policyStatus = primaryPolicy.policy_compliance_status;
+        switch (policyStatus) {
+          case 'PASSED':
+            complianceStatus = 'PASS';
+            break;
+          case 'DID_NOT_PASS':
+            complianceStatus = 'FAIL';
+            break;
+          case 'CONDITIONAL_PASS':
+            complianceStatus = 'CONDITIONAL_PASS';
+            break;
+          default:
+            complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
+        }
+      } else {
+        complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
+      }
+
+      return {
+        policy_compliance_status: complianceStatus,
+        total_findings: findings.length,
+        policy_violations: policyViolations,
+        findings_by_severity: findingsBySeverity,
+        violations_by_severity: violationsBySeverity,
+        summary: {
+          has_critical_violations: hasCriticalViolations,
+          has_high_violations: hasHighViolations,
+          total_open_violations: totalOpenViolations
+        }
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch policy compliance: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get policy compliance for an application by name
+  async getPolicyComplianceByName(name: string): Promise<VeracodePolicyCompliance> {
+    try {
+      // First get the application to get its ID
+      const application = await this.getApplicationDetailsByName(name);
+
+      // Then get policy compliance using the ID
+      return await this.getPolicyCompliance(application.guid);
+    } catch (error) {
+      throw new Error(`Failed to fetch policy compliance by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get detailed static flaw information
+  async getStaticFlawInfo(appId: string, issueId: string, context?: string): Promise<VeracodeStaticFlawInfo> {
+    try {
+      let url = `appsec/v2/applications/${appId}/findings/${issueId}/static_flaw_info`;
+      if (context) {
+        url += `?context=${encodeURIComponent(context)}`;
+      }
+
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = this.getErrorMessage(error);
+
+      // Check if this is a 404 error, which might indicate the endpoint is not available
+      if (error?.response?.status === 404) {
+        throw new Error(`Static flaw info not available for issue ID ${issueId}. This could mean:
+1. The static_flaw_info endpoint is not available for this finding type
+2. The finding is not a static analysis finding with data path information
+3. The endpoint may be deprecated or require different permissions
+4. Static flaw info is only available for certain types of vulnerabilities
+
+For general flaw information, use get-findings-by-name or get-findings-by-id instead.
+Original error: ${errorMessage}`);
+      }
+
+      throw new Error(`Failed to fetch static flaw info: ${errorMessage}`);
+    }
+  }
+
+  // Get detailed static flaw information by application name
+  async getStaticFlawInfoByName(name: string, issueId: string, context?: string): Promise<VeracodeStaticFlawInfo> {
+    try {
+      // First get the application to get its ID
+      const application = await this.getApplicationDetailsByName(name);
+
+      // Then get static flaw info using the ID
+      return await this.getStaticFlawInfo(application.guid, issueId, context);
+    } catch (error) {
+      throw new Error(`Failed to fetch static flaw info by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Utility method to convert relative platform URLs to full URLs
+  private convertToFullUrl(relativePath?: string): string | undefined {
+    if (!relativePath) return undefined;
+
+    // If already a full URL, return as-is
+    if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
+      return relativePath;
+    }
+
+    // Convert relative path to full platform URL
+    const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+    return `${this.platformBaseUrl}${cleanPath}`;
+  }
+
+  // Utility method to extract error messages from various error types
+  private getErrorMessage(error: any): string {
+    if (error?.response?.data?.message) {
+      return error.response.data.message;
+    }
+    if (error?.response?.data?.error) {
+      return error.response.data.error;
+    }
+    if (error?.response?.data) {
+      return JSON.stringify(error.response.data);
+    }
+    if (error?.message) {
+      return error.message;
+    }
+    return String(error);
   }
 }

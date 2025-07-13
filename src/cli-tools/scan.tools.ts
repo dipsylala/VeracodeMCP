@@ -1,19 +1,18 @@
-import { VeracodeClient } from '../veracode-rest-client.js';
-import { CLIToolHandler, ToolResponse } from './cli-types.js';
+import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 
 /**
- * Create scan result tools for CLI
+ * Create scan tools for CLI
  */
-export function createScanTools(client: VeracodeClient): CLIToolHandler[] {
+export function createScanTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-scan-results',
-      handler: async(args: any): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.app_id) {
           return { success: false, error: 'Missing required argument: app_id' };
         }
 
-        const result = await client.getScanResults(args.app_id, args.scan_type);
+        const result = await context.veracodeClient.getScanResults(args.app_id, args.scan_type);
         return {
           success: true,
           data: {
@@ -35,13 +34,13 @@ export function createScanTools(client: VeracodeClient): CLIToolHandler[] {
 
     {
       name: 'get-scan-results-by-name',
-      handler: async(args: any): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }
 
         // First search for applications with this name
-        const searchResults = await client.searchApplications(args.name);
+        const searchResults = await context.veracodeClient.searchApplications(args.name);
         if (searchResults.length === 0) {
           return { success: false, error: `No application found with name: ${args.name}` };
         }
@@ -55,7 +54,7 @@ export function createScanTools(client: VeracodeClient): CLIToolHandler[] {
           console.warn(`No exact match found for "${args.name}". Using first result: "${targetApp.profile.name}"`);
         }
 
-        const result = await client.getScanResults(targetApp.guid, args.scan_type);
+        const result = await context.veracodeClient.getScanResults(targetApp.guid, args.scan_type);
         return {
           success: true,
           data: {

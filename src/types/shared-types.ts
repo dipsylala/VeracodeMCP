@@ -1,19 +1,11 @@
-/**
- * Shared types used by both MCP and CLI systems
- */
-
-/**
- * Standard tool response/result interface
- */
+// Standard tool response/result interface
 export interface ToolResponse {
   success: boolean;
   data?: any;
   error?: string;
 }
 
-/**
- * Tool categories for organization - used by both MCP and CLI
- */
+// Tool categories for organization - used by both MCP and CLI
 export enum ToolCategory {
   APPLICATION = 'application',
   SCAN = 'scan',
@@ -23,9 +15,7 @@ export enum ToolCategory {
   POLICY = 'policy'
 }
 
-/**
- * Base tool call interface
- */
+// Base tool call interface
 export interface ToolCall {
   tool: string;
   args?: Record<string, any>;

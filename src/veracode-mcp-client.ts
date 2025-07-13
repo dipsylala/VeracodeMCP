@@ -22,7 +22,7 @@ interface ToolResult {
 
 export class VeracodeMCPClient {
   private veracodeClient: VeracodeClient;
-  private toolRegistry: CLIToolRegistry;
+  private cliToolRegistry: CLIToolRegistry;
   constructor() {
     logger.debug('Initializing VeracodeMCPClient', 'CLIENT');
 
@@ -45,7 +45,7 @@ export class VeracodeMCPClient {
     logger.debug('Veracode client created', 'CLIENT');
 
     logger.debug('About to initialize CLI tool registry', 'CLIENT');
-    this.toolRegistry = new CLIToolRegistry(this.veracodeClient);
+    this.cliToolRegistry = new CLIToolRegistry(this.veracodeClient);
     logger.debug('CLI tool registry created', 'CLIENT');
 
     logger.info('VeracodeMCPClient initialized successfully', 'CLIENT');
@@ -67,7 +67,7 @@ export class VeracodeMCPClient {
       }
       console.log();
 
-      const result = await this.toolRegistry.callTool(toolCall);
+      const result = await this.cliToolRegistry.executeTool(toolCall);
 
       const executionTime = Date.now() - startTime;
       logger.debug('Tool call completed', 'CLIENT', {
@@ -92,7 +92,7 @@ export class VeracodeMCPClient {
   }
 
   getAvailableTools(): string[] {
-    return this.toolRegistry.getAvailableTools();
+    return this.cliToolRegistry.getAvailableTools();
   }
 }
 
@@ -115,7 +115,7 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
           input += chunk;
         }
       });
-      process.stdin.on('end', async() => {
+      process.stdin.on('end', async () => {
         try {
           const parsed = JSON.parse(input.trim());
           const client = new VeracodeMCPClient();
@@ -157,7 +157,7 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
         }
       });
       return null; // Async handling
-    } catch (error) {}
+    } catch (error) { }
   }
 
   const tool = args[0];
@@ -193,48 +193,48 @@ function showUsage(client: VeracodeMCPClient) {
   console.log('Available tools:');
   availableTools.forEach(tool => {
     switch (tool) {
-    case 'get-applications':
-      console.log('  get-applications');
-      break;
-    case 'search-applications':
-      console.log('  search-applications --name <search_term>');
-      break;
-    case 'get-application-details':
-      console.log('  get-application-details-by-id --app_id <app_id>');
-      break;
-    case 'get-application-details-by-name':
-      console.log('  get-application-details-by-name --name <app_name>');
-      break;
-    case 'get-scan-results':
-      console.log('  get-scan-results-by-id --app_id <app_id> [--scan_type <type>]');
-      break;
-    case 'get-scan-results-by-name':
-      console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
-      break;
-    case 'get-findings':
-      console.log('  get-findings-by-id --app_id <app_id> [--scan_type <type>] [--severity <severity>]');
-      break;
-    case 'get-findings-by-name':
-      console.log(
-        '  get-findings-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>]'
-      );
-      break;
-    case 'get-sca-results-by-name':
-      console.log(
-        '  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]'
-      );
-      break;
-    case 'get-policy-compliance':
-      console.log('  get-policy-compliance-by-id --app_id <app_id>');
-      break;
-    case 'get-static-flaw-info':
-      console.log('  get-static-flaw-info-by-id --app_id <app_id> --issue_id <issue_id> [--context <sandbox_guid>]');
-      break;
-    case 'get-static-flaw-info-by-name':
-      console.log(
-        '  get-static-flaw-info-by-name --name <app_name> --issue_id <issue_id> [--context <sandbox_guid>]'
-      );
-      break;
+      case 'get-applications':
+        console.log('  get-applications');
+        break;
+      case 'search-applications':
+        console.log('  search-applications --name <search_term>');
+        break;
+      case 'get-application-details':
+        console.log('  get-application-details-by-id --app_id <app_id>');
+        break;
+      case 'get-application-details-by-name':
+        console.log('  get-application-details-by-name --name <app_name>');
+        break;
+      case 'get-scan-results':
+        console.log('  get-scan-results-by-id --app_id <app_id> [--scan_type <type>]');
+        break;
+      case 'get-scan-results-by-name':
+        console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
+        break;
+      case 'get-findings':
+        console.log('  get-findings-by-id --app_id <app_id> [--scan_type <type>] [--severity <severity>]');
+        break;
+      case 'get-findings-by-name':
+        console.log(
+          '  get-findings-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>]'
+        );
+        break;
+      case 'get-sca-results-by-name':
+        console.log(
+          '  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]'
+        );
+        break;
+      case 'get-policy-compliance':
+        console.log('  get-policy-compliance-by-id --app_id <app_id>');
+        break;
+      case 'get-static-flaw-info':
+        console.log('  get-static-flaw-info-by-id --app_id <app_id> --issue_id <issue_id> [--context <sandbox_guid>]');
+        break;
+      case 'get-static-flaw-info-by-name':
+        console.log(
+          '  get-static-flaw-info-by-name --name <app_name> --issue_id <issue_id> [--context <sandbox_guid>]'
+        );
+        break;
     }
   });
 

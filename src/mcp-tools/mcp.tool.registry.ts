@@ -1,51 +1,49 @@
-import { MCPToolHandler } from './mcp-types.js';
-import { ToolCategory } from '../types/shared-types.js';
-import { applicationTools } from './application.tools.js';
-import { findingsTools } from './findings.tools.js';
-import { staticAnalysisTools } from './static-analysis.tools.js';
-import { scaTools } from './sca.tools.js';
-import { scanTools } from './scan.tools.js';
-import { policyTools } from './policy.tools.js';
+import { MCPToolHandler, ToolContext } from './mcp-types.js';
+import { ToolCategory, ToolCall, ToolResponse } from '../types/shared-types.js';
+import { VeracodeClient } from '../veracode-rest-client.js';
+import { createApplicationTools } from './application.tools.js';
+import { createFindingsTools } from './findings.tools.js';
+import { createStaticAnalysisTools } from './static-analysis.tools.js';
+import { createSCATools } from './sca.tools.js';
+import { createScanTools } from './scan.tools.js';
+import { createPolicyTools } from './policy.tools.js';
 
-// Tool registry for organized tool management
-export class ToolRegistry {
+export class MCPToolRegistry {
   private tools: Map<string, MCPToolHandler> = new Map();
-  private toolsByCategory: Map<ToolCategory, MCPToolHandler[]> = new Map();
+  private allTools: MCPToolHandler[] = [];
+  private context: ToolContext;
 
-  constructor() {
-    this.registerTools();
-  }
+  constructor(client: VeracodeClient) {
+    // Create context
+    this.context = { veracodeClient: client };
 
-  private registerTools(): void {
-    // Register application tools
-    this.registerToolCategory(ToolCategory.APPLICATION, applicationTools);
+    this.allTools = [
+      ...createApplicationTools(),
+      ...createFindingsTools(),
+      ...createStaticAnalysisTools(),
+      ...createSCATools(),
+      ...createScanTools(),
+      ...createPolicyTools()
+    ];
 
-    // Register findings tools
-    this.registerToolCategory(ToolCategory.FINDINGS, findingsTools);
-
-    // Register static analysis tools
-    this.registerToolCategory(ToolCategory.STATIC_ANALYSIS, staticAnalysisTools);
-
-    // Register SCA tools
-    this.registerToolCategory(ToolCategory.SCA, scaTools);
-
-    // Register scan tools
-    this.registerToolCategory(ToolCategory.SCAN, scanTools);
-
-    // Register policy tools
-    this.registerToolCategory(ToolCategory.POLICY, policyTools);
-  }
-
-  private registerToolCategory(category: ToolCategory, tools: MCPToolHandler[]): void {
-    this.toolsByCategory.set(category, tools);
-    tools.forEach(tool => {
+    // Build handler map
+    for (const tool of this.allTools) {
       this.tools.set(tool.name, tool);
-    });
+    }
   }
 
   // Get all tools
   getAllTools(): MCPToolHandler[] {
-    return Array.from(this.tools.values());
+    return this.allTools;
+  }
+
+  // Execute tool with ToolCall - throws on error (like original executeTool)
+  async executeTool(toolCall: ToolCall): Promise<any> {
+    const tool = this.tools.get(toolCall.tool);
+    if (!tool) {
+      throw new Error(`Tool not found: ${toolCall.tool}`);
+    }
+    return await tool.handler(toolCall.args || {}, this.context);
   }
 
   // Get tool by name
@@ -55,12 +53,39 @@ export class ToolRegistry {
 
   // Get tools by category
   getToolsByCategory(category: ToolCategory): MCPToolHandler[] {
-    return this.toolsByCategory.get(category) || [];
+    return this.allTools.filter(tool => {
+      const name = tool.name;
+      switch (category) {
+        case ToolCategory.APPLICATION:
+          return name.includes('application') || name === 'get-applications' || name === 'search-applications';
+        case ToolCategory.FINDINGS:
+          return name.includes('finding');
+        case ToolCategory.STATIC_ANALYSIS:
+          return name.includes('static-flaw');
+        case ToolCategory.SCA:
+          return name.includes('sca');
+        case ToolCategory.SCAN:
+          return name.includes('scan');
+        case ToolCategory.POLICY:
+          return name.includes('policy');
+        default:
+          return false;
+      }
+    });
+  }
+
+  // Get all categories with tool names - for compatibility
+  getAllToolsByCategory(): Record<string, string[]> {
+    const categorization: Record<string, string[]> = {};
+    for (const category of Object.values(ToolCategory)) {
+      categorization[category] = this.getToolsByCategory(category).map(tool => tool.name);
+    }
+    return categorization;
   }
 
   // Get all tool names
   getToolNames(): string[] {
-    return Array.from(this.tools.keys());
+    return this.allTools.map(tool => tool.name);
   }
 
   // Check if tool exists
@@ -70,7 +95,7 @@ export class ToolRegistry {
 
   // Get tool count
   getToolCount(): number {
-    return this.tools.size;
+    return this.allTools.length;
   }
 
   // Get categories with tool counts
@@ -82,6 +107,3 @@ export class ToolRegistry {
     return summary;
   }
 }
-
-// Export singleton instance
-export const toolRegistry = new ToolRegistry();

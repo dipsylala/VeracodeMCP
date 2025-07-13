@@ -3,8 +3,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { VeracodeClient } from './veracode-rest-client.js';
-import { toolRegistry } from './mcp-tools/mcp.tool.registry.js';
-import { ToolContext } from './mcp-tools/mcp-types.js';
+import { MCPToolRegistry } from './mcp-tools/mcp.tool.registry.js';
 import { logger } from './utils/logger.js';
 import * as dotenv from 'dotenv';
 
@@ -36,12 +35,10 @@ logger.debug('Environment validation passed', 'STARTUP');
 logger.debug('Creating Veracode client', 'STARTUP');
 const veracodeClient = new VeracodeClient(process.env.VERACODE_API_ID!, process.env.VERACODE_API_KEY!);
 
-// Create tool context
-const toolContext: ToolContext = {
-  veracodeClient
-};
+// Create tool registry instance (context managed internally)
+const mcpToolRegistry = new MCPToolRegistry(veracodeClient);
 
-logger.debug('Tool context created', 'STARTUP');
+logger.debug('Tool registry created', 'STARTUP');
 
 // Create MCP server instance
 logger.debug('Creating MCP server', 'STARTUP');
@@ -55,7 +52,7 @@ const server = new McpServer({
 });
 
 // Register all tools from the tool registry
-const allTools = toolRegistry.getAllTools();
+const allTools = mcpToolRegistry.getAllTools();
 logger.info(`Registering ${allTools.length} tools`, 'STARTUP');
 
 for (const tool of allTools) {
@@ -64,12 +61,12 @@ for (const tool of allTools) {
     hasSchema: !!tool.schema
   });
 
-  server.tool(tool.name, tool.description, tool.schema, async(args: any) => {
+  server.tool(tool.name, tool.description, tool.schema, async (args: any) => {
     const startTime = Date.now();
     logger.toolExecution(tool.name, args);
 
     try {
-      const result = await tool.handler(args, toolContext);
+      const result = await mcpToolRegistry.executeTool({ tool: tool.name, args });
       const executionTime = Date.now() - startTime;
 
       logger.toolResult(
@@ -118,7 +115,7 @@ for (const tool of allTools) {
 }
 
 // Log tool registration summary
-const categorySummary = toolRegistry.getCategorySummary();
+const categorySummary = mcpToolRegistry.getCategorySummary();
 logger.info('Tool registration summary', 'STARTUP');
 for (const [category, count] of Object.entries(categorySummary)) {
   logger.info(`  ${category}: ${count} tools`, 'STARTUP');
