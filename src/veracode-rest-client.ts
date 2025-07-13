@@ -1093,9 +1093,8 @@ Original error: ${errorMessage}`);
       return relativePath;
     }
 
-    // Convert relative path to full platform URL
-    const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
-    return `${this.platformBaseUrl}${cleanPath}`;
+    // Convert relative path to full platform URL. It's generally HomeAppProfile or similar
+    return `${this.platformBaseUrl}/auth/index.jsp#${relativePath}`;
   }
 
   // Utility method to extract error messages from various error types
