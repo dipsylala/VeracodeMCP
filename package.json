@@ -19,7 +19,11 @@
     "example:find-sca-apps": "npm run build && node examples/find-sca-apps.js",
     "example:list-apps": "npm run build && node examples/list-apps.js",
     "example:get-static-flaw-info": "npm run build && echo \"Usage: node examples/get-static-flaw-info.js <app_id> <flaw_id>\" && echo \"Example: node examples/get-static-flaw-info.js your-app-id 123\"",
-    "example:compare-analysis": "npm run build && echo \"Usage: node examples/compare-analysis-approaches.js <app_name> <flaw_id>\" && echo \"Example: node examples/compare-analysis-approaches.js \\\"MyApp\\\" 123\""
+    "example:compare-analysis": "npm run build && echo \"Usage: node examples/compare-analysis-approaches.js <app_name> <flaw_id>\" && echo \"Example: node examples/compare-analysis-approaches.js \\\"MyApp\\\" 123\"",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts"
   },
   "keywords": [
     "mcp",
@@ -40,6 +44,10 @@
   "homepage": "https://github.com/dipsylala/VeracodeMCP#readme",
   "devDependencies": {
     "@types/node": "^24.0.13",
+    "@typescript-eslint/eslint-plugin": "^8.36.0",
+    "@typescript-eslint/parser": "^8.36.0",
+    "eslint": "^9.31.0",
+    "prettier": "^3.6.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
@@ -48,6 +56,6 @@
     "axios": "^1.10.0",
     "crypto-js": "^4.2.0",
     "dotenv": "^17.2.0",
-    "zod": "^3.25.76"
+    "zod": "^4.0.5"
   }
 }

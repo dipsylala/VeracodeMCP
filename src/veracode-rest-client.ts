@@ -1,5 +1,5 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import * as crypto from "crypto";
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import * as crypto from 'crypto';
 import { logger } from './utils/logger.js';
 
 export interface VeracodeApplication {
@@ -283,11 +283,15 @@ export class VeracodeClient {
   private apiKey: string;
   private platformBaseUrl: string;
 
-  constructor(apiId: string, apiKey: string, options?: {
-    apiBaseUrl?: string;
-    platformBaseUrl?: string;
-  }) {
-    logger.debug("Initializing VeracodeClient", "CLIENT", {
+  constructor(
+    apiId: string,
+    apiKey: string,
+    options?: {
+      apiBaseUrl?: string;
+      platformBaseUrl?: string;
+    }
+  ) {
+    logger.debug('Initializing VeracodeClient', 'CLIENT', {
       hasApiId: !!apiId,
       hasApiKey: !!apiKey,
       options
@@ -297,11 +301,9 @@ export class VeracodeClient {
     this.apiKey = apiKey;
 
     // Determine API base URL (region-specific)
-    const apiBaseUrl = options?.apiBaseUrl ||
-      process.env.VERACODE_API_BASE_URL ||
-      "https://api.veracode.com/";
+    const apiBaseUrl = options?.apiBaseUrl || process.env.VERACODE_API_BASE_URL || 'https://api.veracode.com/';
 
-    logger.debug("API base URL determined", "CLIENT", { apiBaseUrl });
+    logger.debug('API base URL determined', 'CLIENT', { apiBaseUrl });
 
     // Auto-derive platform URL from API URL if not explicitly provided
     if (options?.platformBaseUrl) {
@@ -313,27 +315,27 @@ export class VeracodeClient {
       this.platformBaseUrl = this.derivePlatformUrl(apiBaseUrl);
     }
 
-    logger.debug("Platform URL configured", "CLIENT", { platformBaseUrl: this.platformBaseUrl });
+    logger.debug('Platform URL configured', 'CLIENT', { platformBaseUrl: this.platformBaseUrl });
 
     this.apiClient = axios.create({
       baseURL: apiBaseUrl,
-      timeout: 30000,
+      timeout: 30000
     });
 
-    logger.debug("Axios client created", "CLIENT", {
+    logger.debug('Axios client created', 'CLIENT', {
       baseURL: apiBaseUrl,
       timeout: 30000
     });
 
     // Add request interceptor for HMAC authentication
-    this.apiClient.interceptors.request.use((config) => {
+    this.apiClient.interceptors.request.use(config => {
       return this.addHMACAuthentication(config);
     });
 
     // Add response interceptor for logging
     this.apiClient.interceptors.response.use(
-      (response) => {
-        logger.debug("API Response received", "CLIENT", {
+      response => {
+        logger.debug('API Response received', 'CLIENT', {
           method: response.config.method?.toUpperCase(),
           url: response.config.url,
           status: response.status,
@@ -341,8 +343,8 @@ export class VeracodeClient {
         });
         return response;
       },
-      (error) => {
-        logger.error("API Request failed", "CLIENT", {
+      error => {
+        logger.error('API Request failed', 'CLIENT', {
           method: error.config?.method?.toUpperCase(),
           url: error.config?.url,
           status: error.response?.status,
@@ -353,7 +355,7 @@ export class VeracodeClient {
       }
     );
 
-    logger.info("VeracodeClient initialized successfully", "CLIENT");
+    logger.info('VeracodeClient initialized successfully', 'CLIENT');
   }
 
   /**
@@ -366,9 +368,9 @@ export class VeracodeClient {
 
       // Map API hostnames to platform hostnames
       const regionMap: Record<string, string> = {
-        'api.veracode.com': 'analysiscenter.veracode.com',     // Commercial US
-        'api.veracode.eu': 'analysiscenter.veracode.eu',       // European
-        'api.veracode.us': 'analysiscenter.veracode.us',       // US Federal
+        'api.veracode.com': 'analysiscenter.veracode.com', // Commercial US
+        'api.veracode.eu': 'analysiscenter.veracode.eu', // European
+        'api.veracode.us': 'analysiscenter.veracode.us' // US Federal
       };
 
       const platformHost = regionMap[apiHost];
@@ -422,7 +424,7 @@ export class VeracodeClient {
    * Generate Veracode authentication header using the correct multi-step HMAC process
    */
   private generateVeracodeAuthHeader(url: string, method: string): string {
-    const verStr = "vcode_request_version_1";
+    const verStr = 'vcode_request_version_1';
     const apiHost = new URL(this.apiClient.defaults.baseURL || 'https://api.veracode.com/').hostname;
     const data = `id=${this.apiId}&host=${apiHost}&url=${url}&method=${method}`;
     const timestamp = Date.now().toString();
@@ -454,13 +456,13 @@ export class VeracodeClient {
    * Add HMAC authentication headers to the request
    */
   private addHMACAuthentication(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
-    const method = config.method?.toUpperCase() || "GET";
+    const method = config.method?.toUpperCase() || 'GET';
     // Ensure URL starts with / for the HMAC calculation
     const url = config.url?.startsWith('/') ? config.url : `/${config.url || ''}`;
 
     try {
       const authHeader = this.generateVeracodeAuthHeader(url, method);
-      config.headers.set("Authorization", authHeader);
+      config.headers.set('Authorization', authHeader);
     } catch (error) {
       throw new Error(`Authentication failed: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -473,17 +475,17 @@ export class VeracodeClient {
    */
   async getApplications(): Promise<VeracodeApplication[]> {
     const startTime = Date.now();
-    logger.debug("Getting all applications", "API");
+    logger.debug('Getting all applications', 'API');
 
     try {
-      logger.apiRequest("GET", "appsec/v1/applications");
-      const response = await this.apiClient.get("appsec/v1/applications");
+      logger.apiRequest('GET', 'appsec/v1/applications');
+      const response = await this.apiClient.get('appsec/v1/applications');
       const responseTime = Date.now() - startTime;
 
       const applications = response.data._embedded?.applications || [];
-      logger.apiResponse("GET", "appsec/v1/applications", response.status, responseTime, applications.length);
+      logger.apiResponse('GET', 'appsec/v1/applications', response.status, responseTime, applications.length);
 
-      logger.debug("Processing application data", "API", {
+      logger.debug('Processing application data', 'API', {
         count: applications.length,
         hasEmbedded: !!response.data._embedded
       });
@@ -499,7 +501,7 @@ export class VeracodeClient {
         }))
       }));
 
-      logger.debug("Applications retrieved and processed", "API", {
+      logger.debug('Applications retrieved and processed', 'API', {
         totalCount: processedApps.length,
         executionTime: responseTime
       });
@@ -507,7 +509,7 @@ export class VeracodeClient {
       return processedApps;
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      logger.apiError("GET", "appsec/v1/applications", error);
+      logger.apiError('GET', 'appsec/v1/applications', error);
       throw new Error(`Failed to fetch applications: ${this.getErrorMessage(error)}`);
     }
   }
@@ -649,28 +651,30 @@ export class VeracodeClient {
       const params = new URLSearchParams();
 
       if (options) {
-        if (options.scanType) params.append("scan_type", options.scanType);
-        if (options.severity !== undefined) params.append("severity", options.severity.toString());
-        if (options.severityGte !== undefined) params.append("severity_gte", options.severityGte.toString());
+        if (options.scanType) params.append('scan_type', options.scanType);
+        if (options.severity !== undefined) params.append('severity', options.severity.toString());
+        if (options.severityGte !== undefined) params.append('severity_gte', options.severityGte.toString());
         if (options.cwe && options.cwe.length > 0) {
-          options.cwe.forEach(cweId => params.append("cwe", cweId.toString()));
+          options.cwe.forEach(cweId => params.append('cwe', cweId.toString()));
         }
-        if (options.cvss !== undefined) params.append("cvss", options.cvss.toString());
-        if (options.cvssGte !== undefined) params.append("cvss_gte", options.cvssGte.toString());
-        if (options.cve) params.append("cve", options.cve);
-        if (options.context) params.append("context", options.context);
+        if (options.cvss !== undefined) params.append('cvss', options.cvss.toString());
+        if (options.cvssGte !== undefined) params.append('cvss_gte', options.cvssGte.toString());
+        if (options.cve) params.append('cve', options.cve);
+        if (options.context) params.append('context', options.context);
         if (options.findingCategory && options.findingCategory.length > 0) {
-          options.findingCategory.forEach(cat => params.append("finding_category", cat.toString()));
+          options.findingCategory.forEach(cat => params.append('finding_category', cat.toString()));
         }
-        if (options.includeAnnotations !== undefined) params.append("include_annot", options.includeAnnotations.toString());
-        if (options.includeExpirationDate !== undefined) params.append("include_exp_date", options.includeExpirationDate.toString());
-        if (options.mitigatedAfter) params.append("mitigated_after", options.mitigatedAfter);
-        if (options.newFindingsOnly !== undefined) params.append("new", options.newFindingsOnly.toString());
-        if (options.scaDependencyMode) params.append("sca_dep_mode", options.scaDependencyMode);
-        if (options.scaScanMode) params.append("sca_scan_mode", options.scaScanMode);
-        if (options.policyViolation !== undefined) params.append("violates_policy", options.policyViolation.toString());
-        if (options.page !== undefined) params.append("page", options.page.toString());
-        if (options.size !== undefined) params.append("size", options.size.toString());
+        if (options.includeAnnotations !== undefined)
+          params.append('include_annot', options.includeAnnotations.toString());
+        if (options.includeExpirationDate !== undefined)
+          params.append('include_exp_date', options.includeExpirationDate.toString());
+        if (options.mitigatedAfter) params.append('mitigated_after', options.mitigatedAfter);
+        if (options.newFindingsOnly !== undefined) params.append('new', options.newFindingsOnly.toString());
+        if (options.scaDependencyMode) params.append('sca_dep_mode', options.scaDependencyMode);
+        if (options.scaScanMode) params.append('sca_scan_mode', options.scaScanMode);
+        if (options.policyViolation !== undefined) params.append('violates_policy', options.policyViolation.toString());
+        if (options.page !== undefined) params.append('page', options.page.toString());
+        if (options.size !== undefined) params.append('size', options.size.toString());
       }
 
       if (params.toString()) {
@@ -755,7 +759,7 @@ export class VeracodeClient {
     }
   ): Promise<VeracodeFinding[]> {
     const startTime = Date.now();
-    logger.debug("Getting findings by application name", "API", {
+    logger.debug('Getting findings by application name', 'API', {
       name,
       options: {
         scanType: options?.scanType,
@@ -769,15 +773,15 @@ export class VeracodeClient {
 
     try {
       // First search for applications with this name
-      logger.debug("Searching for application", "API", { name });
+      logger.debug('Searching for application', 'API', { name });
       const searchResults = await this.searchApplications(name);
 
       if (searchResults.length === 0) {
-        logger.warn("No application found with name", "API", { name });
+        logger.warn('No application found with name', 'API', { name });
         throw new Error(`No application found with name: ${name}`);
       }
 
-      logger.debug("Application search results", "API", {
+      logger.debug('Application search results', 'API', {
         name,
         resultsCount: searchResults.length,
         applications: searchResults.map(app => ({ name: app.profile.name, guid: app.guid }))
@@ -789,9 +793,9 @@ export class VeracodeClient {
       // If no exact match, use the first result but warn about it
       if (!targetApp) {
         targetApp = searchResults[0];
-        logger.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`, "API");
+        logger.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`, 'API');
       } else {
-        logger.debug("Exact application match found", "API", {
+        logger.debug('Exact application match found', 'API', {
           searchName: name,
           foundName: targetApp.profile.name,
           guid: targetApp.guid
@@ -799,7 +803,7 @@ export class VeracodeClient {
       }
 
       // Get findings using the GUID
-      logger.debug("Fetching findings for application", "API", {
+      logger.debug('Fetching findings for application', 'API', {
         appName: targetApp.profile.name,
         appGuid: targetApp.guid,
         options
@@ -808,7 +812,7 @@ export class VeracodeClient {
       const findings = await this.getFindingsById(targetApp.guid, options);
       const executionTime = Date.now() - startTime;
 
-      logger.debug("Findings retrieved successfully", "API", {
+      logger.debug('Findings retrieved successfully', 'API', {
         appName: targetApp.profile.name,
         findingsCount: findings.length,
         scanType: options?.scanType,
@@ -818,7 +822,7 @@ export class VeracodeClient {
       return findings;
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      logger.error("Failed to fetch findings by name", "API", {
+      logger.error('Failed to fetch findings by name', 'API', {
         name,
         options,
         executionTime,
@@ -885,9 +889,8 @@ export class VeracodeClient {
         complianceStatus = 'CONDITIONAL_PASS';
       }
 
-      const compliancePercentage = findings.length > 0
-        ? Math.round(((findings.length - policyViolations) / findings.length) * 100)
-        : 100;
+      const compliancePercentage =
+        findings.length > 0 ? Math.round(((findings.length - policyViolations) / findings.length) * 100) : 100;
 
       return {
         policy_compliance_status: complianceStatus,
@@ -946,14 +949,14 @@ export class VeracodeClient {
       }
 
       // Sort by creation date to get the latest scan
-      const latestScan = scaScans.sort((a, b) =>
-        new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
+      const latestScan = scaScans.sort(
+        (a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
       )[0];
 
       // Get all SCA findings for the application
       const findings = await this.getFindingsById(appId, {
         scanType: 'SCA',
-        size: 500  // Get a large number of findings
+        size: 500 // Get a large number of findings
       });
 
       // Calculate summary statistics
@@ -971,7 +974,8 @@ export class VeracodeClient {
           policyViolations++;
         }
 
-        if (severity >= 3) { // High and Very High severity
+        if (severity >= 3) {
+          // High and Very High severity
           highRiskComponents++;
         }
       });
@@ -994,17 +998,20 @@ export class VeracodeClient {
   /**
    * Get SCA findings with enhanced filtering and details
    */
-  async getSCAFindings(appId: string, options?: {
-    includeTransitiveDependencies?: boolean;
-    includeDirectDependencies?: boolean;
-    severityGte?: number;
-    cvssGte?: number;
-    onlyPolicyViolations?: boolean;
-    onlyNewFindings?: boolean;
-    includeLicenseInfo?: boolean;
-    page?: number;
-    size?: number;
-  }): Promise<VeracodeFinding[]> {
+  async getSCAFindings(
+    appId: string,
+    options?: {
+      includeTransitiveDependencies?: boolean;
+      includeDirectDependencies?: boolean;
+      severityGte?: number;
+      cvssGte?: number;
+      onlyPolicyViolations?: boolean;
+      onlyNewFindings?: boolean;
+      includeLicenseInfo?: boolean;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<VeracodeFinding[]> {
     try {
       const findingOptions: any = {
         scanType: 'SCA',
@@ -1048,17 +1055,20 @@ export class VeracodeClient {
   /**
    * Get SCA findings by application name with enhanced filtering
    */
-  async getSCAFindingsByName(name: string, options?: {
-    includeTransitiveDependencies?: boolean;
-    includeDirectDependencies?: boolean;
-    severityGte?: number;
-    cvssGte?: number;
-    onlyPolicyViolations?: boolean;
-    onlyNewFindings?: boolean;
-    includeLicenseInfo?: boolean;
-    page?: number;
-    size?: number;
-  }): Promise<VeracodeFinding[]> {
+  async getSCAFindingsByName(
+    name: string,
+    options?: {
+      includeTransitiveDependencies?: boolean;
+      includeDirectDependencies?: boolean;
+      severityGte?: number;
+      cvssGte?: number;
+      onlyPolicyViolations?: boolean;
+      onlyNewFindings?: boolean;
+      includeLicenseInfo?: boolean;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<VeracodeFinding[]> {
     try {
       // First search for applications with this name
       const searchResults = await this.searchApplications(name);
@@ -1087,11 +1097,7 @@ export class VeracodeClient {
    * Get detailed static flaw information including data paths for a specific finding
    * Returns detailed data path information for static analysis findings
    */
-  async getStaticFlawInfo(
-    appId: string,
-    issueId: string | number,
-    context?: string
-  ): Promise<VeracodeStaticFlawInfo> {
+  async getStaticFlawInfo(appId: string, issueId: string | number, context?: string): Promise<VeracodeStaticFlawInfo> {
     try {
       let url = `appsec/v2/applications/${appId}/findings/${issueId}/static_flaw_info`;
 
@@ -1285,18 +1291,21 @@ export class VeracodeClient {
   /**
    * Get SCA findings with comprehensive details including exploitability
    */
-  async getComprehensiveSCAFindings(appId: string, options?: {
-    includeTransitiveDependencies?: boolean;
-    includeDirectDependencies?: boolean;
-    severityGte?: number;
-    cvssGte?: number;
-    onlyPolicyViolations?: boolean;
-    onlyNewFindings?: boolean;
-    onlyWithExploits?: boolean;
-    includeLicenseInfo?: boolean;
-    page?: number;
-    size?: number;
-  }): Promise<{
+  async getComprehensiveSCAFindings(
+    appId: string,
+    options?: {
+      includeTransitiveDependencies?: boolean;
+      includeDirectDependencies?: boolean;
+      severityGte?: number;
+      cvssGte?: number;
+      onlyPolicyViolations?: boolean;
+      onlyNewFindings?: boolean;
+      onlyWithExploits?: boolean;
+      includeLicenseInfo?: boolean;
+      page?: number;
+      size?: number;
+    }
+  ): Promise<{
     findings: VeracodeFinding[];
     scaAnalysis: {
       totalComponents: number;
@@ -1325,9 +1334,14 @@ export class VeracodeClient {
         cvssGte: options?.cvssGte,
         policyViolation: options?.onlyPolicyViolations,
         newFindingsOnly: options?.onlyNewFindings,
-        scaDependencyMode: options?.includeTransitiveDependencies && options?.includeDirectDependencies ? 'BOTH' :
-          options?.includeTransitiveDependencies ? 'TRANSITIVE' :
-            options?.includeDirectDependencies ? 'DIRECT' : undefined,
+        scaDependencyMode:
+          options?.includeTransitiveDependencies && options?.includeDirectDependencies
+            ? 'BOTH'
+            : options?.includeTransitiveDependencies
+              ? 'TRANSITIVE'
+              : options?.includeDirectDependencies
+                ? 'DIRECT'
+                : undefined,
         page: options?.page,
         size: options?.size || 500
       });
@@ -1335,9 +1349,9 @@ export class VeracodeClient {
       const findings = enhancedResult.findings;
 
       // Filter for exploitable findings if requested
-      const filteredFindings = options?.onlyWithExploits ?
-        findings.filter(f => this.isSCAFinding(f) && f.finding_details.cve?.exploitability?.exploit_observed) :
-        findings;
+      const filteredFindings = options?.onlyWithExploits
+        ? findings.filter(f => this.isSCAFinding(f) && f.finding_details.cve?.exploitability?.exploit_observed)
+        : findings;
 
       // Analyze SCA-specific data
       const componentMap = new Map<string, Set<string>>();
@@ -1436,24 +1450,24 @@ export class VeracodeClient {
       const data = error.response.data;
 
       if (status === 401) {
-        return "Authentication failed. Please check your API credentials.";
+        return 'Authentication failed. Please check your API credentials.';
       } else if (status === 403) {
-        return "Access forbidden. You may not have permission to access this resource.";
+        return 'Access forbidden. You may not have permission to access this resource.';
       } else if (status === 404) {
-        return "Resource not found.";
+        return 'Resource not found.';
       } else if (status === 429) {
-        return "Rate limit exceeded. Please try again later.";
-      } else if (data && typeof data === "object") {
+        return 'Rate limit exceeded. Please try again later.';
+      } else if (data && typeof data === 'object') {
         return data.message || data.error || `HTTP ${status}`;
       } else {
         return `HTTP ${status}`;
       }
     } else if (error.request) {
       // Request made but no response received
-      return "No response received from Veracode API. Please check your network connection.";
+      return 'No response received from Veracode API. Please check your network connection.';
     } else {
       // Something else happened
-      return error.message || "Unknown error occurred";
+      return error.message || 'Unknown error occurred';
     }
   }
 
