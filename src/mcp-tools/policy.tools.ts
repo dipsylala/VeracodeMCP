@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ToolHandler, ToolContext, ToolResponse } from "../types/tool.types.js";
+import { MCPToolHandler, ToolContext, ToolResponse } from "./mcp-types.js";
 
 // Policy compliance and management tools
-export const policyTools: ToolHandler[] = [
+export const policyTools: MCPToolHandler[] = [
     {
         name: "get-policy-compliance",
         description: "Get policy compliance status for an application",

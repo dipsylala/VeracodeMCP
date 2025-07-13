@@ -3,8 +3,8 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { VeracodeClient } from "./veracode-rest-client.js";
-import { toolRegistry } from "./tools/tool.registry.js";
-import { ToolContext } from "./types/tool.types.js";
+import { toolRegistry } from "./mcp-tools/mcp.tool.registry.js";
+import { ToolContext } from "./mcp-tools/mcp-types.js";
 import { logger } from "./utils/logger.js";
 import * as dotenv from "dotenv";
 

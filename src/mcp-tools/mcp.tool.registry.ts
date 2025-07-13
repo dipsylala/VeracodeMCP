@@ -1,4 +1,5 @@
-import { ToolHandler, ToolCategory } from "../types/tool.types.js";
+import { MCPToolHandler } from "./mcp-types.js";
+import { ToolCategory } from "../types/shared-types.js";
 import { applicationTools } from "./application.tools.js";
 import { findingsTools } from "./findings.tools.js";
 import { staticAnalysisTools } from "./static-analysis.tools.js";
@@ -8,8 +9,8 @@ import { policyTools } from "./policy.tools.js";
 
 // Tool registry for organized tool management
 export class ToolRegistry {
-    private tools: Map<string, ToolHandler> = new Map();
-    private toolsByCategory: Map<ToolCategory, ToolHandler[]> = new Map();
+    private tools: Map<string, MCPToolHandler> = new Map();
+    private toolsByCategory: Map<ToolCategory, MCPToolHandler[]> = new Map();
 
     constructor() {
         this.registerTools();
@@ -35,7 +36,7 @@ export class ToolRegistry {
         this.registerToolCategory(ToolCategory.POLICY, policyTools);
     }
 
-    private registerToolCategory(category: ToolCategory, tools: ToolHandler[]): void {
+    private registerToolCategory(category: ToolCategory, tools: MCPToolHandler[]): void {
         this.toolsByCategory.set(category, tools);
         tools.forEach(tool => {
             this.tools.set(tool.name, tool);
@@ -43,17 +44,17 @@ export class ToolRegistry {
     }
 
     // Get all tools
-    getAllTools(): ToolHandler[] {
+    getAllTools(): MCPToolHandler[] {
         return Array.from(this.tools.values());
     }
 
     // Get tool by name
-    getTool(name: string): ToolHandler | undefined {
+    getTool(name: string): MCPToolHandler | undefined {
         return this.tools.get(name);
     }
 
     // Get tools by category
-    getToolsByCategory(category: ToolCategory): ToolHandler[] {
+    getToolsByCategory(category: ToolCategory): MCPToolHandler[] {
         return this.toolsByCategory.get(category) || [];
     }
 

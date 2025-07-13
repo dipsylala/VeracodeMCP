@@ -27,27 +27,23 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
 
 ```
 src/
-├── index.ts                      # MCP Server Entry Point  
-├── veracode-rest-client.ts       # Veracode API REST Client
-├── veracode-mcp-client.ts        # MCP Client & CLI Interface
-├── cli/                          # CLI-specific implementations
-│   ├── tool-handlers.ts          # CLI Tool Registry and Handlers
-│   ├── sca-tools.ts              # CLI SCA Tool Implementations
-│   └── findings-tools.ts         # CLI Findings Tool Implementations
-├── tools/                        # MCP Tool Implementations
-│   ├── tool.registry.ts          # Tool Registration System
-│   ├── application.tools.ts      # Application Management Tools
-│   ├── findings.tools.ts         # Findings & Vulnerability Tools  
-│   ├── scan.tools.ts             # Scan Management Tools
-│   ├── sca.tools.ts              # Software Composition Analysis Tools
-│   ├── static-analysis.tools.ts  # Static Analysis Tools
-│   └── policy.tools.ts           # Policy Compliance Tools
-├── types/
-│   └── tool.types.ts             # TypeScript Type Definitions
+├── index.ts                     # MCP Server Entry Point  
+├── veracode-rest-client.ts      # Veracode API REST Client
+├── veracode-mcp-client.ts       # MCP Client & CLI Interface
+├── types/                       # Shared Type Definitions
+│   └── shared-types.ts          # Common interfaces and enums (ToolResponse, ToolCategory, ToolCall)
+├── cli-tools/                   # CLI-specific Tool System (Factory Pattern)
+│   ├── cli-types.ts             # CLI-specific types (CLIToolHandler + re-exports)
+│   ├── cli-tool-registry.ts     # CLI Tool Registry and Management
+│   ├── *.tools.ts               # CLI tools broken up by category
+├── mcp-tools/                   # MCP Protocol Tool Implementations
+│   ├── mcp-types.ts             # MCP-specific types (ToolHandler, ToolContext + re-exports)
+│   ├── mcp.tool.registry.ts     # MCP Tool Registration System
+│   ├── *.tools.ts               # MCP tools broken up by category
 └── utils/
-    └── logger.ts                 # Structured Logging Utility
+    └── logger.ts                # Structured Logging Utility
 
-examples/                         # Usage Examples & Test Scripts
+examples/                        # Usage Examples & Test Scripts
 ├── get-sca-results.js           # SCA Results Example
 ├── find-sca-apps.js             # SCA Discovery Example  
 ├── query-apps.js                # Application Search Example
@@ -124,30 +120,39 @@ docs/                            # Documentation
 **Purpose**: Command-line interface and testing utility for validating MCP server functionality.
 
 **Features**:
-- Command-line tool execution via tool registry
-- Direct tool execution without MCP protocol overhead
-- Response validation and formatting
+- Command-line tool execution via simplified CLI tool registry
+- Direct tool execution without MCP protocol overhead using factory functions
+- Response validation and formatting with shared `ToolResponse` interface
 - Debugging utilities with structured logging
 - Support for all MCP server tools via CLI interface
 
-**CLI Tool Registry** (`src/cli/tool-handlers.ts`):
-- Modular tool organization by category (Application, Scan, Policy, SCA, Findings, Static Analysis)
-- Base `ToolCategory` class for organized tool management
-- Dynamic tool registration and discovery
-- Consistent error handling and response formatting
+**CLI Tool Registry Architecture**:
+- **Factory Function Pattern**: Each tool category exports a `createXXXTools(client)` function
+- **Simplified Registration**: No complex inheritance - just arrays of `CLIToolHandler` objects
+- **Shared Types**: Uses `ToolCategory` enum and `ToolResponse` interface from shared types
+- **Consistent Error Handling**: All tools return `ToolResponse` format for consistency
 
-### 4. Tool Registry System (`src/tools/tool.registry.ts`)
+### 4. Tool Registry System
 
+**MCP Tool Registry** (`src/mcp-tools/mcp.tool.registry.ts`):
 **Purpose**: Centralized tool registration and management system for MCP server tools.
 
-**Features**:
+**CLI Tool Registry** (`src/cli-tools/cli-tool-registry.ts`):
+**Purpose**: Simplified factory-function based tool registry for CLI tools.
+
+**Architecture Pattern**: Both systems now use consistent patterns:
+- **Factory Functions**: Simple functions that return arrays of tool handlers
+- **Shared Types**: Common interfaces and enums from `shared-types.ts`
+- **Modular Organization**: Tools organized by category (Application, Scan, Policy, SCA, Findings, Static Analysis)
+- **No Inheritance**: Eliminated complex class hierarchies in favor of simple functions
+
+**Shared Features**:
 - Dynamic tool registration by category
 - Tool discovery and metadata management
-- Category-based tool organization
-- Tool count and summary statistics
-- Type-safe tool handler registration
+- Category-based tool organization using shared `ToolCategory` enum
+- Consistent error handling and response formatting using shared `ToolResponse` interface
 
-**Tool Categories**:
+**Tool Categories** (shared between CLI and MCP):
 - **Application Tools**: Application management and search
 - **Findings Tools**: General findings and vulnerability data
 - **Scan Tools**: Scan results and metadata
@@ -168,19 +173,58 @@ docs/                            # Documentation
 
 ## Type System Design
 
-### Core Types
+### Shared Type Architecture
+
+The project uses a **three-tier type system** for maintainability and consistency:
 
 ```typescript
-// Union type for different finding types
-type VeracodeFindingDetails = VeracodeSCAFinding | VeracodeStaticFinding | 
-                             VeracodeDynamicFinding | VeracodeManualFinding;
+// 1. Shared Types (src/types/shared-types.ts)
+export interface ToolResponse {
+    success: boolean;
+    data?: any;
+    error?: string;
+}
 
-// Type guards for runtime safety
-function isSCAFinding(finding: VeracodeFindingDetails): finding is VeracodeSCAFinding
-function isStaticFinding(finding: VeracodeFindingDetails): finding is VeracodeStaticFinding
-function isDynamicFinding(finding: VeracodeFindingDetails): finding is VeracodeDynamicFinding
-function isManualFinding(finding: VeracodeFindingDetails): finding is VeracodeManualFinding
+export enum ToolCategory {
+    APPLICATION = 'application',
+    SCAN = 'scan',
+    FINDINGS = 'findings',
+    SCA = 'sca',
+    STATIC_ANALYSIS = 'static-analysis',
+    POLICY = 'policy'
+}
+
+export interface ToolCall {
+    tool: string;
+    args?: Record<string, any>;
+}
+
+// 2. MCP-Specific Types (src/mcp-tools/mcp-types.ts)
+export interface ToolHandler {
+    name: string;
+    description: string;
+    schema: any;
+    handler: (args: any, context: ToolContext) => Promise<ToolResponse>;
+}
+
+export interface ToolContext {
+    veracodeClient: any;
+}
+
+// 3. CLI-Specific Types (src/cli-tools/cli-types.ts)
+export interface CLIToolHandler {
+    name: string;
+    handler: (args: any) => Promise<ToolResponse>;
+}
 ```
+
+### Benefits of Shared Type System
+
+- **Consistency**: Both CLI and MCP systems use the same response format (`ToolResponse`)
+- **Single Source of Truth**: Common types defined once in `shared-types.ts`
+- **No Duplication**: Eliminated redundant interfaces and type aliases
+- **Clean Imports**: Simple re-exports without confusing workarounds
+- **Maintainability**: Changes to shared concepts only need to be made in one place
 
 ### SCA Type System
 
@@ -481,16 +525,17 @@ npm run test:search              # Test search functionality
 ### Adding New Tools
 
 1. **For MCP Server Tools**:
-   - Create tool handler in appropriate `src/tools/*.tools.ts` file
+   - Create tool handler in appropriate `src/mcp-tools/*.tools.ts` file
    - Define input schema with Zod validation
-   - Implement tool handler function
+   - Implement tool handler function that returns `ToolResponse`
    - Add tool to tool array export
    - Tool registry automatically registers it
 
 2. **For CLI Tools** (optional):
-   - Add method to appropriate category in `src/cli/tool-handlers.ts`
-   - Follow `ToolCategory` pattern for organization
-   - CLI tool registry automatically discovers it
+   - Add tool to appropriate `src/cli-tools/*.tools.ts` file  
+   - Follow factory function pattern: `createXXXTools(client: VeracodeClient)`
+   - Return `CLIToolHandler` objects with `ToolResponse` format
+   - CLI tool registry automatically discovers it via factory function
 
 3. **Create Example Usage**:
    - Add example script in `examples/` directory
@@ -502,6 +547,22 @@ npm run test:search              # Test search functionality
    - Update README.md with new tool information
    - Add testing instructions to TESTING.md
 
+### Type System Extension
+
+1. **Shared Types** (`src/types/shared-types.ts`):
+   - Add new shared interfaces, enums, or types used by both systems
+   - Extend `ToolCategory` enum for new tool categories
+   - Extend `ToolCall` interface for new parameter patterns
+
+2. **System-Specific Types**:
+   - **MCP**: Add types to `src/mcp-tools/mcp-types.ts` for MCP-only concepts
+   - **CLI**: Add types to `src/cli-tools/cli-types.ts` for CLI-only concepts
+
+3. **Consistency Guidelines**:
+   - Use `ToolResponse` for all tool return values
+   - Use shared `ToolCategory` for categorization
+   - Re-export shared types from system-specific type files for convenience
+
 ### API Endpoint Extension
 
 1. **Add API Methods**:
@@ -511,14 +572,61 @@ npm run test:search              # Test search functionality
    - Follow existing patterns for consistency
 
 2. **Create Tool Handlers**:
-   - Add tool implementations that use new API methods
-   - Include input validation and response formatting
-   - Add to appropriate tool category file
+   - Add tool implementations that use new API methods in both MCP and CLI systems
+   - Include input validation and response formatting using shared `ToolResponse`
+   - Add to appropriate tool category file using factory function pattern
 
 3. **Testing and Examples**:
    - Create example scripts demonstrating new functionality
    - Add comprehensive testing coverage
    - Update documentation with new capabilities
+
+## Architecture Decisions
+
+### Simplified Tool Architecture
+
+**Decision**: Replaced complex class-based inheritance with simple factory functions.
+
+**Rationale**:
+- **Eliminated Over-engineering**: The `ToolCategory` base classes provided no functional benefit
+- **Improved Consistency**: Both CLI and MCP systems now use the same simple pattern
+- **Reduced Complexity**: Factory functions are easier to understand and maintain than inheritance hierarchies
+- **Better Performance**: Direct function calls instead of class instantiation and method binding
+
+**Implementation**:
+```typescript
+// Before: Complex inheritance
+class ApplicationTools extends ToolCategory {
+  getHandlers(): Record<string, ToolHandler> { ... }
+}
+
+// After: Simple factory function
+export function createApplicationTools(client: VeracodeClient): CLIToolHandler[] {
+  return [
+    { name: "get-applications", handler: async (args) => { ... } }
+  ];
+}
+```
+
+### Shared Type System
+
+**Decision**: Created a three-tier type system with shared common types.
+
+**Rationale**:
+- **Single Source of Truth**: Common concepts defined once
+- **Eliminated Duplication**: No more redundant interfaces like `ToolResult` vs `ToolResponse`
+- **Improved Consistency**: Both systems use exactly the same response format
+- **Better Maintainability**: Changes to shared concepts only require one edit
+
+**Implementation**:
+```typescript
+// Shared types for common concepts
+src/types/shared-types.ts: ToolResponse, ToolCategory, ToolCall
+
+// System-specific types with re-exports
+src/mcp-tools/mcp-types.ts: ToolHandler, ToolContext + re-exports
+src/cli-tools/cli-types.ts: CLIToolHandler + re-exports
+```
 
 ## Security Design
 
@@ -558,12 +666,14 @@ npm run test:search              # Test search functionality
 ## Extensibility
 
 The architecture supports:
-- **Modular Tool System**: Plugin-based tool additions through tool registry
+- **Modular Tool System**: Factory-function based tool additions through simplified registries
+- **Shared Type System**: Consistent interfaces and responses across CLI and MCP systems
 - **Custom Authentication**: Support for alternative authentication providers
 - **Multiple API Backends**: Support for different Veracode API versions and environments
 - **Enhanced Data Processing**: Custom data transformation and analysis pipelines
-- **CLI and MCP Dual Mode**: Tools available both via MCP protocol and direct CLI access
+- **CLI and MCP Dual Mode**: Tools available both via MCP protocol and direct CLI access with consistent interfaces
 - **Structured Logging Integration**: Pluggable logging backends and formatters
+- **Zero Inheritance Overhead**: Simple function-based architecture for easy extension and testing
 
 ## Dependencies
 

@@ -2,7 +2,7 @@
 
 import { VeracodeClient } from "./veracode-rest-client.js";
 import { logger } from "./utils/logger.js";
-import { CLIToolRegistry } from "./cli/tool-handlers.js";
+import { CLIToolRegistry } from "./cli-tools/cli-tool-registry.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -136,13 +136,7 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
                                 if (finding.violates_policy !== undefined) console.log(`  Policy Violation: ${finding.violates_policy ? 'Yes' : 'No'}`);
                                 if (finding.cve && finding.cvss) console.log(`  CVE: ${finding.cve} (CVSS: ${finding.cvss})`);
                                 if (finding.component_filename && finding.version) console.log(`  Component: ${finding.component_filename} (v${finding.version})`);
-                                if (finding.description) {
-                                    const maxLength = 200;
-                                    const desc = finding.description.length > maxLength
-                                        ? finding.description.substring(0, maxLength) + '...'
-                                        : finding.description;
-                                    console.log(`  Description: ${desc}`);
-                                }
+                                if (finding.description) { console.log(`  Description: ${finding.description}`); }
                             });
                         } else {
                             console.log(JSON.stringify(result.data, null, 2));
@@ -158,8 +152,6 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
             });
             return null; // Async handling
         } catch (error) {
-            console.error("❌ Error in JSON mode:", error);
-            process.exit(1);
         }
     }
 
@@ -218,7 +210,7 @@ function showUsage(client: VeracodeMCPClient) {
                 console.log("  get-findings-by-id --app_id <app_id> [--scan_type <type>] [--severity <severity>]");
                 break;
             case "get-findings-by-name":
-                console.log("  get-findings-by-name --name <app_name> [--scan_type <type>] [--severity <severity>]");
+                console.log("  get-findings-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>]");
                 break;
             case "get-sca-results-by-name":
                 console.log("  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]");
@@ -239,6 +231,7 @@ function showUsage(client: VeracodeMCPClient) {
     console.log("  node build/veracode-mcp-client.js search-applications --name goat");
     console.log("  node build/veracode-mcp-client.js get-applications");
     console.log("  node build/veracode-mcp-client.js get-application-details-by-id --app_id 12345");
+    console.log("  node build/veracode-mcp-client.js get-findings-by-name --name \"My App\" --scan_type SCA --severity_gte 3");
     console.log("  node build/veracode-mcp-client.js get-sca-results-by-name --name \"ASC-597\"");
     console.log("  node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id 12345 --issue_id 67890");
     console.log("  node build/veracode-mcp-client.js get-static-flaw-info-by-name --name \"My App\" --issue_id 67890");
@@ -295,13 +288,7 @@ async function main() {
                     if (finding.policy_rules_status !== undefined) console.log(`  Policy Violation: ${finding.policy_rules_status ? 'Yes' : 'No'} `);
                     if (finding.exploitable !== undefined) console.log(`  Exploitable: ${finding.exploitable ? 'Yes' : 'No'} `);
                     if (finding.license) console.log(`  License: ${finding.license} `);
-                    if (finding.description) {
-                        const maxLength = 200;
-                        const desc = finding.description.length > maxLength
-                            ? finding.description.substring(0, maxLength) + '...'
-                            : finding.description;
-                        console.log(`  Description: ${desc} `);
-                    }
+                    if (finding.description) { console.log(`  Description: ${finding.description} `); }
                 });
             } else {
                 console.log(JSON.stringify(result.data, null, 2));

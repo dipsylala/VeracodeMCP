@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ToolHandler, ToolContext, ToolResponse } from "../types/tool.types.js";
+import { MCPToolHandler, ToolContext, ToolResponse } from "./mcp-types.js";
 
 // Scan management and results tools
-export const scanTools: ToolHandler[] = [
+export const scanTools: MCPToolHandler[] = [
     {
         name: "get-scan-results",
         description: "Get scan results for an application by ID",

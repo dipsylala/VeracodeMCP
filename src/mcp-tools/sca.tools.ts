@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { ToolHandler, ToolContext, ToolResponse } from "../types/tool.types.js";
+import { MCPToolHandler, ToolContext, ToolResponse } from "./mcp-types.js";
 import { logger } from "../utils/logger.js";
 
 // Software Composition Analysis (SCA) tools
-export const scaTools: ToolHandler[] = [
+export const scaTools: MCPToolHandler[] = [
     {
         name: "get-sca-results-by-name",
         description: "Get comprehensive Software Composition Analysis (SCA) results for an application by profile name. Returns SCA findings and analysis for the specified application name.",

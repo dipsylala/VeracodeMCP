@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ToolHandler, ToolContext, ToolResponse } from "../types/tool.types.js";
+import { MCPToolHandler, ToolContext, ToolResponse } from "./mcp-types.js";
 
 // Application management tools
-export const applicationTools: ToolHandler[] = [
+export const applicationTools: MCPToolHandler[] = [
     {
         name: "get-applications",
         description: "List all applications in Veracode account",

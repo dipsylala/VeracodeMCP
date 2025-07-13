@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ToolHandler, ToolContext, ToolResponse } from "../types/tool.types.js";
+import { MCPToolHandler, ToolContext, ToolResponse } from "./mcp-types.js";
 
 // Findings and vulnerability analysis tools
-export const findingsTools: ToolHandler[] = [
+export const findingsTools: MCPToolHandler[] = [
     {
         name: "get-findings-by-name",
         description: "Get general findings and scan results for an application by name. For specific flaw ID analysis with call stack data, use get-static-flaw-info-by-id or get-static-flaw-info-by-name instead.",
