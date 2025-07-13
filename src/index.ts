@@ -94,7 +94,6 @@ for (const tool of allTools) {
         ]
       };
     } catch (error) {
-      const executionTime = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 
       logger.toolError(tool.name, error);

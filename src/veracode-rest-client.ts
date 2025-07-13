@@ -508,7 +508,6 @@ export class VeracodeClient {
 
       return processedApps;
     } catch (error) {
-      const responseTime = Date.now() - startTime;
       logger.apiError('GET', 'appsec/v1/applications', error);
       throw new Error(`Failed to fetch applications: ${this.getErrorMessage(error)}`);
     }
