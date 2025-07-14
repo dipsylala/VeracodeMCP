@@ -68,10 +68,13 @@ MCP Server (index.ts) → Tool Registry → Individual Tools → VeracodeClient 
 - ✅ **Type-safe implementation** with robust error handling
 - ✅ **Production-ready** for Claude Desktop integration
 
-## Next Steps
-1. Commit current changes
-2. Tag release version
-3. Update any CI/CD pipelines if needed
+## TODO
+1. Get full release package built, tagged and released.
+2. Pull the Veracode API details from veracode.json (or whatever the default is nowadays)
+3. Investigate OAuth for REST
+4. Review Pipeline scan as an input
+
+
 
 ---
 *Status: Ready for commit - All systems verified ✅*
