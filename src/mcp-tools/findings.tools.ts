@@ -9,7 +9,7 @@ export function createFindingsTools(): MCPToolHandler[] {
     {
       name: 'get-findings-by-name',
       description:
-        'Get general findings and scan results for an application by name. For specific flaw ID analysis with call stack data, use get-static-flaw-info-by-id or get-static-flaw-info-by-name instead.',
+        'Get general findings and scan results for an application by name. For specific flaw ID analysis with call stack data, use get-static-flaw-info or get-static-flaw-info-by-name instead.',
       schema: {
         name: z.string().describe('Application name to get findings for')
       },
@@ -30,9 +30,9 @@ export function createFindingsTools(): MCPToolHandler[] {
     },
 
     {
-      name: 'get-findings-by-id',
+      name: 'get-findings',
       description:
-        'Get general findings and scan results for an application by ID. For specific flaw ID analysis with call stack data, use get-static-flaw-info-by-id instead.',
+        'Get general findings and scan results for an application by ID. For specific flaw ID analysis with call stack data, use get-static-flaw-info instead.',
       schema: {
         app_id: z.string().describe('Application ID (GUID) to get findings for')
       },
@@ -53,7 +53,7 @@ export function createFindingsTools(): MCPToolHandler[] {
     },
 
     {
-      name: 'get-findings',
+      name: 'get-findings-advanced-by-name',
       description:
         'Get application findings with comprehensive filtering and pagination support. Retrieves findings from Veracode scans (STATIC, DYNAMIC, MANUAL, SCA) with detailed filtering options and automatic pagination handling.',
       schema: {

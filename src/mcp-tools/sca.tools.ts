@@ -25,7 +25,7 @@ export function createSCATools(): MCPToolHandler[] {
                 logger.debug('Starting get-sca-results-by-name execution', 'SCA_TOOL', { args });
 
                 try {
-                    // Use getFindingsByName with scanType SCA - same as get-findings-by-name but filtered to SCA
+                    // Use getFindingsByName with scanType SCA - same as get-findings-by-name/get-findings-advanced-by-name but filtered to SCA
                     logger.debug('Calling getFindingsByName with SCA filter', 'SCA_TOOL', {
                         name: args.name,
                         scanType: 'SCA',
@@ -216,7 +216,7 @@ export function createSCATools(): MCPToolHandler[] {
         },
 
         {
-            name: 'get-sca-summary',
+            name: 'get-sca-summary-by-name',
             description:
                 'Get a high-level SCA summary for an application including key metrics, risk assessment, and component overview without detailed findings.',
             schema: {

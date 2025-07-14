@@ -81,10 +81,13 @@ The server provides these tools that can be tested via MCP clients:
 2. **search-applications** - Search applications by name
 3. **get-application-details** - Get detailed application information
 4. **get-scan-results** - Get scan results for an application
-5. **get-findings** - Get detailed findings from scans
-6. **get-latest-sca-results** - Get latest SCA scan results
+5. **get-findings** - Get findings by application ID
+6. **get-findings-by-name** - Get basic findings by application name
+7. **get-findings-advanced-by-name** - Get comprehensive findings with filtering
+8. **get-findings-paginated** - Get paginated findings with detailed control
+9. **get-latest-sca-results** - Get latest SCA scan results
 7. **get-sca-results-by-name** - **🎯 COMPREHENSIVE SCA** - Get detailed SCA analysis by application name
-8. **get-sca-summary** - Get high-level SCA overview with risk metrics
+8. **get-sca-summary-by-name** - Get high-level SCA overview with risk metrics
 9. **get-sca-apps** - List all applications with SCA scanning enabled
 10. **get-comprehensive-sca-analysis** - Detailed SCA analysis with exploitability data
 

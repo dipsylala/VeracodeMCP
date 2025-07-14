@@ -83,17 +83,18 @@ docs/                            # Documentation
 **Tools Provided** (via MCP Server):
 - `get-applications`: List all accessible applications
 - `search-applications`: Search applications by name pattern
-- `get-application-details-by-id`: Get detailed application information by ID
+- `get-application-details`: Get detailed application information by ID
 - `get-application-details-by-name`: Get detailed application information by name
 - `get-scan-results`: Retrieve scan results for an application by ID
 - `get-scan-results-by-name`: Retrieve scan results for an application by name
-- `get-findings-by-id`: Get findings summary and metadata by application ID
-- `get-findings-by-name`: Get findings summary and metadata by application name
-- `get-findings-paginated`: Get paginated findings results with advanced filtering
+- `get-findings`: Get findings summary and metadata by application ID
+- `get-findings-by-name`: Get findings summary and metadata by application name (basic)
+- `get-findings-advanced-by-name`: Get findings with comprehensive filtering and pagination support
+- `get-findings-paginated`: Get paginated findings results with detailed pagination control
 - `get-sca-results-by-name`: **COMPREHENSIVE SCA** - Detailed SCA analysis including exploitability, licensing, and component risk assessment
-- `get-sca-summary`: High-level SCA overview with risk metrics and component statistics
+- `get-sca-summary-by-name`: High-level SCA overview with risk metrics and component statistics
 - `get-sca-apps`: List all applications with SCA scanning enabled, including risk analysis
-- `get-static-flaw-info-by-id`: **RECOMMENDED for flaw analysis** - Detailed static flaw information including data paths and call stack
+- `get-static-flaw-info`: **RECOMMENDED for flaw analysis** - Detailed static flaw information including data paths and call stack
 - `get-static-flaw-info-by-name`: **RECOMMENDED for flaw analysis** - Detailed static flaw information by application name and flaw ID
 - `get-policy-compliance`: Check policy compliance by application ID
 - `get-policy-compliance-by-name`: Check policy compliance by application name

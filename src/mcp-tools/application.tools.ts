@@ -177,7 +177,7 @@ export function createApplicationTools(): MCPToolHandler[] {
     },
 
     {
-      name: 'get-application-details-by-id',
+      name: 'get-application-details',
       description: 'Get detailed application information by ID',
       schema: {
         app_id: z.string().describe('Application ID (GUID)')

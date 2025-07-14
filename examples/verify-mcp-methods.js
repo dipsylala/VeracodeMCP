@@ -15,7 +15,8 @@ async function verifyMCPClientMethods() {
     const testCases = [
         { tool: "get-applications" },
         { tool: "get-findings", args: { app_id: "test" } },
-        { tool: "get-findings-paginated", args: { app_id: "test" } },
+        { tool: "get-findings-advanced-by-name", args: { name: "test" } },
+        { tool: "get-findings-paginated", args: { name: "test" } },
         { tool: "get-all-findings", args: { app_id: "test" } },
         { tool: "unknown-method" }
     ];

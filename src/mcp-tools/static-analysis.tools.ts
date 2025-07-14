@@ -7,7 +7,7 @@ import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
 export function createStaticAnalysisTools(): MCPToolHandler[] {
   return [
     {
-      name: 'get-static-flaw-info-by-id',
+      name: 'get-static-flaw-info',
       description:
         'Get detailed static analysis flaw information by application ID and flaw ID. This tool provides comprehensive flaw details including data paths, call stack information, and remediation guidance. Use this tool when you need specific details about a particular flaw identified by its numeric ID within a specific application.',
       schema: {

@@ -1063,7 +1063,7 @@ export class VeracodeClient {
 3. The endpoint may be deprecated or require different permissions
 4. Static flaw info is only available for certain types of vulnerabilities
 
-For general flaw information, use get-findings-by-name or get-findings-by-id instead.
+For general flaw information, use get-findings-by-name, get-findings-advanced-by-name, or get-findings instead.
 Original error: ${errorMessage}`);
       }
 

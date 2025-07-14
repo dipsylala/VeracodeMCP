@@ -200,23 +200,28 @@ function showUsage(client: VeracodeMCPClient) {
         console.log('  search-applications --name <search_term>');
         break;
       case 'get-application-details':
-        console.log('  get-application-details-by-id --app_id <app_id>');
+        console.log('  get-application-details --app_id <app_id>');
         break;
       case 'get-application-details-by-name':
         console.log('  get-application-details-by-name --name <app_name>');
         break;
       case 'get-scan-results':
-        console.log('  get-scan-results-by-id --app_id <app_id> [--scan_type <type>]');
+        console.log('  get-scan-results --app_id <app_id> [--scan_type <type>]');
         break;
       case 'get-scan-results-by-name':
         console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
         break;
       case 'get-findings':
-        console.log('  get-findings-by-id --app_id <app_id> [--scan_type <type>] [--severity <severity>]');
+        console.log('  get-findings --app_id <app_id> [--scan_type <type>] [--severity <severity>]');
         break;
       case 'get-findings-by-name':
         console.log(
           '  get-findings-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>]'
+        );
+        break;
+      case 'get-findings-advanced-by-name':
+        console.log(
+          '  get-findings-advanced-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>] [--single_page]'
         );
         break;
       case 'get-sca-results-by-name':
@@ -225,10 +230,10 @@ function showUsage(client: VeracodeMCPClient) {
         );
         break;
       case 'get-policy-compliance':
-        console.log('  get-policy-compliance-by-id --app_id <app_id>');
+        console.log('  get-policy-compliance --app_id <app_id>');
         break;
       case 'get-static-flaw-info':
-        console.log('  get-static-flaw-info-by-id --app_id <app_id> --issue_id <issue_id> [--context <sandbox_guid>]');
+        console.log('  get-static-flaw-info --app_id <app_id> --issue_id <issue_id> [--context <sandbox_guid>]');
         break;
       case 'get-static-flaw-info-by-name':
         console.log(
@@ -241,12 +246,13 @@ function showUsage(client: VeracodeMCPClient) {
   console.log('Examples:');
   console.log('  node build/veracode-mcp-client.js search-applications --name goat');
   console.log('  node build/veracode-mcp-client.js get-applications');
-  console.log('  node build/veracode-mcp-client.js get-application-details-by-id --app_id 12345');
+  console.log('  node build/veracode-mcp-client.js get-application-details --app_id 12345');
   console.log(
-    '  node build/veracode-mcp-client.js get-findings-by-name --name "My App" --scan_type SCA --severity_gte 3'
+    '  node build/veracode-mcp-client.js get-findings-by-name --name "My App" --scan_type SCA --severity_gte 3',
+    '  node build/veracode-mcp-client.js get-findings-advanced-by-name --name "My App" --scan_type STATIC --severity_gte 4 --single_page'
   );
   console.log('  node build/veracode-mcp-client.js get-sca-results-by-name --name "ASC-597"');
-  console.log('  node build/veracode-mcp-client.js get-static-flaw-info-by-id --app_id 12345 --issue_id 67890');
+  console.log('  node build/veracode-mcp-client.js get-static-flaw-info --app_id 12345 --issue_id 67890');
   console.log('  node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "My App" --issue_id 67890');
   console.log('📝 For application names with special characters, use JSON input:');
   console.log(
