@@ -214,7 +214,7 @@ npm run test:search
 ### With Claude Desktop
 Use natural language queries:
 - *"What applications do I have in my Veracode account?"*
-- *"Show me SCA vulnerabilities for MyApp with high EPSS scores"*
+- *"Show me SCA vulnerabilities for MyApp with high CVSS scores"*
 - *"What are the licensing risks in my applications?"*
 - *"Which components have known exploits?"*
 
