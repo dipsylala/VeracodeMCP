@@ -4,6 +4,8 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 > 🔍 **Read-Only Focus**: This server provides **read-only access** to Veracode data. It does not support creating, modifying, or deleting applications, scans, or findings. This design ensures safe integration with AI assistants and automation workflows without risk of unintended changes to your Veracode account.
 
+> 🖥 **Platform Focussed**: It accesses the Veracode Platform rather than any Veracode pipeline data, so any findings will be those stored in the application profile.
+
 > ⚠️ **DISCLAIMER**: This is an **unofficial**, **unsupported**, and **work-in-progress** project. This is not an official Veracode product and is not supported by Veracode. Use at your own risk. This project is for educational and experimental purposes only.
 
 > ✅ **Production Ready**: Fully functional MCP server for Claude Desktop integration with comprehensive SCA analysis capabilities.
@@ -214,7 +216,7 @@ npm run test:search
 ### With Claude Desktop
 Use natural language queries:
 - *"What applications do I have in my Veracode account?"*
-- *"Show me SCA vulnerabilities for MyApp with high EPSS scores"*
+- *"Show me SCA vulnerabilities for MyApp with high CVSS scores"*
 - *"What are the licensing risks in my applications?"*
 - *"Which components have known exploits?"*
 
