@@ -21,7 +21,8 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 ### 🏗️ Technical Documentation
 - **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
-- **[📝 HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
+- **[�️ POLICY_MANAGEMENT.md](docs/POLICY_MANAGEMENT.md)** - Policy management API reference and usage
+- **[�📝 HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
 - **[✅ CALL_VERIFICATION_REPORT.md](docs/CALL_VERIFICATION_REPORT.md)** - MCP-to-REST client integration verification
 - **[📊 PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** - Current project status and recent changes
 
@@ -167,6 +168,14 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 
 #### 📊 **Policy & Compliance**
 - `get-policy-compliance` - Check policy compliance by application ID (GUID) or name
+
+#### 🛡️ **Policy Management**
+- `get-policies` - List all security policies with optional filtering by category, name, or other criteria
+- `get-policy` - Get detailed information about a specific policy by GUID
+- `get-policy-versions` - Get all versions of a specific policy
+- `get-policy-version` - Get a specific version of a policy
+- `get-policy-settings` - Get default policy mappings for business criticality levels
+- `get-sca-licenses` - Get component license information for SCA policies
 
 #### 🔐 **Software Composition Analysis (SCA)**
 - `get-sca-results` - **🎯 COMPREHENSIVE SCA** - Get detailed SCA analysis including exploitability, licensing, and component risk assessment by application ID (GUID) or name

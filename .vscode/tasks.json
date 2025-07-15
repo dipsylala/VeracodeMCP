@@ -139,6 +139,44 @@
 			},
 			"dependsOn": "Build Veracode MCP Server",
 			"problemMatcher": []
+		},
+		{
+			"label": "Test Policy Management",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"examples/test-policy-management.js"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test Policy Tools",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"examples/test-policy-tools.js"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
 		}
 	],
 	"inputs": [

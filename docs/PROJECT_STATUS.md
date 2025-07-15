@@ -1,24 +1,5 @@
 # Project Status Summary
 
-## Recent Changes ✅
-
-### 1. HTML Content Handling
-- **✅ Removed HTML cleaning** from MCP client responses
-- **✅ Preserving trusted Veracode API formatting** including HTML tags and links
-- **✅ Maintaining rich content** with clickable CWE/OWASP/WASC references
-
-### 2. Code Organization  
-- **✅ Moved documentation** to `docs/` folder
-- **✅ Moved utility scripts** to `examples/` folder
-- **✅ Cleaned up duplicate files** (`index.new.ts`, `index.ts.backup`)
-- **✅ Organized project structure** following best practices
-
-### 3. Documentation Updates
-- **✅ Updated HTML_ANALYSIS_REPORT.md** to reflect current HTML preservation approach
-- **✅ Updated DESIGN.md** with current architecture including tools/ structure
-- **✅ Updated TESTING.md** with correct example paths
-- **✅ All docs moved to docs/ folder** for better organization
-
 ## Current Architecture
 
 ### Call Chain Verification ✅
@@ -70,11 +51,6 @@ MCP Server (index.ts) → Tool Registry → Individual Tools → VeracodeClient 
 
 ## TODO
 1. Get full release package built, tagged and released.
-2. Pull the Veracode API details from veracode.json (or whatever the default is nowadays)
+2. Pull the Veracode API creds from veracode.json (or whatever the default is nowadays)
 3. Investigate OAuth for REST
 4. Review Pipeline scan as an input
-
-
-
----
-*Status: Ready for commit - All systems verified ✅*

@@ -305,6 +305,128 @@ export interface VeracodePolicyCompliance {
   };
 }
 
+// Policy management interfaces
+export interface VeracodeCustomSeverity {
+  cwe: number;
+  severity: number;
+}
+
+export interface VeracodeScaLicenseSummary {
+  full_name?: string;
+  name?: string;
+  risk?: 'Low' | 'Medium' | 'High' | 'Unknown';
+  spdx_id: string;
+  url?: string;
+}
+
+export interface VeracodeFindingRuleAdvancedOptions {
+  all_licenses_must_meet_requirement?: boolean;
+  allowed_nonoss_licenses?: boolean;
+  is_blocklist?: boolean;
+  selected_licenses?: VeracodeScaLicenseSummary[];
+}
+
+export interface VeracodeCoordinate {
+  coordinate1?: string;
+  coordinate2?: string;
+  created_by?: string;
+  created_date?: string;
+  repo_type?: string;
+  version?: string;
+}
+
+export interface VeracodeFindingRule {
+  coordinates?: VeracodeCoordinate[];
+  scan_type?: ('STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA' | 'MOBILE' | 'ALL' | 'DYNAMICMP')[];
+  type: 'FAIL_ALL' | 'CWE' | 'CATEGORY' | 'MAX_SEVERITY' | 'CVSS' | 'CVE' | 'BLACKLIST' | 'MIN_SCORE' | 'SECURITY_STANDARD' | 'LICENSE_RISK' | 'ALLOWLIST';
+  advanced_options?: VeracodeFindingRuleAdvancedOptions;
+  value?: string;
+}
+
+export interface VeracodeScanFrequency {
+  frequency: 'NOT_REQUIRED' | 'ONCE' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUALLY' | 'ANNUALLY' | 'EVERY_18_MONTHS' | 'EVERY_2_YEARS' | 'EVERY_3_YEARS' | 'SET_BY_VL_POLICY' | 'SET_BY_POLICY_RULE';
+  scan_type: 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA' | 'ANY';
+}
+
+export interface VeracodeCvssScoreGracePeriod {
+  upper: number;
+  lower: number;
+  days: number;
+}
+
+export interface VeracodeSeverityGracePeriods {
+  sev0_grace_period?: number;
+  sev1_grace_period?: number;
+  sev2_grace_period?: number;
+  sev3_grace_period?: number;
+  sev4_grace_period?: number;
+}
+
+export interface VeracodeScaGracePeriods {
+  sca_blacklist_grace_period?: number;
+  license_risk_grace_period?: number;
+  severity_grace_period?: VeracodeSeverityGracePeriods;
+  cvss_score_grace_period?: VeracodeCvssScoreGracePeriod[];
+}
+
+export interface VeracodePolicyVersion {
+  category?: 'APPLICATION' | 'COMPONENT';
+  created?: string;
+  custom_severities?: VeracodeCustomSeverity[];
+  description?: string;
+  evaluation_date?: string;
+  evaluation_date_type?: 'BEFORE' | 'AFTER';
+  finding_rules?: VeracodeFindingRule[];
+  sca_grace_periods?: VeracodeScaGracePeriods;
+  guid?: string;
+  modified_by?: string;
+  name?: string;
+  organization_id?: number;
+  sca_blacklist_grace_period?: number; // deprecated
+  scan_frequency_rules?: VeracodeScanFrequency[];
+  score_grace_period?: number;
+  sev0_grace_period?: number;
+  sev1_grace_period?: number;
+  sev2_grace_period?: number;
+  sev3_grace_period?: number;
+  sev4_grace_period?: number;
+  sev5_grace_period?: number;
+  type?: 'BUILTIN' | 'VERACODELEVEL' | 'CUSTOMER' | 'STANDARD';
+  vendor_policy?: boolean;
+  version?: number;
+}
+
+export interface VeracodePolicyListOptions {
+  category?: 'APPLICATION' | 'COMPONENT';
+  legacy_policy_id?: number;
+  name?: string;
+  name_exact?: boolean;
+  page?: number;
+  public_policy?: boolean;
+  size?: number;
+  vendor_policy?: boolean;
+}
+
+export interface VeracodePolicyListResponse {
+  _embedded?: {
+    policy_versions?: VeracodePolicyVersion[];
+  };
+  _links?: any;
+}
+
+export interface VeracodePolicySetting {
+  business_criticality: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW' | 'VERY_LOW';
+  modified?: string;
+  policy_guid: string;
+}
+
+export interface VeracodePolicySettingsResponse {
+  _embedded?: {
+    policy_settings?: VeracodePolicySetting[];
+  };
+  _links?: any;
+}
+
 // Static flaw data path interfaces
 export interface VeracodeStaticFlawCall {
   data_path: number;
@@ -1311,6 +1433,94 @@ Original error: ${errorMessage}`);
       return await this.getStaticFlawInfo(application.guid, issueId, sandbox_id);
     } catch (error) {
       throw new Error(`Failed to fetch static flaw info by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Policy Management Methods
+
+  // Get list of policies with optional filtering
+  async getPolicies(options?: VeracodePolicyListOptions): Promise<VeracodePolicyListResponse> {
+    try {
+      const params = new URLSearchParams();
+      
+      if (options?.category) params.append('category', options.category);
+      if (options?.legacy_policy_id !== undefined) params.append('legacy_policy_id', options.legacy_policy_id.toString());
+      if (options?.name) params.append('name', options.name);
+      if (options?.name_exact !== undefined) params.append('name_exact', options.name_exact.toString());
+      if (options?.page !== undefined) params.append('page', options.page.toString());
+      if (options?.public_policy !== undefined) params.append('public_policy', options.public_policy.toString());
+      if (options?.size !== undefined) params.append('size', options.size.toString());
+      if (options?.vendor_policy !== undefined) params.append('vendor_policy', options.vendor_policy.toString());
+
+      const url = `appsec/v1/policies${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch policies: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get specific policy by GUID (latest version)
+  async getPolicy(policyGuid: string): Promise<VeracodePolicyVersion> {
+    try {
+      const url = `appsec/v1/policies/${policyGuid}`;
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch policy ${policyGuid}: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get all versions of a specific policy
+  async getPolicyVersions(policyGuid: string, page?: number, size?: number): Promise<VeracodePolicyListResponse> {
+    try {
+      const params = new URLSearchParams();
+      if (page !== undefined) params.append('page', page.toString());
+      if (size !== undefined) params.append('size', size.toString());
+
+      const url = `appsec/v1/policies/${policyGuid}/versions${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch policy versions for ${policyGuid}: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get specific version of a policy
+  async getPolicyVersion(policyGuid: string, version: number): Promise<VeracodePolicyVersion> {
+    try {
+      const url = `appsec/v1/policies/${policyGuid}/versions/${version}`;
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch policy ${policyGuid} version ${version}: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get policy settings (default policies for business criticality levels)
+  async getPolicySettings(): Promise<VeracodePolicySettingsResponse> {
+    try {
+      const url = 'appsec/v1/policy_settings';
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch policy settings: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get SCA component licenses information
+  async getScaLicenses(page?: number, size?: number, sort?: string): Promise<any> {
+    try {
+      const params = new URLSearchParams();
+      if (page !== undefined) params.append('page', page.toString());
+      if (size !== undefined) params.append('size', size.toString());
+      if (sort) params.append('sort', sort);
+
+      const url = `appsec/v1/policy_licenselist${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await this.apiClient.get(url);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Failed to fetch SCA licenses: ${this.getErrorMessage(error)}`);
     }
   }
 
