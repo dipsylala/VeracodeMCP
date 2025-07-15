@@ -1,13 +1,11 @@
 import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 
-/**
- * Create application management tools for CLI
- */
+// Create application management tools for CLI
 export function createApplicationTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-applications',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const result = await context.veracodeClient.getApplications();
         return {
           success: true,
@@ -29,7 +27,7 @@ export function createApplicationTools(): CLIToolHandler[] {
 
     {
       name: 'search-applications',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }
@@ -56,7 +54,7 @@ export function createApplicationTools(): CLIToolHandler[] {
 
     {
       name: 'get-application-details',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.app_id) {
           return { success: false, error: 'Missing required argument: app_id' };
         }
@@ -71,7 +69,7 @@ export function createApplicationTools(): CLIToolHandler[] {
 
     {
       name: 'get-application-details-by-name',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }

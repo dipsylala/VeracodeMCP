@@ -1,17 +1,8 @@
 import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { isGuid } from '../utils/validation.js';
 
-/**
- * Helper function to detect if a string is a GUID format
- */
-function isGuid(str: string): boolean {
-  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return guidRegex.test(str);
-}
-
-/**
- * Create static analysis tools for MCP
- */
+// Create static analysis tools for MCP
 export function createStaticAnalysisTools(): MCPToolHandler[] {
   return [
     {
@@ -23,7 +14,7 @@ export function createStaticAnalysisTools(): MCPToolHandler[] {
         issue_id: z.string().describe('Issue/Flaw ID to get detailed information for'),
         sandbox_id: z.string().optional().describe('Optional sandbox ID to filter findings to a specific sandbox')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
 

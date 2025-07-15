@@ -1,13 +1,11 @@
 import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 
-/**
- * Create scan tools for CLI
- */
+// Create scan tools for CLI
 export function createScanTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-scan-results',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.app_id) {
           return { success: false, error: 'Missing required argument: app_id' };
         }
@@ -34,7 +32,7 @@ export function createScanTools(): CLIToolHandler[] {
 
     {
       name: 'get-scan-results-by-name',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }

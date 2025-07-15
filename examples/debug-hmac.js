@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 
-/**
- * Debug script to test HMAC authentication with different URL encodings
- */
-
+// Debug script to test HMAC authentication with different URL encodings
 import { VeracodeClient } from '../build/veracode-rest-client.js';
 
 async function debugHMACAuthentication() {

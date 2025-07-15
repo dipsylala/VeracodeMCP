@@ -1,17 +1,8 @@
 import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { isGuid } from '../utils/validation.js';
 
-/**
- * Helper function to detect if a string is a GUID format
- */
-function isGuid(str: string): boolean {
-  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return guidRegex.test(str);
-}
-
-/**
- * Create sandbox tools for MCP
- */
+// Create sandbox tools for MCP
 export function createSandboxTools(): MCPToolHandler[] {
   return [
     {
@@ -22,10 +13,10 @@ export function createSandboxTools(): MCPToolHandler[] {
         page: z.number().optional().describe('Page number (defaults to 0)'),
         size: z.number().optional().describe('Page size, up to 500 (default is 50)')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
-          
+
           if (isGuid(args.application)) {
             // Handle as application ID
             const sandboxes = await context.veracodeClient.getSandboxes(args.application, {
@@ -112,10 +103,10 @@ export function createSandboxTools(): MCPToolHandler[] {
       schema: {
         application: z.string().describe('Application ID (GUID) or application name to get sandbox summary for')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
-          
+
           if (isGuid(args.application)) {
             // Handle as application ID
             const sandboxes = await context.veracodeClient.getSandboxes(args.application);

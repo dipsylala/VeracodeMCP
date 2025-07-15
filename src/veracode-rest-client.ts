@@ -590,16 +590,14 @@ export class VeracodeClient {
     logger.info('VeracodeClient initialized successfully', 'CLIENT');
   }
 
-  /**
-   * Create a VeracodeClient instance using credentials from environment variables
-   * This is the recommended way to create a client for testing and applications
-   */
+  // Create a VeracodeClient instance using credentials from environment variables
+  // This is the recommended way to create a client for testing and applications
   static fromEnvironment(options?: {
     apiBaseUrl?: string;
     platformBaseUrl?: string;
   }): VeracodeClient {
     const credentials = loadVeracodeCredentials();
-    
+
     return new VeracodeClient(credentials.apiId, credentials.apiKey, {
       apiBaseUrl: options?.apiBaseUrl || credentials.apiBaseUrl,
       platformBaseUrl: options?.platformBaseUrl || credentials.platformBaseUrl
@@ -902,14 +900,14 @@ export class VeracodeClient {
 
       const response = await this.apiClient.get(url);
       const scans = response.data._embedded?.scans || [];
-      
+
       logger.debug('Scan results retrieved', 'API', {
         appId,
         scanType: scanType || 'all',
         scanCount: scans.length,
         scans: scans.map((scan: any) => ({ scan_id: scan.scan_id, scan_type: scan.scan_type, status: scan.status }))
       });
-      
+
       return scans;
     } catch (error) {
       throw new Error(`Failed to fetch scan results: ${this.getErrorMessage(error)}`);
@@ -934,7 +932,7 @@ export class VeracodeClient {
     try {
       const scans = await this.getScanResults(appId, scanType);
       const scanTypes = [...new Set(scans.map((scan: any) => scan.scan_type))];
-      
+
       logger.debug('Scan existence check completed', 'API', {
         appId,
         requestedScanType: scanType,
@@ -942,7 +940,7 @@ export class VeracodeClient {
         scanCount: scans.length,
         availableScanTypes: scanTypes
       });
-      
+
       return {
         hasScans: scans.length > 0,
         scanCount: scans.length,
@@ -994,13 +992,13 @@ export class VeracodeClient {
     try {
       // Check if the application has any scans first
       const scanCheck = await this.hasScans(appId, options?.scanType);
-      
+
       if (!scanCheck.hasScans) {
         logger.warn('No scans found for application', 'API', {
           appId,
           requestedScanType: options?.scanType || 'any'
         });
-        
+
         return {
           findings: [],
           pagination: {
@@ -1013,7 +1011,7 @@ export class VeracodeClient {
           }
         };
       }
-      
+
       // If a specific scan type was requested but not available, return empty results
       if (options?.scanType && !scanCheck.scanTypes.includes(options.scanType)) {
         logger.warn('Requested scan type not available for application', 'API', {
@@ -1021,7 +1019,7 @@ export class VeracodeClient {
           requestedScanType: options.scanType,
           availableScanTypes: scanCheck.scanTypes
         });
-        
+
         return {
           findings: [],
           pagination: {
@@ -1217,8 +1215,6 @@ export class VeracodeClient {
     }
   }
 
-
-
   // Get findings for an application across multiple pages
   // Automatically handles pagination to retrieve all findings
   async getAllFindings(
@@ -1309,7 +1305,7 @@ export class VeracodeClient {
       // Count findings by severity
       const findingsBySeverity: Record<string, number> = {
         '5': 0, // Very High
-        '4': 0, // High  
+        '4': 0, // High
         '3': 0, // Medium
         '2': 0, // Low
         '1': 0  // Very Low
@@ -1348,17 +1344,17 @@ export class VeracodeClient {
       if (primaryPolicy) {
         const policyStatus = primaryPolicy.policy_compliance_status;
         switch (policyStatus) {
-          case 'PASSED':
-            complianceStatus = 'PASS';
-            break;
-          case 'DID_NOT_PASS':
-            complianceStatus = 'FAIL';
-            break;
-          case 'CONDITIONAL_PASS':
-            complianceStatus = 'CONDITIONAL_PASS';
-            break;
-          default:
-            complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
+        case 'PASSED':
+          complianceStatus = 'PASS';
+          break;
+        case 'DID_NOT_PASS':
+          complianceStatus = 'FAIL';
+          break;
+        case 'CONDITIONAL_PASS':
+          complianceStatus = 'CONDITIONAL_PASS';
+          break;
+        default:
+          complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
         }
       } else {
         complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
@@ -1442,7 +1438,7 @@ Original error: ${errorMessage}`);
   async getPolicies(options?: VeracodePolicyListOptions): Promise<VeracodePolicyListResponse> {
     try {
       const params = new URLSearchParams();
-      
+
       if (options?.category) params.append('category', options.category);
       if (options?.legacy_policy_id !== undefined) params.append('legacy_policy_id', options.legacy_policy_id.toString());
       if (options?.name) params.append('name', options.name);

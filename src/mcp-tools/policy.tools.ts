@@ -1,9 +1,7 @@
 import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
 
-/**
- * Create policy tools for MCP
- */
+// Create policy tools for MCP
 export function createPolicyTools(): MCPToolHandler[] {
   return [
     {
@@ -19,7 +17,7 @@ export function createPolicyTools(): MCPToolHandler[] {
         size: z.number().min(1).max(500).optional().describe('Page size (1-500, defaults to 50)'),
         vendor_policy: z.boolean().optional().describe('Filter by vendor policy flag')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const options = {
             category: args.category,
@@ -59,7 +57,7 @@ export function createPolicyTools(): MCPToolHandler[] {
       schema: {
         policy_guid: z.string().describe('The unique identifier (GUID) of the policy')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getPolicy(args.policy_guid);
           return {
@@ -83,7 +81,7 @@ export function createPolicyTools(): MCPToolHandler[] {
         page: z.number().optional().describe('Page number (defaults to 0)'),
         size: z.number().min(1).max(500).optional().describe('Page size (1-500, defaults to 50)')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getPolicyVersions(
             args.policy_guid,
@@ -110,7 +108,7 @@ export function createPolicyTools(): MCPToolHandler[] {
         policy_guid: z.string().describe('The unique identifier (GUID) of the policy'),
         version: z.number().describe('The specific version number of the policy')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getPolicyVersion(
             args.policy_guid,
@@ -133,7 +131,7 @@ export function createPolicyTools(): MCPToolHandler[] {
       name: 'get-policy-settings',
       description: 'Get policy settings (default policies for business criticality levels)',
       schema: {},
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getPolicySettings();
           return {
@@ -157,7 +155,7 @@ export function createPolicyTools(): MCPToolHandler[] {
         size: z.number().optional().describe('Page size'),
         sort: z.string().optional().describe('Sort order')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getScaLicenses(
             args.page,

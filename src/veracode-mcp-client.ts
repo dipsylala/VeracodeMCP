@@ -115,7 +115,7 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
           input += chunk;
         }
       });
-      process.stdin.on('end', async () => {
+      process.stdin.on('end', async() => {
         try {
           const parsed = JSON.parse(input.trim());
           const client = new VeracodeMCPClient();
@@ -193,46 +193,46 @@ function showUsage(client: VeracodeMCPClient) {
   console.log('Available tools:');
   availableTools.forEach(tool => {
     switch (tool) {
-      case 'get-applications':
-        console.log('  get-applications');
-        break;
-      case 'search-applications':
-        console.log('  search-applications --name <search_term>');
-        break;
-      case 'get-application-details':
-        console.log('  get-application-details --application <app_id_or_name>');
-        break;
-      case 'get-scan-results':
-        console.log('  get-scan-results --app_id <app_id> [--scan_type <type>]');
-        break;
-      case 'get-scan-results-by-name':
-        console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
-        break;
-      case 'get-findings':
-        console.log('  get-findings --application <app_id_or_name> [--scan_type <type>] [--severity <severity>]');
-        break;
-      case 'get-findings-advanced-by-name':
-        console.log(
-          '  get-findings-advanced-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>] [--single_page]'
-        );
-        break;
-      case 'get-sca-results-by-name':
-        console.log(
-          '  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]'
-        );
-        break;
-      case 'get-policy-compliance':
-        console.log('  get-policy-compliance --app_id <app_id>');
-        break;
-      case 'get-static-flaw-info':
-        console.log('  get-static-flaw-info --application <app_id_or_name> --issue_id <issue_id> [--sandbox_id <sandbox_guid>]');
-        break;
-      case 'get-sandboxes':
-        console.log('  get-sandboxes --application <app_id_or_name> [--page <page>] [--size <size>]');
-        break;
-      case 'get-sandbox-summary':
-        console.log('  get-sandbox-summary --application <app_id_or_name>');
-        break;
+    case 'get-applications':
+      console.log('  get-applications');
+      break;
+    case 'search-applications':
+      console.log('  search-applications --name <search_term>');
+      break;
+    case 'get-application-details':
+      console.log('  get-application-details --application <app_id_or_name>');
+      break;
+    case 'get-scan-results':
+      console.log('  get-scan-results --app_id <app_id> [--scan_type <type>]');
+      break;
+    case 'get-scan-results-by-name':
+      console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
+      break;
+    case 'get-findings':
+      console.log('  get-findings --application <app_id_or_name> [--scan_type <type>] [--severity <severity>]');
+      break;
+    case 'get-findings-advanced-by-name':
+      console.log(
+        '  get-findings-advanced-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>] [--single_page]'
+      );
+      break;
+    case 'get-sca-results-by-name':
+      console.log(
+        '  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]'
+      );
+      break;
+    case 'get-policy-compliance':
+      console.log('  get-policy-compliance --app_id <app_id>');
+      break;
+    case 'get-static-flaw-info':
+      console.log('  get-static-flaw-info --application <app_id_or_name> --issue_id <issue_id> [--sandbox_id <sandbox_guid>]');
+      break;
+    case 'get-sandboxes':
+      console.log('  get-sandboxes --application <app_id_or_name> [--page <page>] [--size <size>]');
+      break;
+    case 'get-sandbox-summary':
+      console.log('  get-sandbox-summary --application <app_id_or_name>');
+      break;
     }
   });
 

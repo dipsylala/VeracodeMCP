@@ -1,14 +1,12 @@
 import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 import { logger } from '../utils/logger.js';
 
-/**
- * Create findings tools for CLI
- */
+// Create findings tools for CLI
 export function createFindingsTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-findings-by-name',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting findings search execution', 'FINDINGS_CLI', { args });
 
@@ -53,31 +51,31 @@ export function createFindingsTools(): CLIToolHandler[] {
             };
 
             switch (finding.scan_type) {
-              case 'STATIC':
-                return {
-                  ...baseFinding,
-                  flaw_id: finding.finding_details?.finding_id?.toString(),
-                  cwe_id: finding.finding_details?.cwe?.id,
-                  cwe_name: finding.finding_details?.cwe?.name,
-                  module: finding.finding_details?.module,
-                  function_name: finding.finding_details?.procedure,
-                  relative_location: finding.finding_details?.relative_location,
-                  line_number: finding.finding_details?.file_line_number,
-                  description: finding.finding_details?.description || finding.description
-                };
-              case 'SCA':
-                return {
-                  ...baseFinding,
-                  component_id: finding.finding_details?.component_id,
-                  component_filename: finding.finding_details?.component_filename,
-                  component_version: finding.finding_details?.version,
-                  cve_id: finding.finding_details?.cve?.name,
-                  cvss: finding.finding_details?.cve?.cvss,
-                  exploitable: finding.finding_details?.cve?.exploitability?.exploit_observed,
-                  description: finding.finding_details?.description || finding.description
-                };
-              default:
-                return baseFinding;
+            case 'STATIC':
+              return {
+                ...baseFinding,
+                flaw_id: finding.finding_details?.finding_id?.toString(),
+                cwe_id: finding.finding_details?.cwe?.id,
+                cwe_name: finding.finding_details?.cwe?.name,
+                module: finding.finding_details?.module,
+                function_name: finding.finding_details?.procedure,
+                relative_location: finding.finding_details?.relative_location,
+                line_number: finding.finding_details?.file_line_number,
+                description: finding.finding_details?.description || finding.description
+              };
+            case 'SCA':
+              return {
+                ...baseFinding,
+                component_id: finding.finding_details?.component_id,
+                component_filename: finding.finding_details?.component_filename,
+                component_version: finding.finding_details?.version,
+                cve_id: finding.finding_details?.cve?.name,
+                cvss: finding.finding_details?.cve?.cvss,
+                exploitable: finding.finding_details?.cve?.exploitability?.exploit_observed,
+                description: finding.finding_details?.description || finding.description
+              };
+            default:
+              return baseFinding;
             }
           });
 

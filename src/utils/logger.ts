@@ -1,8 +1,5 @@
-/**
- * Centralized logging utility for the Veracode MCP Server
- * Supports different log levels controlled by LOG_LEVEL environment variable
- */
-
+// Centralized logging utility for the Veracode MCP Server
+// Supports different log levels controlled by LOG_LEVEL environment variable
 export enum LogLevel {
   DEBUG = 0,
   INFO = 1,

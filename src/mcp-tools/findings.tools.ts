@@ -1,17 +1,8 @@
 import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { isGuid } from '../utils/validation.js';
 
-/**
- * Helper function to detect if a string is a GUID format
- */
-function isGuid(str: string): boolean {
-  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return guidRegex.test(str);
-}
-
-/**
- * Create findings tools for MCP
- */
+// Create findings tools for MCP
 export function createFindingsTools(): MCPToolHandler[] {
   return [
     {
@@ -21,7 +12,7 @@ export function createFindingsTools(): MCPToolHandler[] {
       schema: {
         application: z.string().describe('Application ID (GUID) or application name to get findings for')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
 
@@ -31,7 +22,7 @@ export function createFindingsTools(): MCPToolHandler[] {
           } else {
             // Handle as application name - with scan checking
             const searchResults = await context.veracodeClient.searchApplications(args.application);
-            
+
             if (searchResults.length === 0) {
               return {
                 success: false,
@@ -46,7 +37,7 @@ export function createFindingsTools(): MCPToolHandler[] {
 
             // Check if the application has scans
             const scanCheck = await context.veracodeClient.hasScans(targetApp.guid);
-            
+
             if (!scanCheck.hasScans) {
               return {
                 success: true,
@@ -70,7 +61,7 @@ export function createFindingsTools(): MCPToolHandler[] {
             }
 
             result = await context.veracodeClient.getFindingsByName(args.application);
-            
+
             // Add scan status information
             result = {
               ...result,
@@ -128,10 +119,10 @@ export function createFindingsTools(): MCPToolHandler[] {
         max_pages: z.number().min(1).max(100).optional().describe('Maximum pages to retrieve (default: 50)'),
         single_page: z.boolean().optional().describe('Return only first page of results (default: false)')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let targetApp;
-          
+
           if (isGuid(args.application)) {
             // Handle as application ID - get application details first
             const appDetails = await context.veracodeClient.getApplicationDetails(args.application);
@@ -162,7 +153,7 @@ export function createFindingsTools(): MCPToolHandler[] {
 
           // Check if the application has scans before proceeding
           const scanCheck = await context.veracodeClient.hasScans(targetApp.guid, args.scan_type);
-          
+
           if (!scanCheck.hasScans) {
             return {
               success: true,
@@ -412,10 +403,10 @@ export function createFindingsTools(): MCPToolHandler[] {
         new_findings_only: z.boolean().optional().describe('Only show new findings (default: false)'),
         policy_violations_only: z.boolean().optional().describe('Only show policy violations (default: false)')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let targetApp;
-          
+
           if (isGuid(args.application)) {
             // Handle as application ID - get application details first
             const appDetails = await context.veracodeClient.getApplicationDetails(args.application);
@@ -446,7 +437,7 @@ export function createFindingsTools(): MCPToolHandler[] {
 
           // Check if the application has scans before proceeding
           const scanCheck = await context.veracodeClient.hasScans(targetApp.guid, args.scan_type);
-          
+
           if (!scanCheck.hasScans) {
             return {
               success: true,

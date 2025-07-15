@@ -1,5 +1,5 @@
 import { MCPToolHandler, ToolContext } from './mcp-types.js';
-import { ToolCategory, ToolCall, ToolResponse } from '../types/shared-types.js';
+import { ToolCategory, ToolCall } from '../types/shared-types.js';
 import { VeracodeClient } from '../veracode-rest-client.js';
 import { createApplicationTools } from './application.tools.js';
 import { createFindingsTools } from './findings.tools.js';
@@ -58,20 +58,20 @@ export class MCPToolRegistry {
     return this.allTools.filter(tool => {
       const name = tool.name;
       switch (category) {
-        case ToolCategory.APPLICATION:
-          return name.includes('application') || name === 'get-applications' || name === 'search-applications';
-        case ToolCategory.FINDINGS:
-          return name.includes('finding');
-        case ToolCategory.STATIC_ANALYSIS:
-          return name.includes('static-flaw');
-        case ToolCategory.SCA:
-          return name.includes('sca');
-        case ToolCategory.SCAN:
-          return name.includes('scan');
-        case ToolCategory.POLICY:
-          return name.includes('policy');
-        default:
-          return false;
+      case ToolCategory.APPLICATION:
+        return name.includes('application') || name === 'get-applications' || name === 'search-applications';
+      case ToolCategory.FINDINGS:
+        return name.includes('finding');
+      case ToolCategory.STATIC_ANALYSIS:
+        return name.includes('static-flaw');
+      case ToolCategory.SCA:
+        return name.includes('sca');
+      case ToolCategory.SCAN:
+        return name.includes('scan');
+      case ToolCategory.POLICY:
+        return name.includes('policy');
+      default:
+        return false;
       }
     });
   }

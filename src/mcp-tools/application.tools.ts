@@ -1,17 +1,8 @@
 import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { isGuid } from '../utils/validation.js';
 
-/**
- * Helper function to detect if a string is a GUID format
- */
-function isGuid(str: string): boolean {
-  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  return guidRegex.test(str);
-}
-
-/**
- * Create application tools for MCP
- */
+// Create application tools for MCP
 export function createApplicationTools(): MCPToolHandler[] {
   return [
     {
@@ -36,7 +27,7 @@ export function createApplicationTools(): MCPToolHandler[] {
         tag: z.string().optional().describe('Filter by tag'),
         team: z.string().optional().describe('Filter by team name')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const applications = await context.veracodeClient.getApplications(args);
           return {
@@ -126,7 +117,7 @@ export function createApplicationTools(): MCPToolHandler[] {
         page: z.number().optional().describe('Page number (defaults to 0)'),
         size: z.number().optional().describe('Page size, up to 500 (default is 50)')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const searchResults = await context.veracodeClient.getApplications({
             name: args.name,
@@ -190,7 +181,7 @@ export function createApplicationTools(): MCPToolHandler[] {
       schema: {
         application: z.string().describe('Application ID (GUID) or application name')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
 

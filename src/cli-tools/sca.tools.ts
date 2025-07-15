@@ -1,14 +1,12 @@
 import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 import { logger } from '../utils/logger.js';
 
-/**
- * Create SCA tools for CLI
- */
+// Create SCA tools for CLI
 export function createSCATools(): CLIToolHandler[] {
   return [
     {
       name: 'get-sca-results-by-name',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting SCA analysis execution', 'SCA_CLI', { args });
 

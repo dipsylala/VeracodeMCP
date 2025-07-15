@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * Test script for Veracode Policy Management MCP Tools
- * This script demonstrates how to use the new policy MCP tools
- */
-
+// Test script for Veracode Policy Management MCP Tools
+// This script demonstrates how to use the new policy MCP tools
 import { CLIToolRegistry } from '../build/cli-tools/cli-tool-registry.js';
 import { VeracodeClient } from '../build/veracode-rest-client.js';
 

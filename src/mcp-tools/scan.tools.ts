@@ -1,9 +1,7 @@
 import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
 
-/**
- * Create scan tools for MCP
- */
+// Create scan tools for MCP
 export function createScanTools(): MCPToolHandler[] {
   return [
     {
@@ -12,7 +10,7 @@ export function createScanTools(): MCPToolHandler[] {
       schema: {
         app_id: z.string().describe('Application ID (GUID) to get scan results for')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getScanResults(args.app_id);
 
@@ -51,7 +49,7 @@ export function createScanTools(): MCPToolHandler[] {
       schema: {
         name: z.string().describe('Application name to get scan results for')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.getScanResultsByName(args.name);
 
@@ -77,7 +75,7 @@ export function createScanTools(): MCPToolHandler[] {
               count: formattedScans.length,
               has_scans: formattedScans.length > 0,
               available_scan_types: scanTypes,
-              message: formattedScans.length === 0 
+              message: formattedScans.length === 0
                 ? 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.'
                 : `Found ${formattedScans.length} scan(s) of types: ${scanTypes.join(', ')}`,
               scans: formattedScans

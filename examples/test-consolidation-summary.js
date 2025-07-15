@@ -1,8 +1,4 @@
-/**
- * Simple test to validate the consolidated tools directly via MCP server
- */
-
-import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
+// Simple test to validate the consolidated tools directly via MCP server
 
 async function testConsolidation() {
   console.log('🧪 Testing Consolidated Tool Functionality\n');

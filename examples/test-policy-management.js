@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * Test script for Veracode Policy Management APIs
- * This script demonstrates how to use the new policy management tools
- */
-
+// Test script for Veracode Policy Management APIs
+// This script demonstrates how to use the new policy management tools
 import { VeracodeClient } from '../build/veracode-rest-client.js';
 
 async function testPolicyManagement() {

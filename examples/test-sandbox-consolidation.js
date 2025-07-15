@@ -1,6 +1,4 @@
-/**
- * Direct test of consolidated sandbox functionality
- */
+// Direct test of consolidated sandbox functionality
 
 import { VeracodeClient } from '../build/veracode-rest-client.js';
 

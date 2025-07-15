@@ -1,6 +1,4 @@
-/**
- * Test script to validate consolidated tools (unified ID/name parameters)
- */
+// Test script to validate consolidated tools (unified ID/name parameters)
 
 import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
 

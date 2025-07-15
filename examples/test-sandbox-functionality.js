@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 
-/**
- * Test script to verify the sandbox functionality works correctly
- * This script tests both MCP and CLI sandbox tools
- */
-
+// Test script to verify the sandbox functionality works correctly
+// This script tests both MCP and CLI sandbox tools
 import { VeracodeClient } from '../build/veracode-rest-client.js';
 import { MCPToolRegistry } from '../build/mcp-tools/mcp.tool.registry.js';
 import { CLIToolRegistry } from '../build/cli-tools/cli-tool-registry.js';

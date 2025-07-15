@@ -1,13 +1,11 @@
 import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 
-/**
- * Create policy tools for CLI
- */
+// Create policy tools for CLI
 export function createPolicyTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-policies',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const options = {
           category: args?.category,
           legacy_policy_id: args?.legacy_policy_id,
@@ -36,7 +34,7 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.policy_guid) {
           return { success: false, error: 'Missing required argument: policy_guid' };
         }
@@ -51,7 +49,7 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy-versions',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.policy_guid) {
           return { success: false, error: 'Missing required argument: policy_guid' };
         }
@@ -70,7 +68,7 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy-version',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.policy_guid) {
           return { success: false, error: 'Missing required argument: policy_guid' };
         }
@@ -91,7 +89,7 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy-settings',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const result = await context.veracodeClient.getPolicySettings();
         return {
           success: true,
@@ -102,7 +100,7 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-sca-licenses',
-      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const result = await context.veracodeClient.getScaLicenses(
           args?.page,
           args?.size,
