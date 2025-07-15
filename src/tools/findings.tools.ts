@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 
 // Schema for the unified get-findings tool
 const GetFindingsSchema = z.object({
@@ -105,7 +105,7 @@ function generateSummaryStats(findings: any[]) {
   return stats;
 }
 
-export function createFindingsTools(): MCPToolHandler[] {
+export function createFindingsTools(): ToolHandler[] {
   return [
     {
       name: 'get-findings',

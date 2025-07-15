@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { isGuid } from '../utils/validation.js';
 
 // Create sandbox tools for MCP
-export function createSandboxTools(): MCPToolHandler[] {
+export function createSandboxTools(): ToolHandler[] {
   return [
     {
       name: 'get-sandboxes',

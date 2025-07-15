@@ -1,26 +1,20 @@
-// Quick test to verify the improved tool registry
-import { CLIToolRegistry } from './build/cli-tools/cli-tool-registry.js';
-import { VeracodeClient } from './build/veracode-rest-client.js';
+// Quick test to verify the MCP tool registry
+import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
-// Create client and registry
-const veracodeClient = new VeracodeClient(
-    process.env.VERACODE_API_ID,
-    process.env.VERACODE_API_KEY
-);
+// Create MCP client
+const client = new VeracodeMCPClient();
 
-const registry = new CLIToolRegistry(veracodeClient);
+console.log('\n🔧 MCP Tool Registry Analysis');
+console.log('==============================');
 
-console.log('\n🔧 Tool Registry Analysis');
-console.log('========================');
-
-console.log('\n📊 Total Tools:', registry.getAvailableTools().length);
+console.log('\n📊 Total Tools:', client.getToolCount());
 
 console.log('\n📁 Tools by Category:');
-const categorization = registry.getToolsByCategory();
+const categorization = client.getToolsByCategory();
 Object.entries(categorization).forEach(([category, tools]) => {
     if (tools.length > 0) {
         console.log(`\n  ${category} (${tools.length} tools):`);
@@ -28,4 +22,4 @@ Object.entries(categorization).forEach(([category, tools]) => {
     }
 });
 
-console.log('\n✅ Registry improvement verification complete!');
+console.log('\n✅ MCP Registry verification complete!');

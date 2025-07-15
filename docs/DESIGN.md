@@ -32,13 +32,13 @@ src/
 ├── veracode-mcp-client.ts       # MCP Client & CLI Interface
 ├── types/                       # Shared Type Definitions
 │   └── shared-types.ts          # Common interfaces and enums (ToolResponse, ToolCategory, ToolCall)
-├── cli-tools/                   # CLI-specific Tool System (Factory Pattern)
-│   ├── cli-types.ts             # CLI-specific types (CLIToolHandler + re-exports)
+├── tools (removed)/                   # CLI-specific Tool System (Factory Pattern)
+│   ├── cli-types.ts             # CLI-specific types (ToolHandler (CLI removed) + re-exports)
 │   ├── cli-tool-registry.ts     # CLI Tool Registry and Management
 │   ├── *.tools.ts               # CLI tools broken up by category
-├── mcp-tools/                   # MCP Protocol Tool Implementations
-│   ├── mcp-types.ts             # MCP-specific types (ToolHandler, ToolContext + re-exports)
-│   ├── mcp.tool.registry.ts     # MCP Tool Registration System
+├── tools/                   # MCP Protocol Tool Implementations
+│   ├── tool-types.ts             # MCP-specific types (ToolHandler, ToolContext + re-exports)
+│   ├── tool.registry.ts     # MCP Tool Registration System
 │   ├── *.tools.ts               # MCP tools broken up by category
 └── utils/
     └── logger.ts                # Structured Logging Utility
@@ -126,16 +126,16 @@ docs/                            # Documentation
 
 **CLI Tool Registry Architecture**:
 - **Factory Function Pattern**: Each tool category exports a `createXXXTools(client)` function
-- **Simplified Registration**: No complex inheritance - just arrays of `CLIToolHandler` objects
+- **Simplified Registration**: No complex inheritance - just arrays of `ToolHandler (CLI removed)` objects
 - **Shared Types**: Uses `ToolCategory` enum and `ToolResponse` interface from shared types
 - **Consistent Error Handling**: All tools return `ToolResponse` format for consistency
 
 ### 4. Tool Registry System
 
-**MCP Tool Registry** (`src/mcp-tools/mcp.tool.registry.ts`):
+**MCP Tool Registry** (`src/tools/tool.registry.ts`):
 **Purpose**: Centralized tool registration and management system for MCP server tools.
 
-**CLI Tool Registry** (`src/cli-tools/cli-tool-registry.ts`):
+**CLI Tool Registry** (`src/tools (removed)/cli-tool-registry.ts`):
 **Purpose**: Simplified factory-function based tool registry for CLI tools.
 
 **Architecture Pattern**: Both systems now use consistent patterns:
@@ -197,7 +197,7 @@ export interface ToolCall {
     args?: Record<string, any>;
 }
 
-// 2. MCP-Specific Types (src/mcp-tools/mcp-types.ts)
+// 2. MCP-Specific Types (src/tools/tool-types.ts)
 export interface ToolHandler {
     name: string;
     description: string;
@@ -209,8 +209,8 @@ export interface ToolContext {
     veracodeClient: any;
 }
 
-// 3. CLI-Specific Types (src/cli-tools/cli-types.ts)
-export interface CLIToolHandler {
+// 3. CLI-Specific Types (src/tools (removed)/cli-types.ts)
+export interface ToolHandler (CLI removed) {
     name: string;
     handler: (args: any) => Promise<ToolResponse>;
 }
@@ -523,16 +523,16 @@ npm run test:search              # Test search functionality
 ### Adding New Tools
 
 1. **For MCP Server Tools**:
-   - Create tool handler in appropriate `src/mcp-tools/*.tools.ts` file
+   - Create tool handler in appropriate `src/tools/*.tools.ts` file
    - Define input schema with Zod validation
    - Implement tool handler function that returns `ToolResponse`
    - Add tool to tool array export
    - Tool registry automatically registers it
 
 2. **For CLI Tools** (optional):
-   - Add tool to appropriate `src/cli-tools/*.tools.ts` file  
+   - Add tool to appropriate `src/tools (removed)/*.tools.ts` file  
    - Follow factory function pattern: `createXXXTools(client: VeracodeClient)`
-   - Return `CLIToolHandler` objects with `ToolResponse` format
+   - Return `ToolHandler (CLI removed)` objects with `ToolResponse` format
    - CLI tool registry automatically discovers it via factory function
 
 3. **Create Example Usage**:
@@ -553,8 +553,8 @@ npm run test:search              # Test search functionality
    - Extend `ToolCall` interface for new parameter patterns
 
 2. **System-Specific Types**:
-   - **MCP**: Add types to `src/mcp-tools/mcp-types.ts` for MCP-only concepts
-   - **CLI**: Add types to `src/cli-tools/cli-types.ts` for CLI-only concepts
+   - **MCP**: Add types to `src/tools/tool-types.ts` for MCP-only concepts
+   - **CLI**: Add types to `src/tools (removed)/cli-types.ts` for CLI-only concepts
 
 3. **Consistency Guidelines**:
    - Use `ToolResponse` for all tool return values
@@ -599,7 +599,7 @@ class ApplicationTools extends ToolCategory {
 }
 
 // After: Simple factory function
-export function createApplicationTools(client: VeracodeClient): CLIToolHandler[] {
+export function createApplicationTools(client: VeracodeClient): ToolHandler (CLI removed)[] {
   return [
     { name: "get-applications", handler: async (args) => { ... } }
   ];
@@ -622,8 +622,8 @@ export function createApplicationTools(client: VeracodeClient): CLIToolHandler[]
 src/types/shared-types.ts: ToolResponse, ToolCategory, ToolCall
 
 // System-specific types with re-exports
-src/mcp-tools/mcp-types.ts: ToolHandler, ToolContext + re-exports
-src/cli-tools/cli-types.ts: CLIToolHandler + re-exports
+src/tools/tool-types.ts: ToolHandler, ToolContext + re-exports
+src/tools (removed)/cli-types.ts: ToolHandler (CLI removed) + re-exports
 ```
 
 ## Security Design

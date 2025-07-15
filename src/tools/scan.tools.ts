@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 
 // Create scan tools for MCP
-export function createScanTools(): MCPToolHandler[] {
+export function createScanTools(): ToolHandler[] {
   return [
     {
       name: 'get-scan-results',

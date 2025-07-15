@@ -3,7 +3,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { VeracodeClient } from './veracode-rest-client.js';
-import { MCPToolRegistry } from './mcp-tools/mcp.tool.registry.js';
+import { ToolRegistry } from './tools/tool.registry.js';
 import { logger } from './utils/logger.js';
 import { loadVeracodeCredentials } from './utils/credentials.js';
 import * as dotenv from 'dotenv';
@@ -35,7 +35,7 @@ const veracodeClient = new VeracodeClient(credentials.apiId, credentials.apiKey,
 });
 
 // Create tool registry instance (context managed internally)
-const mcpToolRegistry = new MCPToolRegistry(veracodeClient);
+const toolRegistry = new ToolRegistry(veracodeClient);
 
 logger.debug('Tool registry created', 'STARTUP');
 
@@ -51,7 +51,7 @@ const server = new McpServer({
 });
 
 // Register all tools from the tool registry
-const allTools = mcpToolRegistry.getAllTools();
+const allTools = toolRegistry.getAllTools();
 logger.info(`Registering ${allTools.length} tools`, 'STARTUP');
 
 for (const tool of allTools) {
@@ -60,12 +60,12 @@ for (const tool of allTools) {
     hasSchema: !!tool.schema
   });
 
-  server.tool(tool.name, tool.description, tool.schema, async(args: any) => {
+  server.tool(tool.name, tool.description, tool.schema, async (args: any) => {
     const startTime = Date.now();
     logger.toolExecution(tool.name, args);
 
     try {
-      const result = await mcpToolRegistry.executeTool({ tool: tool.name, args });
+      const result = await toolRegistry.executeTool({ tool: tool.name, args });
       const executionTime = Date.now() - startTime;
 
       logger.toolResult(
@@ -114,7 +114,7 @@ for (const tool of allTools) {
 }
 
 // Log tool registration summary
-const categorySummary = mcpToolRegistry.getCategorySummary();
+const categorySummary = toolRegistry.getCategorySummary();
 logger.info('Tool registration summary', 'STARTUP');
 for (const [category, count] of Object.entries(categorySummary)) {
   logger.info(`  ${category}: ${count} tools`, 'STARTUP');

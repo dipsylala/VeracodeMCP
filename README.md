@@ -47,7 +47,9 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 - **Comments & Annotations**: View mitigation details, security team comments, and risk assessments
 
 ### 🛠️ Developer Tools
-- **Command-Line Interface**: Scriptable access for automation and CI/CD
+- **MCP Integration**: Seamless integration with Model Context Protocol-compatible tools
+- **Example Scripts**: Comprehensive examples for testing and automation
+- **TypeScript SDK**: Full TypeScript support for custom integrations
 - **TypeScript Support**: Full type safety and IntelliSense support
 - **VS Code Integration**: Tasks and examples for streamlined development
 
@@ -229,36 +231,6 @@ Use natural language queries:
 - *"Show me SCA vulnerabilities for MyApp with high CVSS scores"*
 - *"What are the licensing risks in my applications?"*
 - *"Which components have known exploits?"*
-
-### Command Line Interface
-```bash
-# List all applications
-node build/veracode-mcp-client.js get-applications
-
-# Search for applications
-node build/veracode-mcp-client.js search-applications --name "MyApp"
-
-# Get application details by ID or name
-node build/veracode-mcp-client.js get-application-details --application "your-app-id-or-name"
-
-# Get scan results by ID or name
-node build/veracode-mcp-client.js get-scan-results --application "your-app-id-or-name"
-
-# Get comprehensive SCA analysis (RECOMMENDED for SCA)
-node build/veracode-mcp-client.js get-sca-results --application "MyApp"
-node build/veracode-mcp-client.js get-sca-results --application "MyApp" --severity_gte 4 --only_exploitable true
-
-# Get policy compliance by ID or name
-node build/veracode-mcp-client.js get-policy-compliance --application "your-app-id-or-name"
-
-# Get detailed static flaw analysis by application ID or name
-node build/veracode-mcp-client.js get-static-flaw-info --application "MyApp" --issue_id "123"
-
-# Enable debug logging for troubleshooting
-LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results --application "MyApp"
-```
-
-> 💡 **SCA Analysis**: Use `get-sca-results` for comprehensive Software Composition Analysis including exploitability data, licensing risks, and component vulnerability details. This is the most comprehensive SCA tool available in the CLI.
 
 ## 🔧 Development
 

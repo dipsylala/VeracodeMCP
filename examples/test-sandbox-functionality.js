@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
 // Test script to verify the sandbox functionality works correctly
-// This script tests both MCP and CLI sandbox tools
-import { VeracodeClient } from '../build/veracode-rest-client.js';
-import { MCPToolRegistry } from '../build/mcp-tools/mcp.tool.registry.js';
-import { CLIToolRegistry } from '../build/cli-tools/cli-tool-registry.js';
+// This script tests MCP sandbox tools
+import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
 import 'dotenv/config';
 
 async function testSandboxFunctionality() {
   console.log('🧪 Testing Sandbox Functionality\n');
-  
+
   if (!process.env.VERACODE_API_ID || !process.env.VERACODE_API_KEY) {
     console.error('❌ Missing required environment variables: VERACODE_API_ID and VERACODE_API_KEY');
     console.error('Please set these in your .env file');
@@ -17,23 +15,15 @@ async function testSandboxFunctionality() {
   }
 
   try {
-    // Initialize client
-    const client = new VeracodeClient(
-      process.env.VERACODE_API_ID,
-      process.env.VERACODE_API_KEY,
-      process.env.VERACODE_BASE_URL || 'https://api.veracode.com'
-    );
-
-    // Initialize registries
-    const mcpRegistry = new MCPToolRegistry(client);
-    const cliRegistry = new CLIToolRegistry(client);
+    // Initialize MCP client
+    const client = new VeracodeMCPClient();
 
     console.log('✅ Initialized Veracode client and tool registries\n');
 
     // Test 1: Find an application with sandboxes
     console.log('🔍 Test 1: Finding an application to test with...');
     const applications = await client.getApplications({ size: 10 });
-    
+
     if (applications.length === 0) {
       console.log('⚠️  No applications found in this account. Cannot test sandbox functionality.');
       return;
@@ -47,7 +37,7 @@ async function testSandboxFunctionality() {
 
     // Test get-sandboxes-by-id
     console.log('   Testing get-sandboxes-by-id...');
-    const mcpSandboxesByIdResult = await mcpRegistry.executeTool({
+    const mcpSandboxesByIdResult = await client.callTool({
       tool: 'get-sandboxes-by-id',
       args: {
         application_id: testApp.guid
@@ -65,7 +55,7 @@ async function testSandboxFunctionality() {
 
     // Test get-sandboxes-by-name
     console.log('   Testing get-sandboxes-by-name...');
-    const mcpSandboxesByNameResult = await mcpRegistry.executeTool({
+    const mcpSandboxesByNameResult = await client.callTool({
       tool: 'get-sandboxes-by-name',
       args: {
         application_name: testApp.profile.name
@@ -81,7 +71,7 @@ async function testSandboxFunctionality() {
 
     // Test get-sandbox-summary-by-name
     console.log('   Testing get-sandbox-summary-by-name...');
-    const mcpSummaryByNameResult = await mcpRegistry.executeTool({
+    const mcpSummaryByNameResult = await client.callTool({
       tool: 'get-sandbox-summary-by-name',
       args: {
         application_name: testApp.profile.name
@@ -96,7 +86,7 @@ async function testSandboxFunctionality() {
 
     // Test get-sandbox-summary-by-id
     console.log('   Testing get-sandbox-summary-by-id...');
-    const mcpSummaryByIdResult = await mcpRegistry.executeTool({
+    const mcpSummaryByIdResult = await client.callTool({
       tool: 'get-sandbox-summary-by-id',
       args: {
         application_id: testApp.guid
@@ -114,7 +104,7 @@ async function testSandboxFunctionality() {
 
     // Test CLI get-sandboxes-by-id
     console.log('   Testing CLI get-sandboxes-by-id...');
-    const cliSandboxesByIdResult = await cliRegistry.executeTool({
+    const cliSandboxesByIdResult = await client.callTool({
       tool: 'get-sandboxes-by-id',
       args: {
         application_id: testApp.guid
@@ -129,7 +119,7 @@ async function testSandboxFunctionality() {
 
     // Test CLI get-sandboxes-by-name
     console.log('   Testing CLI get-sandboxes-by-name...');
-    const cliSandboxesByNameResult = await cliRegistry.executeTool({
+    const cliSandboxesByNameResult = await client.callTool({
       tool: 'get-sandboxes-by-name',
       args: {
         application_name: testApp.profile.name
@@ -160,7 +150,7 @@ async function testSandboxFunctionality() {
     console.log('\n🚫 Test 5: Testing Error Handling...');
 
     try {
-      const invalidResult = await mcpRegistry.executeTool({
+      const invalidResult = await client.callTool({
         tool: 'get-sandboxes-by-id',
         args: {
           application_id: '00000000-0000-0000-0000-000000000000'

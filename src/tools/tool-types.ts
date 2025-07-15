@@ -10,7 +10,7 @@ export interface ToolContext {
 }
 
 // Tool handler interface for modular architecture
-export interface MCPToolHandler {
+export interface ToolHandler {
   name: string;
   description: string;
   schema: any;

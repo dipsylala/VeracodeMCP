@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 
 // Create policy tools for MCP
-export function createPolicyTools(): MCPToolHandler[] {
+export function createPolicyTools(): ToolHandler[] {
   return [
     {
       name: 'get-policies',

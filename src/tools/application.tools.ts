@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { isGuid } from '../utils/validation.js';
 
 // Create application tools for MCP
-export function createApplicationTools(): MCPToolHandler[] {
+export function createApplicationTools(): ToolHandler[] {
   return [
     {
       name: 'get-application-profiles',

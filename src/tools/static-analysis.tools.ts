@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { isGuid } from '../utils/validation.js';
 
 // Create static analysis tools for MCP
-export function createStaticAnalysisTools(): MCPToolHandler[] {
+export function createStaticAnalysisTools(): ToolHandler[] {
   return [
     {
       name: 'get-static-flaw-info',

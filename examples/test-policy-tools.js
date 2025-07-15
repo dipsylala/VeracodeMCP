@@ -2,28 +2,26 @@
 
 // Test script for Veracode Policy Management MCP Tools
 // This script demonstrates how to use the new policy MCP tools
-import { CLIToolRegistry } from '../build/cli-tools/cli-tool-registry.js';
-import { VeracodeClient } from '../build/veracode-rest-client.js';
+import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
 
 async function testPolicyMCPTools() {
   console.log('Testing Veracode Policy Management MCP Tools...\n');
 
   try {
-    const client = new VeracodeClient();
-    const registry = new CLIToolRegistry(client);
+    const client = new VeracodeMCPClient();
 
     // Test 1: List all policies
     console.log('1. Testing get-policies tool...');
     try {
-      const result = await registry.executeTool({
+      const result = await client.callTool({
         tool: 'get-policies',
         args: { size: 5 }
       });
-      
+
       if (result.success) {
         const policies = result.data._embedded?.policy_versions || [];
         console.log(`✓ Found ${policies.length} policies`);
-        
+
         if (policies.length > 0) {
           console.log('  Sample policies:');
           policies.slice(0, 3).forEach(policy => {
@@ -41,19 +39,19 @@ async function testPolicyMCPTools() {
     console.log('\n2. Testing get-policy tool...');
     try {
       // First get policies to find a valid GUID
-      const policiesResult = await registry.executeTool({
+      const policiesResult = await client.callTool({
         tool: 'get-policies',
         args: { size: 1 }
       });
-      
+
       if (policiesResult.success && policiesResult.data._embedded?.policy_versions?.length > 0) {
         const firstPolicy = policiesResult.data._embedded.policy_versions[0];
-        
-        const result = await registry.executeTool({
+
+        const result = await client.callTool({
           tool: 'get-policy',
           args: { policy_guid: firstPolicy.guid }
         });
-        
+
         if (result.success) {
           console.log(`✓ Retrieved policy: ${result.data.name}`);
           console.log(`  GUID: ${result.data.guid}`);
@@ -72,15 +70,15 @@ async function testPolicyMCPTools() {
     // Test 3: Get policy settings
     console.log('\n3. Testing get-policy-settings tool...');
     try {
-      const result = await registry.executeTool({
+      const result = await client.callTool({
         tool: 'get-policy-settings',
         args: {}
       });
-      
+
       if (result.success) {
         const settings = result.data._embedded?.policy_settings || [];
         console.log(`✓ Found ${settings.length} policy settings`);
-        
+
         if (settings.length > 0) {
           console.log('  Business criticality mappings:');
           settings.forEach(setting => {
@@ -97,18 +95,18 @@ async function testPolicyMCPTools() {
     // Test 4: Get application policies only
     console.log('\n4. Testing get-policies with APPLICATION category filter...');
     try {
-      const result = await registry.executeTool({
+      const result = await client.callTool({
         tool: 'get-policies',
-        args: { 
+        args: {
           category: 'APPLICATION',
           size: 3
         }
       });
-      
+
       if (result.success) {
         const policies = result.data._embedded?.policy_versions || [];
         console.log(`✓ Found ${policies.length} application policies`);
-        
+
         policies.forEach(policy => {
           console.log(`  - ${policy.name} (Version: ${policy.version})`);
         });
@@ -122,17 +120,17 @@ async function testPolicyMCPTools() {
     // Test 5: Get SCA licenses
     console.log('\n5. Testing get-sca-licenses tool...');
     try {
-      const result = await registry.executeTool({
+      const result = await client.callTool({
         tool: 'get-sca-licenses',
-        args: { 
+        args: {
           page: 0,
           size: 5
         }
       });
-      
+
       if (result.success) {
         console.log(`✓ SCA licenses query completed`);
-        
+
         if (result.data._embedded?.sca_license_summaries?.length > 0) {
           console.log(`  Found ${result.data._embedded.sca_license_summaries.length} licenses`);
           console.log('  Sample licenses:');
@@ -151,26 +149,26 @@ async function testPolicyMCPTools() {
     console.log('\n6. Testing get-policy-versions tool...');
     try {
       // Get a policy first
-      const policiesResult = await registry.executeTool({
+      const policiesResult = await client.callTool({
         tool: 'get-policies',
         args: { size: 1 }
       });
-      
+
       if (policiesResult.success && policiesResult.data._embedded?.policy_versions?.length > 0) {
         const firstPolicy = policiesResult.data._embedded.policy_versions[0];
-        
-        const result = await registry.executeTool({
+
+        const result = await client.callTool({
           tool: 'get-policy-versions',
-          args: { 
+          args: {
             policy_guid: firstPolicy.guid,
             size: 3
           }
         });
-        
+
         if (result.success) {
           const versions = result.data._embedded?.policy_versions || [];
           console.log(`✓ Found ${versions.length} versions for policy ${firstPolicy.name}`);
-          
+
           versions.forEach(version => {
             console.log(`  - Version ${version.version} (Modified by: ${version.modified_by || 'Unknown'})`);
           });
@@ -187,18 +185,18 @@ async function testPolicyMCPTools() {
     // Test 7: Search by name
     console.log('\n7. Testing policy name search...');
     try {
-      const result = await registry.executeTool({
+      const result = await client.callTool({
         tool: 'get-policies',
-        args: { 
+        args: {
           name: 'Veracode',
           size: 3
         }
       });
-      
+
       if (result.success) {
         const policies = result.data._embedded?.policy_versions || [];
         console.log(`✓ Found ${policies.length} policies matching 'Veracode'`);
-        
+
         policies.forEach(policy => {
           console.log(`  - ${policy.name} (${policy.type})`);
         });

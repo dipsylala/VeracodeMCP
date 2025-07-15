@@ -57,7 +57,7 @@ This directory contains example scripts that demonstrate how to use the Veracode
 - **`get-sca-results.js`** - Get comprehensive SCA results for any application
   - Usage: `node get-sca-results.js <application-name>`
   - Example: `node get-sca-results.js "YourAppName"`
-  - **CLI Tool**: Also available via `node build/veracode-mcp-client.js get-sca-results --application "YourAppName"`
+  - **
   
 - **`find-sca-apps.js`** - Find applications that have SCA scans available
   - Usage: `node find-sca-apps.js [name-filter]`
@@ -110,9 +110,9 @@ node examples/scan-information-examples.js
 node examples/sandbox-scan-examples.js
 node examples/advanced-sandbox-scan-examples.js
 
-# Get comprehensive SCA analysis (CLI tool - RECOMMENDED)
-node build/veracode-mcp-client.js get-sca-results --application "Your-App-Name"
-node build/veracode-mcp-client.js get-sca-results --application "MyTestApp" --severity_gte 4 --only_exploitable true
+# Get comprehensive SCA analysis (
+# Use MCP client for programmatic access
+# Use MCP client for programmatic access
 
 # Get SCA results using example script (alternative approach)
 node examples/get-sca-results.js "Your-App-Name"
@@ -120,19 +120,19 @@ node examples/get-sca-results.js "MyTestApp"
 
 # Get static flaw data paths
 node examples/get-static-flaw-info.js "app-guid-here" "issue-id-here"
-node build/veracode-mcp-client.js get-static-flaw-info --application "MyApp" --issue_id "123"
+# Use MCP client for programmatic access
 
 # Search for specific applications
 node examples/query-apps.js "Test"
 node examples/query-apps.js "Production"
-node build/veracode-mcp-client.js search-applications --name "Test"
+# Use MCP client for programmatic access
 
 # Find SCA apps with optional filtering
 node examples/find-sca-apps.js
 node examples/find-sca-apps.js "Test"
 
-# Enable debug logging for any CLI command
-LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results --application "MyApp"
+# Enable debug logging for examples
+LOG_LEVEL=debug # Use MCP client for programmatic access
 LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
 ```
 
@@ -144,13 +144,13 @@ LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
 
 ## Debug Logging
 
-All examples and CLI tools support comprehensive debug logging to help troubleshoot issues and understand the tool's operation:
+All examples and 
 
 ### Enable Debug Logging
 ```bash
 # Set LOG_LEVEL environment variable
 LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
-LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results --application "MyApp"
+LOG_LEVEL=debug # Use MCP client for programmatic access
 
 # Or add to your .env file
 echo "LOG_LEVEL=debug" >> .env

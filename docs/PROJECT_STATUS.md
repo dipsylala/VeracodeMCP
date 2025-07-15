@@ -1,5 +1,20 @@
 # Project Status Summary
 
+## Recent Changes (July 2025) 🎯
+
+### Architectural Simplification ✅
+- **Removed CLI functionality** - Eliminated dual CLI/MCP architecture for cleaner design
+- **Simplified directory structure** - `mcp-tools/` → `tools/` (no more CLI/MCP separation)
+- **Unified tool system** - Single `ToolRegistry` and `ToolHandler` interface
+- **Streamlined client** - `VeracodeMCPClient` focused purely on MCP responsibilities
+- **Updated documentation** - All docs reflect new simplified architecture
+
+### Benefits of Simplification ✅
+- **Reduced complexity** - No need to maintain parallel CLI and MCP systems
+- **Cleaner codebase** - Easier to understand and maintain
+- **Better focus** - MCP-first design without CLI distractions
+- **Simplified testing** - Single code path to test and verify
+
 ## Current Architecture
 
 ### Call Chain Verification ✅

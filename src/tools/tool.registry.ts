@@ -1,4 +1,4 @@
-import { MCPToolHandler, ToolContext } from './mcp-types.js';
+import { ToolHandler, ToolContext } from './tool-types.js';
 import { ToolCategory, ToolCall } from '../types/shared-types.js';
 import { VeracodeClient } from '../veracode-rest-client.js';
 import { createApplicationTools } from './application.tools.js';
@@ -9,9 +9,9 @@ import { createScanTools } from './scan.tools.js';
 import { createPolicyTools } from './policy.tools.js';
 import { createSandboxTools } from './sandbox.tools.js';
 
-export class MCPToolRegistry {
-  private tools: Map<string, MCPToolHandler> = new Map();
-  private allTools: MCPToolHandler[] = [];
+export class ToolRegistry {
+  private tools: Map<string, ToolHandler> = new Map();
+  private allTools: ToolHandler[] = [];
   private context: ToolContext;
 
   constructor(client: VeracodeClient) {
@@ -35,7 +35,7 @@ export class MCPToolRegistry {
   }
 
   // Get all tools
-  getAllTools(): MCPToolHandler[] {
+  getAllTools(): ToolHandler[] {
     return this.allTools;
   }
 
@@ -49,29 +49,29 @@ export class MCPToolRegistry {
   }
 
   // Get tool by name
-  getTool(name: string): MCPToolHandler | undefined {
+  getTool(name: string): ToolHandler | undefined {
     return this.tools.get(name);
   }
 
   // Get tools by category
-  getToolsByCategory(category: ToolCategory): MCPToolHandler[] {
+  getToolsByCategory(category: ToolCategory): ToolHandler[] {
     return this.allTools.filter(tool => {
       const name = tool.name;
       switch (category) {
-      case ToolCategory.APPLICATION:
-        return name.includes('application') || name === 'get-applications' || name === 'search-applications';
-      case ToolCategory.FINDINGS:
-        return name.includes('finding');
-      case ToolCategory.STATIC_ANALYSIS:
-        return name.includes('static-flaw');
-      case ToolCategory.SCA:
-        return name.includes('sca');
-      case ToolCategory.SCAN:
-        return name.includes('scan');
-      case ToolCategory.POLICY:
-        return name.includes('policy');
-      default:
-        return false;
+        case ToolCategory.APPLICATION:
+          return name.includes('application') || name === 'get-applications' || name === 'search-applications';
+        case ToolCategory.FINDINGS:
+          return name.includes('finding');
+        case ToolCategory.STATIC_ANALYSIS:
+          return name.includes('static-flaw');
+        case ToolCategory.SCA:
+          return name.includes('sca');
+        case ToolCategory.SCAN:
+          return name.includes('scan');
+        case ToolCategory.POLICY:
+          return name.includes('policy');
+        default:
+          return false;
       }
     });
   }

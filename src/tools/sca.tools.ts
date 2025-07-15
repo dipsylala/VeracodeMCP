@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
+import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { logger } from '../utils/logger.js';
 
 // Create SCA tools for MCP
-export function createSCATools(): MCPToolHandler[] {
+export function createSCATools(): ToolHandler[] {
   return [
     {
       name: 'get-sca-results-by-name',

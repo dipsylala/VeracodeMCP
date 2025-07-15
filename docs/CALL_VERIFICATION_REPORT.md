@@ -7,26 +7,26 @@ The call chain verification between `veracode-mcp-client` and `veracode-rest-cli
 ## Call Chain Architecture
 
 ```
-User Request → MCP Client → REST Client → Veracode API
+User Request → MCP Client → Tool Registry → REST Client → Veracode API
 ```
 
 ## Verified Method Mappings
 
 ### 1. Paginated Findings
-- **MCP Tool**: `get-findings-paginated`
-- **MCP Client Case**: `"get-findings-paginated"`
+- **Tool**: `get-findings-paginated`
+- **Tool Registry**: `ToolRegistry.executeTool()`
 - **REST Client Method**: `getFindingsPaginated()`
 - **Status**: ✅ Working perfectly
 
 ### 2. All Findings (Multi-page)
-- **MCP Tool**: `get-findings` (with all pages)
-- **MCP Client Case**: `"get-all-findings"`
+- **Tool**: `get-findings` (with all pages)
+- **Tool Registry**: `ToolRegistry.executeTool()`
 - **REST Client Method**: `getAllFindings()`
 - **Status**: ✅ Working perfectly
 
 ### 3. Legacy Findings
-- **MCP Tool**: `get-findings`
-- **MCP Client Case**: `"get-findings"`
+- **Tool**: `get-findings`
+- **Tool Registry**: `ToolRegistry.executeTool()`
 - **REST Client Method**: `getFindings()`
 - **Status**: ✅ Working (backward compatibility)
 
