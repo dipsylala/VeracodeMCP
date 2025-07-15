@@ -240,13 +240,13 @@ export type VeracodeFindingDetails =
 
 // Main finding interface
 export interface VeracodeFinding {
+  issue_id?: number;
   scan_type: 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA';
   description: string;
   count: number;
   context_type: 'APPLICATION' | 'SANDBOX';
   context_guid: string;
   violates_policy: boolean;
-  issue_id?: number;
   build_id?: number;
   grace_period_expires_date?: string;
   annotations?: VeracodeAnnotation[];
