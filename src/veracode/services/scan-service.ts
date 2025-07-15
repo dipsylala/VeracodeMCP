@@ -1,4 +1,5 @@
 // Scan management service for Veracode API
+// Updated
 
 import { BaseVeracodeClient } from '../client/base-client.js';
 import { VeracodeScan } from '../types/application.js';
@@ -117,7 +118,7 @@ export class ScanService extends BaseVeracodeClient {
     async hasScans(identifier: string, scanType?: string, sandboxId?: string): Promise<{ hasScans: boolean; scanCount: number; scanTypes: string[] }> {
         try {
             const scans = await this.getScans(identifier, scanType, sandboxId);
-            const scanTypes = [...new Set(scans.map((scan: any) => scan.scan_type))] as string[];
+            const scanTypes = Array.from(new Set(scans.map((scan: any) => scan.scan_type))) as string[];
 
             logger.debug('Scan existence check completed', 'API', {
                 identifier,
@@ -200,7 +201,7 @@ export class ScanService extends BaseVeracodeClient {
             for (const sandbox of sandboxes) {
                 try {
                     const scans = await this.getScans(appId, scanType, sandbox.guid);
-                    const scanTypes = [...new Set(scans.map(scan => scan.scan_type))] as string[];
+                    const scanTypes = Array.from(new Set(scans.map(scan => scan.scan_type))) as string[];
 
                     sandboxScansData.push({
                         sandbox,
@@ -293,7 +294,7 @@ export class ScanService extends BaseVeracodeClient {
 
             // Get scans for the specific sandbox
             const scans = await this.getScans(appId, scanType, targetSandbox.guid);
-            const scanTypes = [...new Set(scans.map(scan => scan.scan_type))] as string[];
+            const scanTypes = Array.from(new Set(scans.map(scan => scan.scan_type))) as string[];
 
             logger.debug('Sandbox scans retrieved by name', 'API', {
                 appName,
@@ -364,7 +365,7 @@ export class ScanService extends BaseVeracodeClient {
 
             // Get policy scans (no sandbox context)
             const policyScans = await this.getScans(appId, scanType);
-            const policyScanTypes = [...new Set(policyScans.map(scan => scan.scan_type))] as string[];
+            const policyScanTypes = Array.from(new Set(policyScans.map(scan => scan.scan_type))) as string[];
 
             // Get all sandbox scans
             const sandboxScansResult = await this.getSandboxScans(appId, scanType);
@@ -461,7 +462,7 @@ export class ScanService extends BaseVeracodeClient {
 
             // Get policy scans
             const policyScans = await this.getScans(appId);
-            const policyScanTypes = [...new Set(policyScans.map(scan => scan.scan_type))] as string[];
+            const policyScanTypes = Array.from(new Set(policyScans.map(scan => scan.scan_type))) as string[];
             const latestPolicyScans = policyScans.sort((a, b) => {
                 const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
                 const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;

@@ -2,7 +2,7 @@
 
 import { VeracodeClient } from './veracode-rest-client.js';
 import { logger } from './utils/logger.js';
-import { CLIToolRegistry } from './cli-tools/cli-tool-registry.js';
+import { MCPToolRegistry } from './mcp-tools/mcp.tool.registry.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -22,7 +22,7 @@ interface ToolResult {
 
 export class VeracodeMCPClient {
   private veracodeClient: VeracodeClient;
-  private cliToolRegistry: CLIToolRegistry;
+  private mcpToolRegistry: MCPToolRegistry;
   constructor() {
     logger.debug('Initializing VeracodeMCPClient', 'CLIENT');
 
@@ -44,9 +44,9 @@ export class VeracodeMCPClient {
     this.veracodeClient = new VeracodeClient(apiId, apiKey);
     logger.debug('Veracode client created', 'CLIENT');
 
-    logger.debug('About to initialize CLI tool registry', 'CLIENT');
-    this.cliToolRegistry = new CLIToolRegistry(this.veracodeClient);
-    logger.debug('CLI tool registry created', 'CLIENT');
+    logger.debug('About to initialize MCP tool registry', 'CLIENT');
+    this.mcpToolRegistry = new MCPToolRegistry(this.veracodeClient);
+    logger.debug('MCP tool registry created', 'CLIENT');
 
     logger.info('VeracodeMCPClient initialized successfully', 'CLIENT');
   }
@@ -67,7 +67,7 @@ export class VeracodeMCPClient {
       }
       console.log();
 
-      const result = await this.cliToolRegistry.executeTool(toolCall);
+      const result = await this.mcpToolRegistry.executeTool(toolCall);
 
       const executionTime = Date.now() - startTime;
       logger.debug('Tool call completed', 'CLIENT', {
@@ -92,7 +92,7 @@ export class VeracodeMCPClient {
   }
 
   getAvailableTools(): string[] {
-    return this.cliToolRegistry.getAvailableTools();
+    return this.mcpToolRegistry.getToolNames();
   }
 }
 
