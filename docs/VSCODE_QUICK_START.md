@@ -94,7 +94,7 @@ When the server is running, these tools are available:
 - `search-applications` - Search by name
 - `get-application-details` - Get app details
 - `get-scan-results` - Get scan results
-- `get-findings` - Get detailed findings
+- `get-findings` - **UNIFIED FINDINGS TOOL** - Get security findings with intelligent filtering and pagination
 - `get-policy-compliance` - Check compliance
 
 ## ⚡ **Pro Tips**

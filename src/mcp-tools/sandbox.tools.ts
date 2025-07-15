@@ -7,25 +7,34 @@ export function createSandboxTools(): MCPToolHandler[] {
   return [
     {
       name: 'get-sandboxes',
-      description: 'Get all sandboxes for a specific application. Accepts either application ID (GUID) or application name.',
+      description: 'Get all development/testing sandbox environments for a specific application profile. Sandboxes are isolated environments for testing security scans without affecting production results. Use this to discover available development environments, track feature branch scanning, or manage sandbox-specific security testing workflows.',
       schema: {
-        application: z.string().describe('Application ID (GUID) or application name to get sandboxes for'),
-        page: z.number().optional().describe('Page number (defaults to 0)'),
-        size: z.number().optional().describe('Page size, up to 500 (default is 50)')
+        app_profile: z.string().optional().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") or application profile name (like "MyWebApp"). Required to identify which application\'s sandboxes to retrieve.'),
+        application: z.string().optional().describe('⚠️ DEPRECATED: Use app_profile instead. Application ID (GUID) or application name to get sandboxes for'),
+        page: z.number().optional().describe('Page number for pagination (starts at 0). Most applications have few sandboxes, so default page usually sufficient.'),
+        size: z.number().optional().describe('Number of sandboxes per page, maximum 500 (default 50). Use larger values if you have many development environments.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
+          const profileId = args.app_profile || args.application;
 
-          if (isGuid(args.application)) {
+          if (!profileId) {
+            return {
+              success: false,
+              error: 'Missing required argument: app_profile (or legacy application parameter)'
+            };
+          }
+
+          if (isGuid(profileId)) {
             // Handle as application ID
-            const sandboxes = await context.veracodeClient.getSandboxes(args.application, {
+            const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(profileId, {
               page: args.page,
               size: args.size
             });
 
             result = {
-              application_id: args.application,
+              application_id: profileId,
               application_name: null, // Not available when using ID directly
               sandbox_count: sandboxes.length,
               sandboxes: sandboxes.map((sandbox: any) => ({
@@ -43,7 +52,7 @@ export function createSandboxTools(): MCPToolHandler[] {
             };
           } else {
             // Handle as application name
-            const sandboxResult = await context.veracodeClient.getSandboxesByName(args.application, {
+            const sandboxResult = await context.veracodeClient.sandboxes.getSandboxesByName(profileId, {
               page: args.page,
               size: args.size
             });
@@ -99,20 +108,29 @@ export function createSandboxTools(): MCPToolHandler[] {
 
     {
       name: 'get-sandbox-summary',
-      description: 'Get a summary of sandbox information for an application. Accepts either application ID (GUID) or application name.',
+      description: 'Get a concise overview of sandbox environments for an application, including counts, ownership, and activity status. Perfect for quick assessment of development environment security testing coverage. Use this to understand how many sandbox environments exist, who owns them, and their current status without detailed information.',
       schema: {
-        application: z.string().describe('Application ID (GUID) or application name to get sandbox summary for')
+        app_profile: z.string().optional().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") or application profile name (like "MyWebApp"). Required to identify which application\'s sandbox summary to retrieve.'),
+        application: z.string().optional().describe('⚠️ DEPRECATED: Use app_profile instead. Application ID (GUID) or application name to get sandbox summary for')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
+          const profileId = args.app_profile || args.application;
 
-          if (isGuid(args.application)) {
+          if (!profileId) {
+            return {
+              success: false,
+              error: 'Missing required argument: app_profile (or legacy application parameter)'
+            };
+          }
+
+          if (isGuid(profileId)) {
             // Handle as application ID
-            const sandboxes = await context.veracodeClient.getSandboxes(args.application);
+            const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(profileId);
 
             result = {
-              application_id: args.application,
+              application_id: profileId,
               application_name: null, // Not available when using ID directly
               sandbox_summary: {
                 total_count: sandboxes.length,
@@ -128,7 +146,7 @@ export function createSandboxTools(): MCPToolHandler[] {
             };
           } else {
             // Handle as application name
-            const sandboxResult = await context.veracodeClient.getSandboxesByName(args.application);
+            const sandboxResult = await context.veracodeClient.sandboxes.getSandboxesByName(profileId);
 
             result = {
               application_id: sandboxResult.application.guid,

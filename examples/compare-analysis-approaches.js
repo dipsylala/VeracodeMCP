@@ -3,7 +3,7 @@
 // Example: Comparing general findings vs detailed flaw analysis
 // Usage: node examples/compare-analysis-approaches.js [app_name] [flaw_id]
 // This example demonstrates the difference between:
-// 1. get-findings-by-name (general overview)
+// 1. get-findings-by-name (general overview) - Now accepts GUID or name via 'application' parameter
 // 2. get-static-flaw-info-by-name (detailed technical analysis)
 
 import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
@@ -38,7 +38,7 @@ async function demonstrateFlawAnalysis() {
         const findingsResult = await client.callTool({
             tool: 'get-findings-by-name',
             args: {
-                name: appName,
+                application: appName, // Now only supports 'application' parameter (GUID or name)
                 scan_type: 'STATIC',
                 size: '5' // Just show first 5 for comparison
             }

@@ -6,7 +6,7 @@ export function createSCATools(): CLIToolHandler[] {
   return [
     {
       name: 'get-sca-results-by-name',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting SCA analysis execution', 'SCA_CLI', { args });
 
@@ -22,7 +22,7 @@ export function createSCATools(): CLIToolHandler[] {
             size: args.max_results ? Math.min(args.max_results, 500) : 500
           });
 
-          const findings = await context.veracodeClient.getFindingsByName(args.name, {
+          const findings = await context.veracodeClient.findings.getFindingsByName(args.name, {
             scanType: 'SCA',
             severityGte: args.severity_gte,
             cvssGte: args.cvss_gte,
@@ -53,7 +53,7 @@ export function createSCATools(): CLIToolHandler[] {
 
           // Get application details for metadata
           logger.debug('Searching for application details', 'SCA_CLI', { name: args.name });
-          const searchResults = await context.veracodeClient.searchApplications(args.name);
+          const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
           if (searchResults.length === 0) {
             logger.warn('No application found for SCA results', 'SCA_CLI', { name: args.name });
             return {

@@ -8,17 +8,17 @@ export function createSCATools(): MCPToolHandler[] {
     {
       name: 'get-sca-results-by-name',
       description:
-                'Get comprehensive Software Composition Analysis (SCA) results for an application by profile name. Returns SCA findings and analysis for the specified application name.',
+        'Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components. SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses. Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates. Critical for supply chain security and license compliance.',
       schema: {
-        name: z.string().describe('Application name to get SCA results for'),
-        severity_gte: z.number().optional().describe('Minimum severity level (0-5, default: all severities)'),
-        cvss_gte: z.number().optional().describe('Minimum CVSS score (0-10)'),
-        only_policy_violations: z.boolean().optional().describe('Only show policy violations (default: false)'),
-        only_new_findings: z.boolean().optional().describe('Only show new findings (default: false)'),
-        only_exploitable: z.boolean().optional().describe('Only show findings with known exploits (default: false)'),
-        max_results: z.number().optional().describe('Maximum number of findings to retrieve (default: unlimited)')
+        name: z.string().describe('Application profile name to analyze for SCA findings (exact match, e.g., "MyWebApp-Production"). Case-sensitive - use search-application-profiles first if unsure of exact name.'),
+        severity_gte: z.number().optional().describe('Minimum severity level (0-5): 5=Very High, 4=High, 3=Medium, 2=Low, 1=Very Low, 0=Informational. Use 3+ for actionable vulnerabilities, 4+ for critical issues.'),
+        cvss_gte: z.number().optional().describe('Minimum CVSS score (0.0-10.0). Common thresholds: 7.0+ for High, 4.0+ for Medium severity. CVSS provides standardized vulnerability scoring.'),
+        only_policy_violations: z.boolean().optional().describe('Only show findings that violate your organization\'s security policy (default: false). Use for compliance reporting and gate decisions.'),
+        only_new_findings: z.boolean().optional().describe('Only show newly discovered vulnerabilities not seen in previous scans (default: false). Essential for continuous monitoring and CI/CD integration.'),
+        only_exploitable: z.boolean().optional().describe('Only show vulnerabilities with active exploits in the wild (default: false). Prioritizes immediate security threats requiring urgent patching.'),
+        max_results: z.number().optional().describe('Maximum number of findings to retrieve (default: unlimited, up to 500 per call). Use smaller values (50-100) for quick overviews or to reduce API response time.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting get-sca-results-by-name execution', 'SCA_TOOL', { args });
 
@@ -32,7 +32,7 @@ export function createSCATools(): MCPToolHandler[] {
             size: args.max_results ? Math.min(args.max_results, 500) : 500
           });
 
-          const findings = await context.veracodeClient.getFindingsByName(args.name, {
+          const findings = await context.veracodeClient.findings.getFindingsByName(args.name, {
             scanType: 'SCA',
             severityGte: args.severity_gte,
             cvssGte: args.cvss_gte,
@@ -63,7 +63,7 @@ export function createSCATools(): MCPToolHandler[] {
 
           // Get application details for metadata
           logger.debug('Searching for application details', 'SCA_TOOL', { name: args.name });
-          const searchResults = await context.veracodeClient.searchApplications(args.name);
+          const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
           if (searchResults.length === 0) {
             logger.warn('No application found for SCA results', 'SCA_TOOL', { name: args.name });
             return {
@@ -81,7 +81,7 @@ export function createSCATools(): MCPToolHandler[] {
           }
 
           // Check if the application has scans first
-          const scanCheck = await context.veracodeClient.hasScans(targetApp.guid);
+          const scanCheck = await context.veracodeClient.scans.hasScans(targetApp.guid);
 
           if (!scanCheck.hasScans) {
             logger.warn('No scans found for application', 'SCA_TOOL', {
@@ -131,7 +131,7 @@ export function createSCATools(): MCPToolHandler[] {
           }
 
           // Check if SCA or STATIC scans are available (SCA findings are part of STATIC scans)
-          const hasStaticOrSCA = scanCheck.scanTypes.some(type => type === 'STATIC' || type === 'SCA');
+          const hasStaticOrSCA = scanCheck.scanTypes.some((type: string) => type === 'STATIC' || type === 'SCA');
           if (!hasStaticOrSCA) {
             logger.warn('No STATIC or SCA scans found for application', 'SCA_TOOL', {
               appName: targetApp.profile.name,
@@ -183,7 +183,7 @@ export function createSCATools(): MCPToolHandler[] {
           logger.debug('Attempting to retrieve scan information', 'SCA_TOOL', { appGuid: targetApp.guid });
           let latestScanResults = null;
           try {
-            const scans = await context.veracodeClient.getScanResults(targetApp.guid, 'SCA');
+            const scans = await context.veracodeClient.scans.getScans(targetApp.guid, 'SCA');
             logger.debug('Scan results retrieved', 'SCA_TOOL', {
               appName: targetApp.profile.name,
               scanCount: scans.length
@@ -224,15 +224,15 @@ export function createSCATools(): MCPToolHandler[] {
             severityBreakdown: filteredFindings.reduce((acc: Record<string, number>, finding: any) => {
               const severity = finding.finding_details?.severity || 0;
               const label =
-                                severity === 5
-                                  ? 'Very High'
-                                  : severity === 4
-                                    ? 'High'
-                                    : severity === 3
-                                      ? 'Medium'
-                                      : severity === 2
-                                        ? 'Low'
-                                        : 'Very Low';
+                severity === 5
+                  ? 'Very High'
+                  : severity === 4
+                    ? 'High'
+                    : severity === 3
+                      ? 'Medium'
+                      : severity === 2
+                        ? 'Low'
+                        : 'Very Low';
               acc[label] = (acc[label] || 0) + 1;
               return acc;
             }, {}),
@@ -315,14 +315,14 @@ export function createSCATools(): MCPToolHandler[] {
     {
       name: 'get-sca-summary-by-name',
       description:
-                'Get a high-level SCA summary for an application including key metrics, risk assessment, and component overview without detailed findings.',
+        'Get a high-level Software Composition Analysis (SCA) overview with key metrics, risk assessment, and component summary. Perfect for executive reporting, quick risk assessment, or initial security evaluation. Provides vulnerability counts, risk scores, and component statistics without overwhelming detail. Use this before get-sca-results-by-name for efficient triage.',
       schema: {
-        name: z.string().describe('Application name to get SCA summary for')
+        name: z.string().describe('Application profile name for SCA summary (exact match, e.g., "MyWebApp-Production"). Case-sensitive - verify exact name with search-application-profiles if needed.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           // First get the application to get its ID
-          const searchResults = await context.veracodeClient.searchApplications(args.name);
+          const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
 
           if (searchResults.length === 0) {
             return {
@@ -339,7 +339,7 @@ export function createSCATools(): MCPToolHandler[] {
           }
 
           // Get SCA findings for summary (limited to 1000 for performance)
-          const summaryResult = await context.veracodeClient.getAllFindings(targetApp.guid, {
+          const summaryResult = await context.veracodeClient.findings.getAllFindings(targetApp.guid, {
             scanType: 'SCA',
             pageSize: 500,
             maxPages: 2 // Max 1000 findings for summary
@@ -348,7 +348,7 @@ export function createSCATools(): MCPToolHandler[] {
           // Get latest scan information
           let latestScanResults = null;
           try {
-            const scans = await context.veracodeClient.getScanResults(targetApp.guid, 'SCA');
+            const scans = await context.veracodeClient.scans.getScans(targetApp.guid, 'SCA');
             if (scans.length > 0) {
               const latestScan = scans.sort(
                 (a: any, b: any) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
@@ -380,15 +380,15 @@ export function createSCATools(): MCPToolHandler[] {
             severityBreakdown: summaryFindings.reduce((acc: Record<string, number>, finding: any) => {
               const severity = finding.finding_details?.severity || 0;
               const label =
-                                severity === 5
-                                  ? 'Very High'
-                                  : severity === 4
-                                    ? 'High'
-                                    : severity === 3
-                                      ? 'Medium'
-                                      : severity === 2
-                                        ? 'Low'
-                                        : 'Very Low';
+                severity === 5
+                  ? 'Very High'
+                  : severity === 4
+                    ? 'High'
+                    : severity === 3
+                      ? 'Medium'
+                      : severity === 2
+                        ? 'Low'
+                        : 'Very Low';
               acc[label] = (acc[label] || 0) + 1;
               return acc;
             }, {}),
@@ -408,18 +408,18 @@ export function createSCATools(): MCPToolHandler[] {
           // Calculate additional metrics
           const riskAssessment = {
             overall_risk:
-                            summaryAnalysis.exploitableFindings > 0
-                              ? 'HIGH'
-                              : summaryAnalysis.highRiskComponents > 5
-                                ? 'MEDIUM'
-                                : 'LOW',
+              summaryAnalysis.exploitableFindings > 0
+                ? 'HIGH'
+                : summaryAnalysis.highRiskComponents > 5
+                  ? 'MEDIUM'
+                  : 'LOW',
             critical_components: summaryAnalysis.topVulnerabilities.filter((v: any) => v.cvss >= 9.0).length,
             high_components: summaryAnalysis.topVulnerabilities.filter((v: any) => v.cvss >= 7.0 && v.cvss < 9.0).length,
             medium_components: summaryAnalysis.topVulnerabilities.filter((v: any) => v.cvss >= 4.0 && v.cvss < 7.0)
               .length,
             needs_immediate_attention:
-                            summaryAnalysis.exploitableFindings > 0 ||
-                            summaryAnalysis.topVulnerabilities.filter((v: any) => v.cvss >= 9.0).length > 0
+              summaryAnalysis.exploitableFindings > 0 ||
+              summaryAnalysis.topVulnerabilities.filter((v: any) => v.cvss >= 9.0).length > 0
           };
 
           return {
@@ -458,11 +458,11 @@ export function createSCATools(): MCPToolHandler[] {
                   ? ['Review exploitable vulnerabilities', 'Update critical components', 'Apply security patches']
                   : ['Continue monitoring', 'Plan component updates'],
                 priority_focus:
-                                    summaryAnalysis.exploitableFindings > 0
-                                      ? 'exploitable_vulnerabilities'
-                                      : summaryAnalysis.highRiskComponents > 0
-                                        ? 'high_risk_components'
-                                        : 'licensing_compliance'
+                  summaryAnalysis.exploitableFindings > 0
+                    ? 'exploitable_vulnerabilities'
+                    : summaryAnalysis.highRiskComponents > 0
+                      ? 'high_risk_components'
+                      : 'licensing_compliance'
               },
               metadata: {
                 summary_generated: new Date().toISOString(),
@@ -485,22 +485,22 @@ export function createSCATools(): MCPToolHandler[] {
     {
       name: 'get-sca-apps',
       description:
-                'Get all applications that have SCA scanning enabled with comprehensive analysis of their security posture',
+        'Discover all applications with Software Composition Analysis (SCA) scanning enabled and get their security posture overview. Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities. Use this to understand your organization\'s SCA coverage and prioritize security efforts across multiple applications.',
       schema: {
         include_recent_only: z
           .boolean()
           .optional()
-          .describe('Only include apps with recent SCA scans (last 30 days, default: false)'),
-        include_risk_analysis: z.boolean().optional().describe('Include risk assessment for each app (default: true)'),
+          .describe('Only include applications with recent SCA scans (last 30 days, default: false). Use true to focus on actively maintained applications with current security data.'),
+        include_risk_analysis: z.boolean().optional().describe('Include detailed risk assessment and vulnerability metrics for each application (default: true). Set false for faster response when you only need basic application lists.'),
         min_business_criticality: z
           .string()
           .optional()
-          .describe('Minimum business criticality (VERY_LOW, LOW, MEDIUM, HIGH, VERY_HIGH)')
+          .describe('Filter by minimum business criticality level: VERY_LOW, LOW, MEDIUM, HIGH, VERY_HIGH. Use HIGH or VERY_HIGH to focus on mission-critical applications.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Get all applications first
-          const allApps = await context.veracodeClient.getApplications();
+          const allApps = await context.veracodeClient.applications.getApplications();
 
           const scaApps = [];
           let totalAppsProcessed = 0;
@@ -519,7 +519,7 @@ export function createSCATools(): MCPToolHandler[] {
           for (const app of filteredApps) {
             totalAppsProcessed++;
             try {
-              const scaScans = await context.veracodeClient.getScanResults(app.guid, 'SCA');
+              const scaScans = await context.veracodeClient.scans.getScans(app.guid, 'SCA');
 
               if (scaScans.length > 0) {
                 // Filter for recent scans if requested
@@ -541,7 +541,7 @@ export function createSCATools(): MCPToolHandler[] {
                   if (args.include_risk_analysis !== false) {
                     try {
                       // Get basic risk metrics for the app using paginated findings
-                      const quickAnalysis = await context.veracodeClient.getAllFindings(app.guid, {
+                      const quickAnalysis = await context.veracodeClient.findings.getAllFindings(app.guid, {
                         scanType: 'SCA',
                         pageSize: 100, // Small sample for risk assessment
                         maxPages: 1
@@ -556,23 +556,23 @@ export function createSCATools(): MCPToolHandler[] {
                         high_risk_components: findings.filter((f: any) => f.finding_details?.severity >= 4).length,
                         policy_violations: findings.filter((f: any) => f.violates_policy).length,
                         risk_level:
-                                                    hasHighRisk && hasPolicyViolations
-                                                      ? 'HIGH'
-                                                      : hasHighRisk || hasPolicyViolations
-                                                        ? 'MEDIUM'
-                                                        : 'LOW',
+                          hasHighRisk && hasPolicyViolations
+                            ? 'HIGH'
+                            : hasHighRisk || hasPolicyViolations
+                              ? 'MEDIUM'
+                              : 'LOW',
                         severity_breakdown: findings.reduce((acc: Record<string, number>, finding: any) => {
                           const severity = finding.finding_details?.severity || 0;
                           const label =
-                                                        severity === 5
-                                                          ? 'Very High'
-                                                          : severity === 4
-                                                            ? 'High'
-                                                            : severity === 3
-                                                              ? 'Medium'
-                                                              : severity === 2
-                                                                ? 'Low'
-                                                                : 'Very Low';
+                            severity === 5
+                              ? 'Very High'
+                              : severity === 4
+                                ? 'High'
+                                : severity === 3
+                                  ? 'Medium'
+                                  : severity === 2
+                                    ? 'Low'
+                                    : 'Very Low';
                           acc[label] = (acc[label] || 0) + 1;
                           return acc;
                         }, {})

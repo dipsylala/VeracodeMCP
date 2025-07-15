@@ -6,36 +6,62 @@ export function createFindingsTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-findings-by-name',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      // Updated to accept application GUID or name for consistency with other tools
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting findings search execution', 'FINDINGS_CLI', { args });
 
         try {
-          if (!args?.name) {
-            return { success: false, error: 'Missing required argument: name' };
+          if (!args?.application) {
+            return { success: false, error: 'Missing required argument: application (ID/GUID or name)' };
           }
 
-          const findings = await context.veracodeClient.getFindingsByName(args.name, {
-            scanType: args.scan_type,
-            severityGte: args.severity_gte,
-            cvssGte: args.cvss_gte,
-            policyViolation: args.only_policy_violations,
-            newFindingsOnly: args.only_new_findings,
-            size: args.max_results ? Math.min(args.max_results, 500) : 500
-          });
+          const applicationIdentifier = args.application;
 
-          // Get application details for metadata
-          const searchResults = await context.veracodeClient.searchApplications(args.name);
-          if (searchResults.length === 0) {
-            return {
-              success: false,
-              error: `No application found with name: ${args.name}`
-            };
-          }
+          // Check if it's a GUID or name
+          const isGuid = applicationIdentifier.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
-          let targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.name.toLowerCase());
-          if (!targetApp) {
-            targetApp = searchResults[0];
+          let findings;
+          let targetApp;
+
+          if (isGuid) {
+            // It's a GUID, use getFindingsPaginated
+            const result = await context.veracodeClient.findings.getFindingsPaginated(applicationIdentifier, {
+              scanType: args.scan_type,
+              severityGte: args.severity_gte,
+              cvssGte: args.cvss_gte,
+              policyViolation: args.only_policy_violations,
+              newFindingsOnly: args.only_new_findings,
+              size: args.max_results ? Math.min(args.max_results, 500) : 500
+            });
+            findings = result.findings;
+
+            // Get application details for metadata
+            targetApp = await context.veracodeClient.applications.getApplicationDetails(applicationIdentifier);
+          } else {
+            // It's a name, use getFindingsByName (legacy method)
+            findings = await context.veracodeClient.findings.getFindingsByName(applicationIdentifier, {
+              scanType: args.scan_type,
+              severityGte: args.severity_gte,
+              cvssGte: args.cvss_gte,
+              policyViolation: args.only_policy_violations,
+              newFindingsOnly: args.only_new_findings,
+              size: args.max_results ? Math.min(args.max_results, 500) : 500
+            });
+
+            // Get application details for metadata
+            const searchResults = await context.veracodeClient.applications.searchApplications(applicationIdentifier);
+            if (searchResults.length === 0) {
+              return {
+                success: false,
+                error: `No application found with name: ${applicationIdentifier}`
+              };
+            }
+
+            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === applicationIdentifier.toLowerCase());
+            if (!targetApp) {
+              targetApp = searchResults[0];
+            }
           }
 
           // Map findings based on scan type
@@ -51,31 +77,31 @@ export function createFindingsTools(): CLIToolHandler[] {
             };
 
             switch (finding.scan_type) {
-            case 'STATIC':
-              return {
-                ...baseFinding,
-                flaw_id: finding.finding_details?.finding_id?.toString(),
-                cwe_id: finding.finding_details?.cwe?.id,
-                cwe_name: finding.finding_details?.cwe?.name,
-                module: finding.finding_details?.module,
-                function_name: finding.finding_details?.procedure,
-                relative_location: finding.finding_details?.relative_location,
-                line_number: finding.finding_details?.file_line_number,
-                description: finding.finding_details?.description || finding.description
-              };
-            case 'SCA':
-              return {
-                ...baseFinding,
-                component_id: finding.finding_details?.component_id,
-                component_filename: finding.finding_details?.component_filename,
-                component_version: finding.finding_details?.version,
-                cve_id: finding.finding_details?.cve?.name,
-                cvss: finding.finding_details?.cve?.cvss,
-                exploitable: finding.finding_details?.cve?.exploitability?.exploit_observed,
-                description: finding.finding_details?.description || finding.description
-              };
-            default:
-              return baseFinding;
+              case 'STATIC':
+                return {
+                  ...baseFinding,
+                  flaw_id: finding.finding_details?.finding_id?.toString(),
+                  cwe_id: finding.finding_details?.cwe?.id,
+                  cwe_name: finding.finding_details?.cwe?.name,
+                  module: finding.finding_details?.module,
+                  function_name: finding.finding_details?.procedure,
+                  relative_location: finding.finding_details?.relative_location,
+                  line_number: finding.finding_details?.file_line_number,
+                  description: finding.finding_details?.description || finding.description
+                };
+              case 'SCA':
+                return {
+                  ...baseFinding,
+                  component_id: finding.finding_details?.component_id,
+                  component_filename: finding.finding_details?.component_filename,
+                  component_version: finding.finding_details?.version,
+                  cve_id: finding.finding_details?.cve?.name,
+                  cvss: finding.finding_details?.cve?.cvss,
+                  exploitable: finding.finding_details?.cve?.exploitability?.exploit_observed,
+                  description: finding.finding_details?.description || finding.description
+                };
+              default:
+                return baseFinding;
             }
           });
 
@@ -87,7 +113,9 @@ export function createFindingsTools(): CLIToolHandler[] {
               application: {
                 name: targetApp.profile.name,
                 id: targetApp.guid,
-                business_criticality: targetApp.profile.business_criticality
+                business_criticality: targetApp.profile.business_criticality,
+                identifier_used: applicationIdentifier,
+                identifier_type: isGuid ? 'GUID' : 'name'
               },
               findings: mappedFindings,
               filters_applied: {

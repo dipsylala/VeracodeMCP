@@ -85,9 +85,9 @@ docs/                            # Documentation
 - `search-applications`: Search applications by name pattern
 - `get-application-details`: Get detailed application information by ID (GUID) or name
 - `get-scan-results`: Retrieve scan results for an application by ID (GUID) or name  
-- `get-findings`: Get findings summary and metadata by application ID (GUID) or name
-- `get-findings-advanced`: Get findings with comprehensive filtering and pagination support by application ID (GUID) or name
-- `get-findings-paginated`: Get paginated findings results with detailed pagination control by application ID (GUID) or name
+- `get-findings`: **UNIFIED FINDINGS TOOL** - Get security findings with intelligent filtering and pagination. Two modes:
+  - Basic Overview (no filters): Returns first 300 findings ordered by highest severity  
+  - Filtered Mode (with filters/pagination): Applies filters and returns results with pagination support
 - `get-sca-results`: **COMPREHENSIVE SCA** - Detailed SCA analysis including exploitability, licensing, and component risk assessment by application ID (GUID) or name
 - `get-sca-summary`: High-level SCA overview with risk metrics and component statistics by application ID (GUID) or name
 - `get-sca-apps`: List all applications with SCA scanning enabled, including risk analysis

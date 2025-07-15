@@ -6,13 +6,13 @@ export function createScanTools(): MCPToolHandler[] {
   return [
     {
       name: 'get-scan-results',
-      description: 'Get scan results for an application by ID',
+      description: 'Get comprehensive scan history and results for an application including all scan types (STATIC, DYNAMIC, MANUAL, SCA). Use this to understand scan coverage, track scan progress, review compliance status, and access scan reports. Essential for security program management and audit compliance.',
       schema: {
-        app_id: z.string().describe('Application ID (GUID) to get scan results for')
+        app_id: z.string().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") to retrieve scan history for. Use get-application-profiles to find the correct ID.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          const result = await context.veracodeClient.getScanResults(args.app_id);
+          const result = await context.veracodeClient.scans.getScans(args.app_id);
 
           // Format scan results with essential fields
           const formattedScans = result.map((scan: any) => ({
@@ -45,13 +45,13 @@ export function createScanTools(): MCPToolHandler[] {
 
     {
       name: 'get-scan-results-by-name',
-      description: 'Get scan results for an application by name',
+      description: 'Get comprehensive scan history and results for an application by name, including all scan types and compliance status. More convenient than get-scan-results when you know the application name but not the ID. Perfect for reviewing scan coverage, tracking security testing progress, and accessing historical scan data.',
       schema: {
-        name: z.string().describe('Application name to get scan results for')
+        name: z.string().describe('Application profile name to get scan results for (exact match, e.g., "MyWebApp-Production"). Case-sensitive - use search-application-profiles if unsure of exact name.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          const result = await context.veracodeClient.getScanResultsByName(args.name);
+          const result = await context.veracodeClient.scans.getScans(args.name);
 
           // Format scan results with essential fields
           const formattedScans = result.map((scan: any) => ({

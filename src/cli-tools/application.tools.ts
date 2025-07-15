@@ -4,14 +4,14 @@ import { CLIToolHandler, ToolResponse, CLIToolContext } from './cli-types.js';
 export function createApplicationTools(): CLIToolHandler[] {
   return [
     {
-      name: 'get-applications',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
-        const result = await context.veracodeClient.getApplications();
+      name: 'get-application-profiles',
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+        const result = await context.veracodeClient.applications.getApplications();
         return {
           success: true,
           data: {
             count: result.length,
-            applications: result.map((app: any) => ({
+            application_profiles: result.map((app: any) => ({
               name: app.profile.name,
               id: app.guid,
               legacy_id: app.id,
@@ -26,19 +26,19 @@ export function createApplicationTools(): CLIToolHandler[] {
     },
 
     {
-      name: 'search-applications',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      name: 'search-application-profiles',
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }
 
-        const result = await context.veracodeClient.searchApplications(args.name);
+        const result = await context.veracodeClient.applications.searchApplications(args.name);
         return {
           success: true,
           data: {
             search_term: args.name,
             count: result.length,
-            applications: result.map((app: any) => ({
+            application_profiles: result.map((app: any) => ({
               name: app.profile.name,
               id: app.guid,
               legacy_id: app.id,
@@ -53,13 +53,13 @@ export function createApplicationTools(): CLIToolHandler[] {
     },
 
     {
-      name: 'get-application-details',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
-        if (!args?.app_id) {
-          return { success: false, error: 'Missing required argument: app_id' };
+      name: 'get-application-profile-details',
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+        if (!args?.app_profile) {
+          return { success: false, error: 'Missing required argument: app_profile' };
         }
 
-        const result = await context.veracodeClient.getApplicationDetails(args.app_id);
+        const result = await context.veracodeClient.applications.getApplicationDetails(args.app_profile);
         return {
           success: true,
           data: mapApplicationDetails(result)
@@ -68,13 +68,13 @@ export function createApplicationTools(): CLIToolHandler[] {
     },
 
     {
-      name: 'get-application-details-by-name',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      name: 'get-application-profile-details-by-name',
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }
 
-        const result = await context.veracodeClient.getApplicationDetailsByName(args.name);
+        const result = await context.veracodeClient.applications.getApplicationDetailsByName(args.name);
         return {
           success: true,
           data: mapApplicationDetails(result)

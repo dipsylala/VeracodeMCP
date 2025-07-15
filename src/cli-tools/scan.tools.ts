@@ -5,12 +5,12 @@ export function createScanTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-scan-results',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.app_id) {
           return { success: false, error: 'Missing required argument: app_id' };
         }
 
-        const result = await context.veracodeClient.getScanResults(args.app_id, args.scan_type);
+        const result = await context.veracodeClient.scans.getScans(args.app_id, args.scan_type);
         return {
           success: true,
           data: {
@@ -32,13 +32,13 @@ export function createScanTools(): CLIToolHandler[] {
 
     {
       name: 'get-scan-results-by-name',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.name) {
           return { success: false, error: 'Missing required argument: name' };
         }
 
         // First search for applications with this name
-        const searchResults = await context.veracodeClient.searchApplications(args.name);
+        const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
         if (searchResults.length === 0) {
           return { success: false, error: `No application found with name: ${args.name}` };
         }
@@ -52,7 +52,7 @@ export function createScanTools(): CLIToolHandler[] {
           console.warn(`No exact match found for "${args.name}". Using first result: "${targetApp.profile.name}"`);
         }
 
-        const result = await context.veracodeClient.getScanResults(targetApp.guid, args.scan_type);
+        const result = await context.veracodeClient.scans.getScans(targetApp.guid, args.scan_type);
         return {
           success: true,
           data: {

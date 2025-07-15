@@ -5,7 +5,7 @@ export function createPolicyTools(): CLIToolHandler[] {
   return [
     {
       name: 'get-policies',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         const options = {
           category: args?.category,
           legacy_policy_id: args?.legacy_policy_id,
@@ -24,7 +24,7 @@ export function createPolicyTools(): CLIToolHandler[] {
           }
         });
 
-        const result = await context.veracodeClient.getPolicies(Object.keys(options).length > 0 ? options : undefined);
+        const result = await context.veracodeClient.policies.getPolicies(Object.keys(options).length > 0 ? options : undefined);
         return {
           success: true,
           data: result
@@ -34,12 +34,12 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.policy_guid) {
           return { success: false, error: 'Missing required argument: policy_guid' };
         }
 
-        const result = await context.veracodeClient.getPolicy(args.policy_guid);
+        const result = await context.veracodeClient.policies.getPolicy(args.policy_guid);
         return {
           success: true,
           data: result
@@ -49,12 +49,12 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy-versions',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.policy_guid) {
           return { success: false, error: 'Missing required argument: policy_guid' };
         }
 
-        const result = await context.veracodeClient.getPolicyVersions(
+        const result = await context.veracodeClient.policies.getPolicyVersions(
           args.policy_guid,
           args.page,
           args.size
@@ -68,7 +68,7 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy-version',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
         if (!args?.policy_guid) {
           return { success: false, error: 'Missing required argument: policy_guid' };
         }
@@ -76,7 +76,7 @@ export function createPolicyTools(): CLIToolHandler[] {
           return { success: false, error: 'Missing required argument: version' };
         }
 
-        const result = await context.veracodeClient.getPolicyVersion(
+        const result = await context.veracodeClient.policies.getPolicyVersion(
           args.policy_guid,
           args.version
         );
@@ -89,8 +89,8 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-policy-settings',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
-        const result = await context.veracodeClient.getPolicySettings();
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+        const result = await context.veracodeClient.policies.getPolicySettings();
         return {
           success: true,
           data: result
@@ -100,8 +100,8 @@ export function createPolicyTools(): CLIToolHandler[] {
 
     {
       name: 'get-sca-licenses',
-      handler: async(args: any, context: CLIToolContext): Promise<ToolResponse> => {
-        const result = await context.veracodeClient.getScaLicenses(
+      handler: async (args: any, context: CLIToolContext): Promise<ToolResponse> => {
+        const result = await context.veracodeClient.policies.getScaLicenses(
           args?.page,
           args?.size,
           args?.sort

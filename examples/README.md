@@ -12,6 +12,46 @@ This directory contains example scripts that demonstrate how to use the Veracode
   
 - **`test-search.js`** - Test application search functionality with various search terms
 
+### Scan Management Examples
+
+- **`scan-service-examples.js`** - **NEW!** Comprehensive examples of the ScanService API
+  - Usage: `node scan-service-examples.js`
+  - Demonstrates:
+    - Auto-detection of GUID vs application name parameters
+    - Getting all scans for an application
+    - Filtering scans by type (STATIC, SCA, DYNAMIC, etc.)
+    - Checking scan availability with `hasScans()`
+    - Working with sandbox scans
+  - **Key Features**: Clean API, consistent auto-detection, sandbox support
+
+- **`scan-information-examples.js`** - **NEW!** Detailed scan information retrieval
+  - Usage: `node scan-information-examples.js`
+  - Shows how to:
+    - Discover applications and retrieve comprehensive scan data
+    - Compare different scan types and their results
+    - Analyze scan status and compliance information
+    - Work with both policy and sandbox scans
+
+- **`sandbox-scan-examples.js`** - **NEW!** Complete sandbox scanning workflow
+  - Usage: `node sandbox-scan-examples.js` 
+  - Covers:
+    - Discovering sandboxes for applications
+    - Comparing policy vs sandbox scans
+    - Filtering sandbox scans by type
+    - Understanding sandbox scan contexts
+    - DevSecOps integration patterns
+
+- **`advanced-sandbox-scan-examples.js`** - **NEW!** Advanced sandbox-aware scan operations
+  - Usage: `node advanced-sandbox-scan-examples.js`
+  - **Enterprise Features**:
+    - Comprehensive sandbox scan analysis across all sandboxes
+    - Specific sandbox targeting by name with auto-discovery
+    - Policy vs sandbox comparison with detailed analytics
+    - Complete scan summaries with latest scan information
+    - Scan type filtering across multiple sandbox environments
+    - DevSecOps workflow automation examples
+  - **Perfect for**: Security teams managing multiple development branches and environments
+
 ### SCA (Software Composition Analysis) Examples
 
 - **`get-sca-results.js`** - Get comprehensive SCA results for any application
@@ -63,6 +103,12 @@ npm run example:find-sca-apps
 ```bash
 # Build first
 npm run build
+
+# NEW! Scan Service Examples - Demonstrates modern scan API
+node examples/scan-service-examples.js
+node examples/scan-information-examples.js  
+node examples/sandbox-scan-examples.js
+node examples/advanced-sandbox-scan-examples.js
 
 # Get comprehensive SCA analysis (CLI tool - RECOMMENDED)
 node build/veracode-mcp-client.js get-sca-results --application "Your-App-Name"

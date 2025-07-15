@@ -8,22 +8,31 @@ export function createStaticAnalysisTools(): MCPToolHandler[] {
     {
       name: 'get-static-flaw-info',
       description:
-        'Get detailed static analysis flaw information by application (ID or name) and flaw ID. This tool provides comprehensive flaw details including data paths, call stack information, and remediation guidance. Use this tool when you need specific details about a particular flaw identified by its numeric ID within a specific application.',
+        'Get comprehensive static analysis flaw details including data paths, call stack traces, and expert remediation guidance. Use this when you need deep technical information about a specific security vulnerability found during static code analysis. Essential for developers fixing security issues - provides exact source code locations, attack vectors, and detailed remediation steps. Requires the specific flaw ID from scan results.',
       schema: {
-        application: z.string().describe('Application ID (GUID) or application name that contains the flaw'),
-        issue_id: z.string().describe('Issue/Flaw ID to get detailed information for'),
-        sandbox_id: z.string().optional().describe('Optional sandbox ID to filter findings to a specific sandbox')
+        app_profile: z.string().optional().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") or application profile name (like "MyWebApp"). Required to identify which application contains the flaw.'),
+        application: z.string().optional().describe('⚠️ DEPRECATED: Use app_profile instead. Application ID (GUID) or application name that contains the flaw'),
+        issue_id: z.string().describe('Static analysis flaw/issue ID (numeric string like "12345"). Get this from scan results or findings lists. Each flaw has a unique ID within the application.'),
+        sandbox_id: z.string().optional().describe('Sandbox/development environment ID (GUID) to get flaw details from a specific environment. Leave empty for production/main branch flaws.')
       },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
+          const profileId = args.app_profile || args.application;
 
-          if (isGuid(args.application)) {
+          if (!profileId) {
+            return {
+              success: false,
+              error: 'Missing required argument: app_profile (or legacy application parameter)'
+            };
+          }
+
+          if (isGuid(profileId)) {
             // Handle as application ID
-            result = await context.veracodeClient.getStaticFlawInfo(args.application, args.issue_id, args.sandbox_id);
+            result = await context.veracodeClient.findings.getStaticFlawInfo(profileId, args.issue_id, args.sandbox_id);
           } else {
             // Handle as application name
-            result = await context.veracodeClient.getStaticFlawInfoByName(args.application, args.issue_id, args.sandbox_id);
+            result = await context.veracodeClient.findings.getStaticFlawInfoByName(profileId, args.issue_id, args.sandbox_id);
           }
 
           return {

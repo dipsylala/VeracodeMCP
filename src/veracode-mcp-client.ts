@@ -115,7 +115,7 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
           input += chunk;
         }
       });
-      process.stdin.on('end', async() => {
+      process.stdin.on('end', async () => {
         try {
           const parsed = JSON.parse(input.trim());
           const client = new VeracodeMCPClient();
@@ -169,16 +169,19 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
     const value = args[i + 1];
 
     if (key && value !== undefined) {
+      // Convert kebab-case to snake_case for consistency with existing API
+      const normalizedKey = key.replace(/-/g, '_');
+
       // Convert string "true"/"false" to boolean
       if (value === 'true') {
-        toolArgs[key] = true;
+        toolArgs[normalizedKey] = true;
       } else if (value === 'false') {
-        toolArgs[key] = false;
+        toolArgs[normalizedKey] = false;
       } else if (!isNaN(Number(value))) {
         // Convert numeric strings to numbers
-        toolArgs[key] = Number(value);
+        toolArgs[normalizedKey] = Number(value);
       } else {
-        toolArgs[key] = value;
+        toolArgs[normalizedKey] = value;
       }
     }
   }
@@ -188,71 +191,71 @@ function parseArguments(): { tool: string; args: Record<string, any> } | null {
 
 function showUsage(client: VeracodeMCPClient) {
   const availableTools = client.getAvailableTools();
-
   console.log('📖 Usage: node veracode-mcp-client.js <tool> [args...]');
   console.log('Available tools:');
   availableTools.forEach(tool => {
     switch (tool) {
-    case 'get-applications':
-      console.log('  get-applications');
-      break;
-    case 'search-applications':
-      console.log('  search-applications --name <search_term>');
-      break;
-    case 'get-application-details':
-      console.log('  get-application-details --application <app_id_or_name>');
-      break;
-    case 'get-scan-results':
-      console.log('  get-scan-results --app_id <app_id> [--scan_type <type>]');
-      break;
-    case 'get-scan-results-by-name':
-      console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
-      break;
-    case 'get-findings':
-      console.log('  get-findings --application <app_id_or_name> [--scan_type <type>] [--severity <severity>]');
-      break;
-    case 'get-findings-advanced-by-name':
-      console.log(
-        '  get-findings-advanced-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>] [--single_page]'
-      );
-      break;
-    case 'get-sca-results-by-name':
-      console.log(
-        '  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]'
-      );
-      break;
-    case 'get-policy-compliance':
-      console.log('  get-policy-compliance --app_id <app_id>');
-      break;
-    case 'get-static-flaw-info':
-      console.log('  get-static-flaw-info --application <app_id_or_name> --issue_id <issue_id> [--sandbox_id <sandbox_guid>]');
-      break;
-    case 'get-sandboxes':
-      console.log('  get-sandboxes --application <app_id_or_name> [--page <page>] [--size <size>]');
-      break;
-    case 'get-sandbox-summary':
-      console.log('  get-sandbox-summary --application <app_id_or_name>');
-      break;
+      case 'get-application-profiles':
+        console.log('  get-application-profiles');
+        break;
+      case 'search-application-profiles':
+        console.log('  search-application-profiles --name <search_term>');
+        break;
+      case 'get-application-profile-details':
+        console.log('  get-application-profile-details --app-profile <profile_id_or_name>');
+        break;
+      case 'get-application-profile-details-by-name':
+        console.log('  get-application-profile-details-by-name --name <profile_name>');
+        break;
+      case 'get-scan-results':
+        console.log('  get-scan-results --app_id <app_id> [--scan_type <type>]');
+        break;
+      case 'get-scan-results-by-name':
+        console.log('  get-scan-results-by-name --name <app_name> [--scan_type <type>]');
+        break;
+      case 'get-findings':
+        console.log('  get-findings --app-profile <profile_id_or_name> [--scan_type <type>] [--severity <severity>]');
+        break;
+      case 'get-findings-advanced-by-name':
+        console.log(
+          '  get-findings-advanced-by-name --name <app_name> [--scan_type <type>] [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--max_results <count>] [--single_page]'
+        );
+        break;
+      case 'get-sca-results-by-name':
+        console.log(
+          '  get-sca-results-by-name --name <app_name> [--severity_gte <level>] [--cvss_gte <score>] [--only_policy_violations] [--only_new_findings] [--only_exploitable] [--max_results <count>]'
+        );
+        break;
+      case 'get-policy-compliance':
+        console.log('  get-policy-compliance --app_id <app_id>');
+        break;
+      case 'get-static-flaw-info':
+        console.log('  get-static-flaw-info --app-profile <profile_id_or_name> --issue_id <issue_id> [--sandbox_id <sandbox_guid>]');
+        break;
+      case 'get-sandboxes':
+        console.log('  get-sandboxes --app-profile <profile_id_or_name> [--page <page>] [--size <size>]');
+        break;
+      case 'get-sandbox-summary':
+        console.log('  get-sandbox-summary --app-profile <profile_id_or_name>');
+        break;
     }
   });
 
   console.log('Examples:');
-  console.log('  node build/veracode-mcp-client.js search-applications --name goat');
-  console.log('  node build/veracode-mcp-client.js get-applications');
-  console.log('  node build/veracode-mcp-client.js get-application-details --application 12345');
-  console.log('  node build/veracode-mcp-client.js get-findings --application "My App" --scan_type SCA --severity_gte 3');
-  console.log('  node build/veracode-mcp-client.js get-findings-advanced --application "My App" --scan_type STATIC --severity_gte 4 --single_page');
-  console.log('  node build/veracode-mcp-client.js get-sca-results --application "ASC-597"');
-  console.log('  node build/veracode-mcp-client.js get-static-flaw-info --application 12345 --issue_id 67890');
-  console.log('  node build/veracode-mcp-client.js get-sandboxes --application "VeraDemo"');
-  console.log('  node build/veracode-mcp-client.js get-sandbox-summary --application 12345');
-  console.log('📝 For application names with special characters, use JSON input:');
+  console.log('  node build/veracode-mcp-client.js search-application-profiles --name goat');
+  console.log('  node build/veracode-mcp-client.js get-application-profiles');
+  console.log('  node build/veracode-mcp-client.js get-application-profile-details --app-profile 12345');
+  console.log('  node build/veracode-mcp-client.js get-findings --app-profile "My App" --scan_type SCA --severity_gte 3');
+  console.log('  node build/veracode-mcp-client.js get-static-flaw-info --app-profile 12345 --issue_id 67890');
+  console.log('  node build/veracode-mcp-client.js get-sandboxes --app-profile "VeraDemo"');
+  console.log('  node build/veracode-mcp-client.js get-sandbox-summary --app-profile 12345');
+  console.log('📝 For application profile names with special characters, use JSON input:');
   console.log('  # PowerShell:');
-  console.log('  \'{"tool":"search-applications","args":{"name":"bob\\" &&"}}\' | node build/veracode-mcp-client.js --json');
-  console.log('  \'{"tool":"get-scan-results","args":{"application":"& test"}}\' | node build/veracode-mcp-client.js --json');
+  console.log('  \'{"tool":"search-application-profiles","args":{"name":"bob\\" &&"}}\' | node build/veracode-mcp-client.js --json');
+  console.log('  \'{"tool":"get-scan-results","args":{"app_profile":"& test"}}\' | node build/veracode-mcp-client.js --json');
   console.log('  # Bash/Linux:');
-  console.log('  echo \'{"tool":"search-applications","args":{"name":"bob\\" &&"}}\' | node build/veracode-mcp-client.js --json');
-  console.log('  echo \'{"tool":"get-scan-results","args":{"application":"& test"}}\' | node build/veracode-mcp-client.js --json');
+  console.log('  echo \'{"tool":"search-application-profiles","args":{"name":"bob\\" &&"}}\' | node build/veracode-mcp-client.js --json');
+  console.log('  echo \'{"tool":"get-scan-results","args":{"app_profile":"& test"}}\' | node build/veracode-mcp-client.js --json');
 }
 
 // Main execution
