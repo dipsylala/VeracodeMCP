@@ -60,7 +60,7 @@ for (const tool of allTools) {
     hasSchema: !!tool.schema
   });
 
-  server.tool(tool.name, tool.description, tool.schema, async (args: any) => {
+  server.tool(tool.name, tool.description, tool.schema, async(args: any) => {
     const startTime = Date.now();
     logger.toolExecution(tool.name, args);
 

@@ -15,7 +15,7 @@ export function createStaticAnalysisTools(): ToolHandler[] {
         issue_id: z.string().describe('Static analysis flaw/issue ID (numeric string like "12345"). Get this from scan results or findings lists. Each flaw has a unique ID within the application.'),
         sandbox_id: z.string().optional().describe('Sandbox/development environment ID (GUID) to get flaw details from a specific environment. Leave empty for production/main branch flaws.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
           const profileId = args.app_profile || args.application;

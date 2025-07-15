@@ -12,7 +12,7 @@ export function createScanTools(): ToolHandler[] {
         scan_type: z.string().optional().describe('Optional filter for specific scan type (STATIC, DYNAMIC, MANUAL, SCA). Leave empty to get all scan types.'),
         sandbox_identifier: z.string().optional().describe('Optional sandbox identifier - either sandbox name (e.g., "Development Sandbox") or GUID. Auto-detects which type you provided. If specified, gets scans from this sandbox instead of policy scans.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let sandboxId: string | undefined;
           let sandboxContext = 'policy';
@@ -89,7 +89,7 @@ export function createScanTools(): ToolHandler[] {
         identifier: z.string().describe('Application identifier - either the application name (e.g., "MCPNotepad++") or GUID. The function will automatically detect which type you provided.'),
         scan_type: z.string().optional().describe('Optional filter for specific scan type (STATIC, DYNAMIC, MANUAL, SCA). Leave empty to get all scan types.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.scans.getSandboxScans(args.identifier, args.scan_type);
 
@@ -132,7 +132,7 @@ export function createScanTools(): ToolHandler[] {
         sandbox_name: z.string().describe('Name of the sandbox to get scans from (e.g., "Development Sandbox", "Testing Environment").'),
         scan_type: z.string().optional().describe('Optional filter for specific scan type (STATIC, DYNAMIC, MANUAL, SCA).')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.scans.getScansBySandboxName(args.identifier, args.sandbox_name, args.scan_type);
 
@@ -175,7 +175,7 @@ export function createScanTools(): ToolHandler[] {
         identifier: z.string().describe('Application identifier - either the application name or GUID.'),
         scan_type: z.string().optional().describe('Optional filter for specific scan type comparison.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.scans.comparePolicyVsSandboxScans(args.identifier, args.scan_type);
 

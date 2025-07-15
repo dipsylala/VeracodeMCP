@@ -14,7 +14,7 @@ export function createSandboxTools(): ToolHandler[] {
         page: z.number().optional().describe('Page number for pagination (starts at 0). Most applications have few sandboxes, so default page usually sufficient.'),
         size: z.number().optional().describe('Number of sandboxes per page, maximum 500 (default 50). Use larger values if you have many development environments.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
           const profileId = args.app_profile || args.application;
@@ -113,7 +113,7 @@ export function createSandboxTools(): ToolHandler[] {
         app_profile: z.string().optional().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") or application profile name (like "MyWebApp"). Required to identify which application\'s sandbox summary to retrieve.'),
         application: z.string().optional().describe('⚠️ DEPRECATED: Use app_profile instead. Application ID (GUID) or application name to get sandbox summary for')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
           const profileId = args.app_profile || args.application;

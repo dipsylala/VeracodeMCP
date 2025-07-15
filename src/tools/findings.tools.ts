@@ -122,24 +122,12 @@ Examples:
 - Filter critical issues: {"application": "MyApp", "severity": ["Very High", "High"], "status": ["NEW", "OPEN"]}
 - Paginate results: {"application": "MyApp", "page": 1, "size": 50}
 - Target specific vulnerabilities: {"application": "MyApp", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
-      schema: {
-        application: z.string().describe('Application GUID or name to get findings for'),
-        scan_type: z.enum(['STATIC', 'DYNAMIC', 'SCA', 'MANUAL']).optional().describe('Type of scan to filter findings by. If not specified, returns all finding types'),
-        severity: z.array(z.enum(['Very High', 'High', 'Medium', 'Low', 'Very Low', 'Informational'])).optional().describe('Filter findings by severity levels. Example: ["Very High", "High"] for critical findings only'),
-        status: z.array(z.enum(['NEW', 'OPEN', 'FIXED', 'CANNOT_REPRODUCE', 'ACCEPTED', 'FALSE_POSITIVE', 'MITIGATED'])).optional().describe('Filter findings by remediation status. Example: ["NEW", "OPEN"] for unresolved findings'),
-        cwe_ids: z.array(z.string()).optional().describe('Filter findings by specific CWE IDs. Example: ["79", "89"] for XSS and SQL injection'),
-        page: z.number().min(0).optional().describe('Page number for pagination (0-based). Use for large result sets. Default is 0'),
-        size: z.number().min(1).max(500).optional().describe('Number of findings per page (1-500). Default is 100. Use smaller values for faster responses'),
-        include_details: z.boolean().optional().describe('Include detailed finding information (remediation advice, code context). Default is true'),
-        operation_mode: z.enum(['basic_overview', 'filtered']).optional().describe('Controls response mode: basic_overview=first 300 findings by severity (no filtering), filtered=apply filters and/or pagination')
-      },
+      schema: GetFindingsSchema,
 
       handler: async (params: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           const client = context.veracodeClient;
           const mode = determineOperationMode(params);
-          const pageSize = params.size || 100;
-          const pageNumber = params.page || 0;
           const includeDetails = params.include_details !== false;
 
           // Step 1: Resolve application (GUID or name)
@@ -176,9 +164,9 @@ Examples:
                   guid: applicationGuid
                 },
                 suggestions: [
-                  "Upload and scan code using Veracode Static Analysis",
-                  "Configure Dynamic Analysis for runtime testing",
-                  "Enable SCA scanning for open-source dependencies"
+                  'Upload and scan code using Veracode Static Analysis',
+                  'Configure Dynamic Analysis for runtime testing',
+                  'Enable SCA scanning for open-source dependencies'
                 ]
               }
             };
@@ -286,10 +274,10 @@ Examples:
             data: {
               details: error.message,
               troubleshooting: [
-                "Verify the application exists and you have access",
-                "Check that scans have been completed for this application",
-                "Ensure your Veracode API credentials are valid",
-                "Try with a smaller page size if experiencing timeouts"
+                'Verify the application exists and you have access',
+                'Check that scans have been completed for this application',
+                'Ensure your Veracode API credentials are valid',
+                'Try with a smaller page size if experiencing timeouts'
               ]
             }
           };

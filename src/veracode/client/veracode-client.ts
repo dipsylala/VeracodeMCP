@@ -8,29 +8,29 @@ import { ScanService } from '../services/scan-service.js';
 import { PolicyService } from '../services/policy-service.js';
 
 export class VeracodeClient extends BaseVeracodeClient {
-    public readonly applications: ApplicationService;
-    public readonly sandboxes: SandboxService;
-    public readonly findings: FindingsService;
-    public readonly scans: ScanService;
-    public readonly policies: PolicyService;
+  public readonly applications: ApplicationService;
+  public readonly sandboxes: SandboxService;
+  public readonly findings: FindingsService;
+  public readonly scans: ScanService;
+  public readonly policies: PolicyService;
 
-    constructor(
-        apiId?: string,
-        apiKey?: string,
-        options?: VeracodeClientOptions
-    ) {
-        super(apiId, apiKey, options);
+  constructor(
+    apiId?: string,
+    apiKey?: string,
+    options?: VeracodeClientOptions
+  ) {
+    super(apiId, apiKey, options);
 
-        // Initialize all services with the same credentials and options
-        this.applications = new ApplicationService(apiId, apiKey, options);
-        this.sandboxes = new SandboxService(apiId, apiKey, options);
-        this.findings = new FindingsService(apiId, apiKey, options);
-        this.scans = new ScanService(apiId, apiKey, options);
-        this.policies = new PolicyService(apiId, apiKey, options);
-    }
+    // Initialize all services with the same credentials and options
+    this.applications = new ApplicationService(apiId, apiKey, options);
+    this.sandboxes = new SandboxService(apiId, apiKey, options);
+    this.findings = new FindingsService(apiId, apiKey, options);
+    this.scans = new ScanService(apiId, apiKey, options);
+    this.policies = new PolicyService(apiId, apiKey, options);
+  }
 
-    // Create a client instance using credentials from environment variables
-    static fromEnvironment(options?: VeracodeClientOptions): VeracodeClient {
-        return new VeracodeClient(undefined, undefined, options);
-    }
+  // Create a client instance using credentials from environment variables
+  static fromEnvironment(options?: VeracodeClientOptions): VeracodeClient {
+    return new VeracodeClient(undefined, undefined, options);
+  }
 }

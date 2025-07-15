@@ -27,7 +27,7 @@ export function createApplicationTools(): ToolHandler[] {
         tag: z.string().optional().describe('Filter by application tag (exact match). Tags are used for categorization, environment marking (prod/dev), or team ownership.'),
         team: z.string().optional().describe('Filter by team name (exact match). Find applications owned or managed by a specific team.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const applications = await context.veracodeClient.applications.getApplications(args);
           return {
@@ -117,7 +117,7 @@ export function createApplicationTools(): ToolHandler[] {
         page: z.number().optional().describe('Page number for pagination (starts at 0). Most searches return results on first page unless you have many similarly named applications.'),
         size: z.number().optional().describe('Number of results per page, maximum 500 (default 50). Use 10-20 for quick searches, larger values for comprehensive discovery.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const searchResults = await context.veracodeClient.applications.getApplications({
             name: args.name,
@@ -181,7 +181,7 @@ export function createApplicationTools(): ToolHandler[] {
       schema: {
         app_profile: z.string().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") or exact application profile name (like "MyWebApp-Production"). Required to identify the specific application.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
 

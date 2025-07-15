@@ -18,7 +18,7 @@ export function createSCATools(): ToolHandler[] {
         only_exploitable: z.boolean().optional().describe('Only show vulnerabilities with active exploits in the wild (default: false). Prioritizes immediate security threats requiring urgent patching.'),
         max_results: z.number().optional().describe('Maximum number of findings to retrieve (default: unlimited, up to 500 per call). Use smaller values (50-100) for quick overviews or to reduce API response time.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting get-sca-results-by-name execution', 'SCA_TOOL', { args });
 
@@ -319,7 +319,7 @@ export function createSCATools(): ToolHandler[] {
       schema: {
         name: z.string().describe('Application profile name for SCA summary (exact match, e.g., "MyWebApp-Production"). Case-sensitive - verify exact name with search-application-profiles if needed.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           // First get the application to get its ID
           const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
@@ -497,7 +497,7 @@ export function createSCATools(): ToolHandler[] {
           .optional()
           .describe('Filter by minimum business criticality level: VERY_LOW, LOW, MEDIUM, HIGH, VERY_HIGH. Use HIGH or VERY_HIGH to focus on mission-critical applications.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Get all applications first
           const allApps = await context.veracodeClient.applications.getApplications();

@@ -17,7 +17,7 @@ export function createPolicyTools(): ToolHandler[] {
         size: z.number().min(1).max(500).optional().describe('Number of policies per page (1-500, default 50). Use smaller values for quick discovery, larger for bulk operations.'),
         vendor_policy: z.boolean().optional().describe('Filter by vendor-managed vs customer-managed policies. Vendor policies are maintained by Veracode.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const options = {
             category: args.category,
@@ -57,7 +57,7 @@ export function createPolicyTools(): ToolHandler[] {
       schema: {
         policy_guid: z.string().describe('Policy unique identifier (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890"). Get this from get-policies or application profile details.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicy(args.policy_guid);
           return {
@@ -81,7 +81,7 @@ export function createPolicyTools(): ToolHandler[] {
         page: z.number().optional().describe('Page number for pagination (starts at 0). Policies typically have few versions unless actively managed.'),
         size: z.number().min(1).max(500).optional().describe('Number of versions per page (1-500, default 50). Use smaller values for recent changes, larger for complete history.')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicyVersions(
             args.policy_guid,
@@ -108,7 +108,7 @@ export function createPolicyTools(): ToolHandler[] {
         policy_guid: z.string().describe('The unique identifier (GUID) of the policy'),
         version: z.number().describe('The specific version number of the policy')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicyVersion(
             args.policy_guid,
@@ -131,7 +131,7 @@ export function createPolicyTools(): ToolHandler[] {
       name: 'get-policy-settings',
       description: 'Get policy settings (default policies for business criticality levels)',
       schema: {},
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicySettings();
           return {
@@ -155,7 +155,7 @@ export function createPolicyTools(): ToolHandler[] {
         size: z.number().optional().describe('Page size'),
         sort: z.string().optional().describe('Sort order')
       },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getScaLicenses(
             args.page,
