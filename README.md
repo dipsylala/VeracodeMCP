@@ -154,40 +154,39 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 #### 📋 **Application Management**
 - `get-applications` - List all applications
 - `search-applications` - Search applications by name
-- `get-application-details` - Get detailed application information by ID
-- `get-application-details-by-name` - Get detailed application information by name
+- `get-application-details` - Get detailed application information by ID (GUID) or name
 
 #### 🔍 **Scan Results & Findings**
-- `get-scan-results` - Get scan results for an application by ID
-- `get-scan-results-by-name` - Get scan results for an application by name
-- `get-findings` - Get findings summary and metadata by application ID
-- `get-findings-by-name` - Get findings summary and metadata by application name (basic)
-- `get-findings-advanced-by-name` - Get findings with comprehensive filtering and pagination
-- `get-findings-paginated` - Get paginated findings results with detailed control
+- `get-scan-results` - Get scan results for an application by ID (GUID) or name
+- `get-findings` - Get findings summary and metadata by application ID (GUID) or name
+- `get-findings-advanced` - Get findings with comprehensive filtering and pagination by application ID (GUID) or name
+- `get-findings-paginated` - Get paginated findings results with detailed control by application ID (GUID) or name
 
 #### 🚨 **Detailed Flaw Analysis (Use for Specific Flaw IDs)**
-- `get-static-flaw-info` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information including data paths and call stack for specific flaw IDs
-- `get-static-flaw-info-by-name` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information by application name and flaw ID
+- `get-static-flaw-info` - **🎯 RECOMMENDED for flaw analysis** - Get detailed static flaw information including data paths and call stack for specific flaw IDs by application ID (GUID) or name
 
 #### 📊 **Policy & Compliance**
-- `get-policy-compliance` - Check policy compliance by application ID
-- `get-policy-compliance-by-name` - Check policy compliance by application name
+- `get-policy-compliance` - Check policy compliance by application ID (GUID) or name
 
 #### 🔐 **Software Composition Analysis (SCA)**
-- `get-sca-results-by-name` - **🎯 COMPREHENSIVE SCA** - Get detailed SCA analysis including exploitability, licensing, and component risk assessment by application name
-- `get-sca-summary-by-name` - Get high-level SCA overview with risk metrics and component statistics
+- `get-sca-results` - **🎯 COMPREHENSIVE SCA** - Get detailed SCA analysis including exploitability, licensing, and component risk assessment by application ID (GUID) or name
+- `get-sca-summary` - Get high-level SCA overview with risk metrics and component statistics by application ID (GUID) or name
 - `get-sca-apps` - List all applications with SCA scanning enabled, including risk analysis
 
+#### 🧪 **Sandbox Management**
+- `get-sandboxes` - List all sandboxes for an application by application ID (GUID) or name
+- `get-sandbox-summary` - Get summary information for sandboxes by application ID (GUID) or name
+
 #### 🧠 **AI Agent Guidance**
-> **For AI assistants**: When users ask about specific flaw IDs or need detailed technical analysis of vulnerabilities, use `get-static-flaw-info-by-name` or `get-static-flaw-info`. These tools provide:
+> **For AI assistants**: When users ask about specific flaw IDs or need detailed technical analysis of vulnerabilities, use `get-static-flaw-info`. This tool provides:
 > - ✅ Detailed data flow paths showing how vulnerabilities occur
 > - ✅ Call stack information for debugging
 > - ✅ Specific source code file and line number details
 > - ✅ Technical vulnerability analysis beyond basic metadata
 > 
-> Use `get-findings-by-name`/`get-findings` for general overviews and finding counts.
-> Use `get-findings-advanced-by-name` for comprehensive analysis with filtering.
-> Use `get-static-flaw-info`/`get-static-flaw-info-by-name` for detailed flaw-specific analysis with call stacks.
+> Use `get-findings` for general overviews and finding counts.
+> Use `get-findings-advanced` for comprehensive analysis with filtering.
+> Use `get-static-flaw-info` for detailed flaw-specific analysis with call stacks.
 
 ### Command-Line Examples
 ```bash
@@ -231,29 +230,26 @@ node build/veracode-mcp-client.js get-applications
 node build/veracode-mcp-client.js search-applications --name "MyApp"
 
 # Get application details by ID or name
-node build/veracode-mcp-client.js get-application-details --app_id "your-app-id"
-node build/veracode-mcp-client.js get-application-details-by-name --name "MyApp"
+node build/veracode-mcp-client.js get-application-details --application "your-app-id-or-name"
 
 # Get scan results by ID or name
-node build/veracode-mcp-client.js get-scan-results --app_id "your-app-id"
-node build/veracode-mcp-client.js get-scan-results-by-name --name "MyApp"
+node build/veracode-mcp-client.js get-scan-results --application "your-app-id-or-name"
 
-# Get comprehensive SCA analysis by name (RECOMMENDED for SCA)
-node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
-node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp" --severity_gte 4 --only_exploitable true
+# Get comprehensive SCA analysis (RECOMMENDED for SCA)
+node build/veracode-mcp-client.js get-sca-results --application "MyApp"
+node build/veracode-mcp-client.js get-sca-results --application "MyApp" --severity_gte 4 --only_exploitable true
 
-# Get policy compliance by ID
-node build/veracode-mcp-client.js get-policy-compliance --app_id "your-app-id"
+# Get policy compliance by ID or name
+node build/veracode-mcp-client.js get-policy-compliance --application "your-app-id-or-name"
 
-# Get detailed static flaw analysis by name or ID
-node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
-node build/veracode-mcp-client.js get-static-flaw-info --app_id "your-app-id" --issue_id "123"
+# Get detailed static flaw analysis by application ID or name
+node build/veracode-mcp-client.js get-static-flaw-info --application "MyApp" --issue_id "123"
 
 # Enable debug logging for troubleshooting
-LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results --application "MyApp"
 ```
 
-> 💡 **SCA Analysis**: Use `get-sca-results-by-name` for comprehensive Software Composition Analysis including exploitability data, licensing risks, and component vulnerability details. This is the most comprehensive SCA tool available in the CLI.
+> 💡 **SCA Analysis**: Use `get-sca-results` for comprehensive Software Composition Analysis including exploitability data, licensing risks, and component vulnerability details. This is the most comprehensive SCA tool available in the CLI.
 
 ## 🔧 Development
 

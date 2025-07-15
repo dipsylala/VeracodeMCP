@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import * as crypto from 'crypto';
 import { logger } from './utils/logger.js';
+import { loadVeracodeCredentials } from './utils/credentials.js';
 
 export interface VeracodeApplication {
   guid: string;
@@ -99,6 +100,43 @@ export interface ApplicationQueryParams {
   sort_by_custom_field_name?: string;
   tag?: string;
   team?: string;
+}
+
+// Sandbox interface based on Veracode API specification
+export interface VeracodeSandbox {
+  guid: string;
+  id: number;
+  name: string;
+  application_guid: string;
+  organization_id: number;
+  owner_username?: string;
+  auto_recreate?: boolean;
+  created: string;
+  modified: string;
+  custom_fields?: Array<{
+    name: string;
+    value: string;
+  }>;
+}
+
+// Query parameters for getSandboxes API
+export interface SandboxQueryParams {
+  page?: number;
+  size?: number;
+}
+
+// Response structure for paginated sandbox results
+export interface SandboxPagedResponse {
+  _embedded?: {
+    sandboxes: VeracodeSandbox[];
+  };
+  page?: {
+    number: number;
+    size: number;
+    total_elements: number;
+    total_pages: number;
+  };
+  _links?: any;
 }
 
 // Base annotation interface
@@ -290,7 +328,7 @@ export interface VeracodeStaticFlawIssueSummary {
   name: number;
   build_id: number;
   issue_id: number;
-  context?: string;
+  sandbox_id?: string;
 }
 
 export interface VeracodeStaticFlawInfo {
@@ -344,21 +382,33 @@ export class VeracodeClient {
   private platformBaseUrl: string;
 
   constructor(
-    apiId: string,
-    apiKey: string,
+    apiId?: string,
+    apiKey?: string,
     options?: {
       apiBaseUrl?: string;
       platformBaseUrl?: string;
     }
   ) {
+    // If no credentials provided, try to load from environment
+    if (!apiId || !apiKey) {
+      const credentials = loadVeracodeCredentials();
+      apiId = credentials.apiId;
+      apiKey = credentials.apiKey;
+      options = {
+        ...options,
+        apiBaseUrl: options?.apiBaseUrl || credentials.apiBaseUrl,
+        platformBaseUrl: options?.platformBaseUrl || credentials.platformBaseUrl
+      };
+    }
+
     logger.debug('Initializing VeracodeClient', 'CLIENT', {
       hasApiId: !!apiId,
       hasApiKey: !!apiKey,
       options
     });
 
-    this.apiId = apiId;
-    this.apiKey = apiKey;
+    this.apiId = apiId!;
+    this.apiKey = apiKey!;
 
     // Determine API base URL (region-specific)
     const apiBaseUrl = options?.apiBaseUrl || process.env.VERACODE_API_BASE_URL || 'https://api.veracode.com/';
@@ -416,6 +466,22 @@ export class VeracodeClient {
     );
 
     logger.info('VeracodeClient initialized successfully', 'CLIENT');
+  }
+
+  /**
+   * Create a VeracodeClient instance using credentials from environment variables
+   * This is the recommended way to create a client for testing and applications
+   */
+  static fromEnvironment(options?: {
+    apiBaseUrl?: string;
+    platformBaseUrl?: string;
+  }): VeracodeClient {
+    const credentials = loadVeracodeCredentials();
+    
+    return new VeracodeClient(credentials.apiId, credentials.apiKey, {
+      apiBaseUrl: options?.apiBaseUrl || credentials.apiBaseUrl,
+      platformBaseUrl: options?.platformBaseUrl || credentials.platformBaseUrl
+    });
   }
 
   // Derive platform URL from API base URL for different regions
@@ -538,7 +604,10 @@ export class VeracodeClient {
         });
       }
 
-      const url = `appsec/v1/applications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      // For HMAC calculation, we need to use %20 for spaces, not +
+      // URLSearchParams.toString() uses + for spaces, so we need to replace them
+      const queryString = queryParams.toString().replace(/\+/g, '%20');
+      const url = `appsec/v1/applications${queryString ? `?${queryString}` : ''}`;
       logger.apiRequest('GET', url);
       const response = await this.apiClient.get(url);
       const responseTime = Date.now() - startTime;
@@ -630,6 +699,77 @@ export class VeracodeClient {
     }
   }
 
+  // Get sandboxes for a specific application by application ID
+  async getSandboxes(applicationGuid: string, params?: SandboxQueryParams): Promise<VeracodeSandbox[]> {
+    const startTime = Date.now();
+    logger.debug('Getting sandboxes for application', 'API', { applicationGuid, params });
+
+    try {
+      // Build query string from parameters
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) {
+            queryParams.append(key, value.toString());
+          }
+        });
+      }
+
+      const url = `appsec/v1/applications/${applicationGuid}/sandboxes${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      logger.apiRequest('GET', url);
+      const response = await this.apiClient.get(url);
+      const responseTime = Date.now() - startTime;
+
+      const sandboxes = response.data._embedded?.sandboxes || [];
+      logger.apiResponse('GET', url, response.status, responseTime, sandboxes.length);
+
+      logger.debug('Sandboxes retrieved', 'API', {
+        applicationGuid,
+        sandboxCount: sandboxes.length,
+        executionTime: responseTime
+      });
+
+      return sandboxes;
+    } catch (error) {
+      logger.apiError('GET', `appsec/v1/applications/${applicationGuid}/sandboxes`, error);
+      throw new Error(`Failed to fetch sandboxes for application ${applicationGuid}: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Get sandboxes for a specific application by application name
+  async getSandboxesByName(applicationName: string, params?: SandboxQueryParams): Promise<{
+    application: VeracodeApplication;
+    sandboxes: VeracodeSandbox[];
+  }> {
+    try {
+      // First search for applications with this name
+      const searchResults = await this.searchApplications(applicationName);
+
+      if (searchResults.length === 0) {
+        throw new Error(`No application found with name: ${applicationName}`);
+      }
+
+      // If multiple results, look for exact match first
+      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === applicationName.toLowerCase());
+
+      // If no exact match, use the first result
+      if (!targetApp) {
+        targetApp = searchResults[0];
+        logger.debug(`No exact match found for "${applicationName}". Using first result: "${targetApp.profile.name}"`);
+      }
+
+      // Get sandboxes for the selected application
+      const sandboxes = await this.getSandboxes(targetApp.guid, params);
+
+      return {
+        application: targetApp,
+        sandboxes
+      };
+    } catch (error) {
+      throw new Error(`Failed to fetch sandboxes for application "${applicationName}": ${this.getErrorMessage(error)}`);
+    }
+  }
+
   // Get scan results for an application
   async getScanResults(appId: string, scanType?: string): Promise<VeracodeScan[]> {
     try {
@@ -639,7 +779,16 @@ export class VeracodeClient {
       }
 
       const response = await this.apiClient.get(url);
-      return response.data._embedded?.scans || [];
+      const scans = response.data._embedded?.scans || [];
+      
+      logger.debug('Scan results retrieved', 'API', {
+        appId,
+        scanType: scanType || 'all',
+        scanCount: scans.length,
+        scans: scans.map((scan: any) => ({ scan_id: scan.scan_id, scan_type: scan.scan_type, status: scan.status }))
+      });
+      
+      return scans;
     } catch (error) {
       throw new Error(`Failed to fetch scan results: ${this.getErrorMessage(error)}`);
     }
@@ -658,6 +807,44 @@ export class VeracodeClient {
     }
   }
 
+  // Check if an application has any scans
+  async hasScans(appId: string, scanType?: string): Promise<{ hasScans: boolean; scanCount: number; scanTypes: string[] }> {
+    try {
+      const scans = await this.getScanResults(appId, scanType);
+      const scanTypes = [...new Set(scans.map((scan: any) => scan.scan_type))];
+      
+      logger.debug('Scan existence check completed', 'API', {
+        appId,
+        requestedScanType: scanType,
+        hasScans: scans.length > 0,
+        scanCount: scans.length,
+        availableScanTypes: scanTypes
+      });
+      
+      return {
+        hasScans: scans.length > 0,
+        scanCount: scans.length,
+        scanTypes
+      };
+    } catch (error) {
+      logger.warn('Failed to check for scans', 'API', { appId, scanType, error });
+      throw new Error(`Failed to check for scans: ${this.getErrorMessage(error)}`);
+    }
+  }
+
+  // Check if an application has any scans by name
+  async hasScansByName(name: string, scanType?: string): Promise<{ hasScans: boolean; scanCount: number; scanTypes: string[] }> {
+    try {
+      // First get the application details to get the app ID
+      const application = await this.getApplicationDetailsByName(name);
+
+      // Then check for scans using the app ID
+      return await this.hasScans(application.guid, scanType);
+    } catch (error) {
+      throw new Error(`Failed to check for scans by name: ${this.getErrorMessage(error)}`);
+    }
+  }
+
   // Get findings for an application with pagination metadata
   async getFindingsPaginated(
     appId: string,
@@ -669,7 +856,7 @@ export class VeracodeClient {
       cvss?: number;
       cvssGte?: number;
       cve?: string;
-      context?: string;
+      sandbox_id?: string;
       findingCategory?: number[];
       includeAnnotations?: boolean;
       includeExpirationDate?: boolean;
@@ -683,6 +870,49 @@ export class VeracodeClient {
     }
   ): Promise<PaginatedFindingsResult> {
     try {
+      // Check if the application has any scans first
+      const scanCheck = await this.hasScans(appId, options?.scanType);
+      
+      if (!scanCheck.hasScans) {
+        logger.warn('No scans found for application', 'API', {
+          appId,
+          requestedScanType: options?.scanType || 'any'
+        });
+        
+        return {
+          findings: [],
+          pagination: {
+            current_page: 0,
+            page_size: options?.size || 500,
+            total_pages: 0,
+            total_elements: 0,
+            has_next: false,
+            has_previous: false
+          }
+        };
+      }
+      
+      // If a specific scan type was requested but not available, return empty results
+      if (options?.scanType && !scanCheck.scanTypes.includes(options.scanType)) {
+        logger.warn('Requested scan type not available for application', 'API', {
+          appId,
+          requestedScanType: options.scanType,
+          availableScanTypes: scanCheck.scanTypes
+        });
+        
+        return {
+          findings: [],
+          pagination: {
+            current_page: 0,
+            page_size: options?.size || 500,
+            total_pages: 0,
+            total_elements: 0,
+            has_next: false,
+            has_previous: false
+          }
+        };
+      }
+
       let url = `appsec/v2/applications/${appId}/findings`;
       const params = new URLSearchParams();
 
@@ -696,7 +926,7 @@ export class VeracodeClient {
         if (options.cvss !== undefined) params.append('cvss', options.cvss.toString());
         if (options.cvssGte !== undefined) params.append('cvss_gte', options.cvssGte.toString());
         if (options.cve) params.append('cve', options.cve);
-        if (options.context) params.append('context', options.context);
+        if (options.sandbox_id) params.append('context', options.sandbox_id);
         if (options.findingCategory && options.findingCategory.length > 0) {
           options.findingCategory.forEach(cat => params.append('finding_category', cat.toString()));
         }
@@ -749,7 +979,7 @@ export class VeracodeClient {
       cvss?: number;
       cvssGte?: number;
       cve?: string;
-      context?: string;
+      sandbox_id?: string;
       findingCategory?: number[];
       includeAnnotations?: boolean;
       includeExpirationDate?: boolean;
@@ -778,7 +1008,7 @@ export class VeracodeClient {
       cvss?: number;
       cvssGte?: number;
       cve?: string;
-      context?: string;
+      sandbox_id?: string;
       findingCategory?: number[];
       includeAnnotations?: boolean;
       includeExpirationDate?: boolean;
@@ -879,7 +1109,7 @@ export class VeracodeClient {
       cvss?: number;
       cvssGte?: number;
       cve?: string;
-      context?: string;
+      sandbox_id?: string;
       findingCategory?: number[];
       includeAnnotations?: boolean;
       includeExpirationDate?: boolean;
@@ -1043,11 +1273,11 @@ export class VeracodeClient {
   }
 
   // Get detailed static flaw information
-  async getStaticFlawInfo(appId: string, issueId: string, context?: string): Promise<VeracodeStaticFlawInfo> {
+  async getStaticFlawInfo(appId: string, issueId: string, sandbox_id?: string): Promise<VeracodeStaticFlawInfo> {
     try {
       let url = `appsec/v2/applications/${appId}/findings/${issueId}/static_flaw_info`;
-      if (context) {
-        url += `?context=${encodeURIComponent(context)}`;
+      if (sandbox_id) {
+        url += `?context=${encodeURIComponent(sandbox_id)}`;
       }
 
       const response = await this.apiClient.get(url);
@@ -1072,13 +1302,13 @@ Original error: ${errorMessage}`);
   }
 
   // Get detailed static flaw information by application name
-  async getStaticFlawInfoByName(name: string, issueId: string, context?: string): Promise<VeracodeStaticFlawInfo> {
+  async getStaticFlawInfoByName(name: string, issueId: string, sandbox_id?: string): Promise<VeracodeStaticFlawInfo> {
     try {
       // First get the application to get its ID
       const application = await this.getApplicationDetailsByName(name);
 
       // Then get static flaw info using the ID
-      return await this.getStaticFlawInfo(application.guid, issueId, context);
+      return await this.getStaticFlawInfo(application.guid, issueId, sandbox_id);
     } catch (error) {
       throw new Error(`Failed to fetch static flaw info by name: ${this.getErrorMessage(error)}`);
     }

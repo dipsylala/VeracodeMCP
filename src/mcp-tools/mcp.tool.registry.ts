@@ -7,6 +7,7 @@ import { createStaticAnalysisTools } from './static-analysis.tools.js';
 import { createSCATools } from './sca.tools.js';
 import { createScanTools } from './scan.tools.js';
 import { createPolicyTools } from './policy.tools.js';
+import { createSandboxTools } from './sandbox.tools.js';
 
 export class MCPToolRegistry {
   private tools: Map<string, MCPToolHandler> = new Map();
@@ -23,7 +24,8 @@ export class MCPToolRegistry {
       ...createStaticAnalysisTools(),
       ...createSCATools(),
       ...createScanTools(),
-      ...createPolicyTools()
+      ...createPolicyTools(),
+      ...createSandboxTools()
     ];
 
     // Build handler map

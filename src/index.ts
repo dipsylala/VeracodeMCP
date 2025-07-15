@@ -5,6 +5,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { VeracodeClient } from './veracode-rest-client.js';
 import { MCPToolRegistry } from './mcp-tools/mcp.tool.registry.js';
 import { logger } from './utils/logger.js';
+import { loadVeracodeCredentials } from './utils/credentials.js';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -12,28 +13,26 @@ dotenv.config();
 logger.reinitialize(); // Reinitialize after env is loaded
 
 logger.info('Starting Veracode MCP Server', 'STARTUP');
+
+// Load and validate Veracode credentials
+logger.debug('Loading Veracode credentials', 'STARTUP');
+const credentials = loadVeracodeCredentials();
+
 logger.debug('Environment loaded', 'STARTUP', {
-  hasApiId: !!process.env.VERACODE_API_ID,
-  hasApiKey: !!process.env.VERACODE_API_KEY,
+  hasApiId: !!credentials.apiId,
+  hasApiKey: !!credentials.apiKey,
   logLevel: process.env.LOG_LEVEL || 'info',
-  apiBaseUrl: process.env.VERACODE_API_BASE_URL || 'default'
+  apiBaseUrl: credentials.apiBaseUrl || 'default'
 });
-
-// Validate required environment variables
-const requiredEnvVars = ['VERACODE_API_ID', 'VERACODE_API_KEY'];
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-if (missingVars.length > 0) {
-  logger.error(`Missing required environment variables: ${missingVars.join(', ')}`, 'STARTUP');
-  logger.error('Please set these variables in your .env file or environment', 'STARTUP');
-  process.exit(1);
-}
 
 logger.debug('Environment validation passed', 'STARTUP');
 
 // Create Veracode client instance
 logger.debug('Creating Veracode client', 'STARTUP');
-const veracodeClient = new VeracodeClient(process.env.VERACODE_API_ID!, process.env.VERACODE_API_KEY!);
+const veracodeClient = new VeracodeClient(credentials.apiId, credentials.apiKey, {
+  apiBaseUrl: credentials.apiBaseUrl,
+  platformBaseUrl: credentials.platformBaseUrl
+});
 
 // Create tool registry instance (context managed internally)
 const mcpToolRegistry = new MCPToolRegistry(veracodeClient);

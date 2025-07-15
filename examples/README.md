@@ -17,7 +17,7 @@ This directory contains example scripts that demonstrate how to use the Veracode
 - **`get-sca-results.js`** - Get comprehensive SCA results for any application
   - Usage: `node get-sca-results.js <application-name>`
   - Example: `node get-sca-results.js "YourAppName"`
-  - **NEW CLI Tool**: Also available via `node build/veracode-mcp-client.js get-sca-results-by-name --name "YourAppName"`
+  - **CLI Tool**: Also available via `node build/veracode-mcp-client.js get-sca-results --application "YourAppName"`
   
 - **`find-sca-apps.js`** - Find applications that have SCA scans available
   - Usage: `node find-sca-apps.js [name-filter]`
@@ -38,8 +38,8 @@ This directory contains example scripts that demonstrate how to use the Veracode
   - Usage: `node compare-analysis-approaches.js <app_name> <flaw_id>`
   - Example: `node compare-analysis-approaches.js "MyApplication" "123"`
   - Shows side-by-side comparison of:
-    - General findings (get-findings-by-name) - good for overviews and summaries
-    - Detailed flaw analysis (get-static-flaw-info-by-name) - good for technical investigation
+    - General findings (get-findings) - good for overviews and summaries
+    - Detailed flaw analysis (get-static-flaw-info) - good for technical investigation
   - Helps understand when to use each tool type
 
 ## Running Examples
@@ -65,8 +65,8 @@ npm run example:find-sca-apps
 npm run build
 
 # Get comprehensive SCA analysis (CLI tool - RECOMMENDED)
-node build/veracode-mcp-client.js get-sca-results-by-name --name "Your-App-Name"
-node build/veracode-mcp-client.js get-sca-results-by-name --name "MyTestApp" --severity_gte 4 --only_exploitable true
+node build/veracode-mcp-client.js get-sca-results --application "Your-App-Name"
+node build/veracode-mcp-client.js get-sca-results --application "MyTestApp" --severity_gte 4 --only_exploitable true
 
 # Get SCA results using example script (alternative approach)
 node examples/get-sca-results.js "Your-App-Name"
@@ -74,7 +74,7 @@ node examples/get-sca-results.js "MyTestApp"
 
 # Get static flaw data paths
 node examples/get-static-flaw-info.js "app-guid-here" "issue-id-here"
-node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
+node build/veracode-mcp-client.js get-static-flaw-info --application "MyApp" --issue_id "123"
 
 # Search for specific applications
 node examples/query-apps.js "Test"
@@ -86,7 +86,7 @@ node examples/find-sca-apps.js
 node examples/find-sca-apps.js "Test"
 
 # Enable debug logging for any CLI command
-LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results --application "MyApp"
 LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
 ```
 
@@ -104,7 +104,7 @@ All examples and CLI tools support comprehensive debug logging to help troublesh
 ```bash
 # Set LOG_LEVEL environment variable
 LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
-LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
+LOG_LEVEL=debug node build/veracode-mcp-client.js get-sca-results --application "MyApp"
 
 # Or add to your .env file
 echo "LOG_LEVEL=debug" >> .env

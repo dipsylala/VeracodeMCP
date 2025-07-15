@@ -10,6 +10,7 @@ import { createPolicyTools } from './policy.tools.js';
 import { createStaticAnalysisTools } from './static-analysis.tools.js';
 import { createSCATools } from './sca.tools.js';
 import { createFindingsTools } from './findings.tools.js';
+import { createSandboxTools } from './sandbox.tools.js';
 
 export class CLIToolRegistry {
   private tools: Map<string, CLIToolHandler> = new Map();
@@ -25,7 +26,8 @@ export class CLIToolRegistry {
       ...createPolicyTools(),
       ...createStaticAnalysisTools(),
       ...createSCATools(),
-      ...createFindingsTools()
+      ...createFindingsTools(),
+      ...createSandboxTools()
     ];
 
     for (const tool of this.allTools) {

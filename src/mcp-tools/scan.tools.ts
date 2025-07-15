@@ -68,11 +68,18 @@ export function createScanTools(): MCPToolHandler[] {
             results_url: scan.results_url
           }));
 
+          const scanTypes = [...new Set(formattedScans.map(scan => scan.scan_type))];
+
           return {
             success: true,
             data: {
               application_name: args.name,
               count: formattedScans.length,
+              has_scans: formattedScans.length > 0,
+              available_scan_types: scanTypes,
+              message: formattedScans.length === 0 
+                ? 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.'
+                : `Found ${formattedScans.length} scan(s) of types: ${scanTypes.join(', ')}`,
               scans: formattedScans
             }
           };

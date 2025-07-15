@@ -82,6 +82,105 @@ export function createSCATools(): MCPToolHandler[] {
                         });
                     }
 
+                    // Check if the application has scans first
+                    const scanCheck = await context.veracodeClient.hasScans(targetApp.guid);
+                    
+                    if (!scanCheck.hasScans) {
+                        logger.warn('No scans found for application', 'SCA_TOOL', {
+                            appName: targetApp.profile.name,
+                            appGuid: targetApp.guid
+                        });
+                        
+                        return {
+                            success: true,
+                            data: {
+                                application: {
+                                    name: targetApp.profile.name,
+                                    id: targetApp.guid,
+                                    business_criticality: targetApp.profile.business_criticality,
+                                    app_profile_url: targetApp.app_profile_url,
+                                    results_url: targetApp.results_url
+                                },
+                                scan_information: {
+                                    latest_scan: null,
+                                    scan_summary: null,
+                                    note: 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.'
+                                },
+                                analysis: {
+                                    totalFindings: 0,
+                                    exploitableFindings: 0,
+                                    highRiskComponents: 0,
+                                    severityBreakdown: {},
+                                    topVulnerabilities: []
+                                },
+                                detailed_findings: [],
+                                filters_applied: {
+                                    scan_type: 'SCA',
+                                    severity_gte: args.severity_gte,
+                                    cvss_gte: args.cvss_gte,
+                                    only_policy_violations: args.only_policy_violations,
+                                    only_new_findings: args.only_new_findings,
+                                    only_exploitable: args.only_exploitable,
+                                    max_results: args.max_results
+                                },
+                                metadata: {
+                                    total_findings_analyzed: 0,
+                                    analysis_timestamp: new Date().toISOString(),
+                                    execution_time_ms: Date.now() - startTime
+                                }
+                            }
+                        };
+                    }
+
+                    // Check if SCA or STATIC scans are available (SCA findings are part of STATIC scans)
+                    const hasStaticOrSCA = scanCheck.scanTypes.some(type => type === 'STATIC' || type === 'SCA');
+                    if (!hasStaticOrSCA) {
+                        logger.warn('No STATIC or SCA scans found for application', 'SCA_TOOL', {
+                            appName: targetApp.profile.name,
+                            availableScanTypes: scanCheck.scanTypes
+                        });
+                        
+                        return {
+                            success: true,
+                            data: {
+                                application: {
+                                    name: targetApp.profile.name,
+                                    id: targetApp.guid,
+                                    business_criticality: targetApp.profile.business_criticality,
+                                    app_profile_url: targetApp.app_profile_url,
+                                    results_url: targetApp.results_url
+                                },
+                                scan_information: {
+                                    latest_scan: null,
+                                    scan_summary: null,
+                                    note: `No STATIC scans found for this application. SCA findings are part of STATIC scans. Available scan types: ${scanCheck.scanTypes.join(', ')}`
+                                },
+                                analysis: {
+                                    totalFindings: 0,
+                                    exploitableFindings: 0,
+                                    highRiskComponents: 0,
+                                    severityBreakdown: {},
+                                    topVulnerabilities: []
+                                },
+                                detailed_findings: [],
+                                filters_applied: {
+                                    scan_type: 'SCA',
+                                    severity_gte: args.severity_gte,
+                                    cvss_gte: args.cvss_gte,
+                                    only_policy_violations: args.only_policy_violations,
+                                    only_new_findings: args.only_new_findings,
+                                    only_exploitable: args.only_exploitable,
+                                    max_results: args.max_results
+                                },
+                                metadata: {
+                                    total_findings_analyzed: 0,
+                                    analysis_timestamp: new Date().toISOString(),
+                                    execution_time_ms: Date.now() - startTime
+                                }
+                            }
+                        };
+                    }
+
                     // Get basic scan information (if available)
                     logger.debug('Attempting to retrieve scan information', 'SCA_TOOL', { appGuid: targetApp.guid });
                     let latestScanResults = null;

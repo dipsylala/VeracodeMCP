@@ -2,43 +2,86 @@ import { z } from 'zod';
 import { MCPToolHandler, ToolContext, ToolResponse } from './mcp-types.js';
 
 /**
+ * Helper function to detect if a string is a GUID format
+ */
+function isGuid(str: string): boolean {
+  const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return guidRegex.test(str);
+}
+
+/**
  * Create findings tools for MCP
  */
 export function createFindingsTools(): MCPToolHandler[] {
   return [
     {
-      name: 'get-findings-by-name',
-      description:
-        'Get general findings and scan results for an application by name. For specific flaw ID analysis with call stack data, use get-static-flaw-info or get-static-flaw-info-by-name instead.',
-      schema: {
-        name: z.string().describe('Application name to get findings for')
-      },
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
-        try {
-          const result = await context.veracodeClient.getFindingsByName(args.name);
-          return {
-            success: true,
-            data: result
-          };
-        } catch (error) {
-          return {
-            success: false,
-            error: `Error fetching findings by name: ${error instanceof Error ? error.message : String(error)}`
-          };
-        }
-      }
-    },
-
-    {
       name: 'get-findings',
       description:
-        'Get general findings and scan results for an application by ID. For specific flaw ID analysis with call stack data, use get-static-flaw-info instead.',
+        'Get general findings and scan results for an application. Accepts either application ID (GUID) or application name. For specific flaw ID analysis with call stack data, use get-static-flaw-info instead.',
       schema: {
-        app_id: z.string().describe('Application ID (GUID) to get findings for')
+        application: z.string().describe('Application ID (GUID) or application name to get findings for')
       },
       handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          const result = await context.veracodeClient.getFindingsById(args.app_id);
+          let result;
+
+          if (isGuid(args.application)) {
+            // Handle as application ID
+            result = await context.veracodeClient.getFindingsById(args.application);
+          } else {
+            // Handle as application name - with scan checking
+            const searchResults = await context.veracodeClient.searchApplications(args.application);
+            
+            if (searchResults.length === 0) {
+              return {
+                success: false,
+                error: `No application found with name: ${args.application}`
+              };
+            }
+
+            let targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
+            if (!targetApp) {
+              targetApp = searchResults[0];
+            }
+
+            // Check if the application has scans
+            const scanCheck = await context.veracodeClient.hasScans(targetApp.guid);
+            
+            if (!scanCheck.hasScans) {
+              return {
+                success: true,
+                data: {
+                  application: {
+                    name: targetApp.profile.name,
+                    id: targetApp.guid
+                  },
+                  scan_status: {
+                    has_scans: false,
+                    message: 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.',
+                    available_scan_types: []
+                  },
+                  findings: [],
+                  summary: {
+                    total_findings: 0,
+                    message: 'Cannot retrieve findings - no scans available'
+                  }
+                }
+              };
+            }
+
+            result = await context.veracodeClient.getFindingsByName(args.application);
+            
+            // Add scan status information
+            result = {
+              ...result,
+              scan_status: {
+                has_scans: true,
+                message: `Found ${scanCheck.scanCount} scan(s) for this application.`,
+                available_scan_types: scanCheck.scanTypes
+              }
+            };
+          }
+
           return {
             success: true,
             data: result
@@ -46,18 +89,18 @@ export function createFindingsTools(): MCPToolHandler[] {
         } catch (error) {
           return {
             success: false,
-            error: `Error fetching findings by ID: ${error instanceof Error ? error.message : String(error)}`
+            error: `Error fetching findings: ${error instanceof Error ? error.message : String(error)}`
           };
         }
       }
     },
 
     {
-      name: 'get-findings-advanced-by-name',
+      name: 'get-findings-advanced',
       description:
-        'Get application findings with comprehensive filtering and pagination support. Retrieves findings from Veracode scans (STATIC, DYNAMIC, MANUAL, SCA) with detailed filtering options and automatic pagination handling.',
+        'Get application findings with comprehensive filtering and pagination support. Retrieves findings from Veracode scans (STATIC, DYNAMIC, MANUAL, SCA) with detailed filtering options and automatic pagination handling. Accepts either application ID (GUID) or application name.',
       schema: {
-        name: z.string().describe('Application name to get findings for'),
+        application: z.string().describe('Application ID (GUID) or application name to get findings for'),
         scan_type: z
           .enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA'])
           .optional()
@@ -68,7 +111,7 @@ export function createFindingsTools(): MCPToolHandler[] {
         cvss: z.number().min(0).max(10).optional().describe('Exact CVSS score (0-10)'),
         cvss_gte: z.number().min(0).max(10).optional().describe('Minimum CVSS score (0-10)'),
         cve: z.string().optional().describe('Specific CVE ID to filter by'),
-        context: z.string().optional().describe('Context type (APPLICATION, SANDBOX)'),
+        sandbox_id: z.string().optional().describe('Sandbox ID (GUID)'),
         include_annotations: z.boolean().optional().describe('Include mitigation annotations (default: false)'),
         include_expiration_date: z
           .boolean()
@@ -87,21 +130,130 @@ export function createFindingsTools(): MCPToolHandler[] {
       },
       handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          // First get the application to get its ID
-          const searchResults = await context.veracodeClient.searchApplications(args.name);
+          let targetApp;
+          
+          if (isGuid(args.application)) {
+            // Handle as application ID - get application details first
+            const appDetails = await context.veracodeClient.getApplicationDetails(args.application);
+            targetApp = {
+              guid: appDetails.guid,
+              profile: appDetails.profile,
+              app_profile_url: appDetails.app_profile_url,
+              results_url: appDetails.results_url
+            };
+          } else {
+            // Handle as application name - search for application
+            const searchResults = await context.veracodeClient.searchApplications(args.application);
 
-          if (searchResults.length === 0) {
+            if (searchResults.length === 0) {
+              return {
+                success: false,
+                error: `No application found with name: ${args.application}`
+              };
+            }
+
+            // Find exact match or use first result
+            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
+            if (!targetApp) {
+              targetApp = searchResults[0];
+              console.warn(`No exact match found for "${args.application}". Using first result: "${targetApp.profile.name}"`);
+            }
+          }
+
+          // Check if the application has scans before proceeding
+          const scanCheck = await context.veracodeClient.hasScans(targetApp.guid, args.scan_type);
+          
+          if (!scanCheck.hasScans) {
             return {
-              success: false,
-              error: `No application found with name: ${args.name}`
+              success: true,
+              data: {
+                application: {
+                  name: targetApp.profile.name,
+                  id: targetApp.guid,
+                  business_criticality: targetApp.profile.business_criticality,
+                  app_profile_url: targetApp.app_profile_url,
+                  results_url: targetApp.results_url
+                },
+                scan_status: {
+                  has_scans: false,
+                  message: 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.',
+                  requested_scan_type: args.scan_type || 'any',
+                  available_scan_types: []
+                },
+                findings_summary: {
+                  total_findings_retrieved: 0,
+                  total_findings_available: 0,
+                  pages_retrieved: 0,
+                  total_pages_available: 0,
+                  data_truncated: false,
+                  policy_violations: 0,
+                  severity_breakdown: {},
+                  scan_type_breakdown: {},
+                  status_breakdown: {}
+                },
+                detailed_findings: [],
+                filters_applied: {
+                  scan_type: args.scan_type || 'all',
+                  severity_filter: args.severity
+                    ? `exact: ${args.severity}`
+                    : args.severity_gte
+                      ? `>= ${args.severity_gte}`
+                      : 'all',
+                  cvss_filter: args.cvss ? `exact: ${args.cvss}` : args.cvss_gte ? `>= ${args.cvss_gte}` : 'all',
+                  cwe_filter: args.cwe ? args.cwe.join(', ') : 'all',
+                  context: args.sandbox_id || 'all',
+                  new_findings_only: args.new_findings_only || false,
+                  policy_violations_only: args.policy_violations_only || false
+                }
+              }
             };
           }
 
-          // Find exact match or use first result
-          let targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.name.toLowerCase());
-          if (!targetApp) {
-            targetApp = searchResults[0];
-            console.warn(`No exact match found for "${args.name}". Using first result: "${targetApp.profile.name}"`);
+          // Check if requested scan type is available
+          if (args.scan_type && !scanCheck.scanTypes.includes(args.scan_type)) {
+            return {
+              success: true,
+              data: {
+                application: {
+                  name: targetApp.profile.name,
+                  id: targetApp.guid,
+                  business_criticality: targetApp.profile.business_criticality,
+                  app_profile_url: targetApp.app_profile_url,
+                  results_url: targetApp.results_url
+                },
+                scan_status: {
+                  has_scans: true,
+                  message: `No scans of type '${args.scan_type}' found for this application.`,
+                  requested_scan_type: args.scan_type,
+                  available_scan_types: scanCheck.scanTypes
+                },
+                findings_summary: {
+                  total_findings_retrieved: 0,
+                  total_findings_available: 0,
+                  pages_retrieved: 0,
+                  total_pages_available: 0,
+                  data_truncated: false,
+                  policy_violations: 0,
+                  severity_breakdown: {},
+                  scan_type_breakdown: {},
+                  status_breakdown: {}
+                },
+                detailed_findings: [],
+                filters_applied: {
+                  scan_type: args.scan_type || 'all',
+                  severity_filter: args.severity
+                    ? `exact: ${args.severity}`
+                    : args.severity_gte
+                      ? `>= ${args.severity_gte}`
+                      : 'all',
+                  cvss_filter: args.cvss ? `exact: ${args.cvss}` : args.cvss_gte ? `>= ${args.cvss_gte}` : 'all',
+                  cwe_filter: args.cwe ? args.cwe.join(', ') : 'all',
+                  context: args.sandbox_id || 'all',
+                  new_findings_only: args.new_findings_only || false,
+                  policy_violations_only: args.policy_violations_only || false
+                }
+              }
+            };
           }
 
           // Build findings request options
@@ -113,7 +265,7 @@ export function createFindingsTools(): MCPToolHandler[] {
             cvss: args.cvss,
             cvssGte: args.cvss_gte,
             cve: args.cve,
-            context: args.context,
+            context: args.sandbox_id,
             includeAnnotations: args.include_annotations,
             includeExpirationDate: args.include_expiration_date,
             newFindingsOnly: args.new_findings_only,
@@ -189,6 +341,12 @@ export function createFindingsTools(): MCPToolHandler[] {
                 app_profile_url: targetApp.app_profile_url,
                 results_url: targetApp.results_url
               },
+              scan_status: {
+                has_scans: scanCheck.hasScans,
+                message: `Found ${scanCheck.scanCount} scan(s) for this application.`,
+                requested_scan_type: args.scan_type || 'any',
+                available_scan_types: scanCheck.scanTypes
+              },
               findings_summary: {
                 total_findings_retrieved: findingsResult.findings.length,
                 total_findings_available: findingsResult.totalElements,
@@ -239,9 +397,9 @@ export function createFindingsTools(): MCPToolHandler[] {
     {
       name: 'get-findings-paginated',
       description:
-        'Get a specific page of findings with detailed pagination control. Useful for implementing custom pagination or when you need precise control over data retrieval.',
+        'Get a specific page of findings with detailed pagination control. Useful for implementing custom pagination or when you need precise control over data retrieval. Accepts either application ID (GUID) or application name.',
       schema: {
-        name: z.string().describe('Application name to get findings for'),
+        application: z.string().describe('Application ID (GUID) or application name to get findings for'),
         page: z.number().min(0).optional().describe('Page number (0-based, default: 0)'),
         page_size: z.number().min(1).max(500).optional().describe('Number of findings per page (max 500, default 100)'),
         scan_type: z
@@ -256,21 +414,122 @@ export function createFindingsTools(): MCPToolHandler[] {
       },
       handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          // First get the application to get its ID
-          const searchResults = await context.veracodeClient.searchApplications(args.name);
+          let targetApp;
+          
+          if (isGuid(args.application)) {
+            // Handle as application ID - get application details first
+            const appDetails = await context.veracodeClient.getApplicationDetails(args.application);
+            targetApp = {
+              guid: appDetails.guid,
+              profile: appDetails.profile,
+              app_profile_url: appDetails.app_profile_url,
+              results_url: appDetails.results_url
+            };
+          } else {
+            // Handle as application name - search for application
+            const searchResults = await context.veracodeClient.searchApplications(args.application);
 
-          if (searchResults.length === 0) {
+            if (searchResults.length === 0) {
+              return {
+                success: false,
+                error: `No application found with name: ${args.application}`
+              };
+            }
+
+            // Find exact match or use first result
+            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
+            if (!targetApp) {
+              targetApp = searchResults[0];
+              console.warn(`No exact match found for "${args.application}". Using first result: "${targetApp.profile.name}"`);
+            }
+          }
+
+          // Check if the application has scans before proceeding
+          const scanCheck = await context.veracodeClient.hasScans(targetApp.guid, args.scan_type);
+          
+          if (!scanCheck.hasScans) {
             return {
-              success: false,
-              error: `No application found with name: ${args.name}`
+              success: true,
+              data: {
+                application: {
+                  name: targetApp.profile.name,
+                  id: targetApp.guid,
+                  app_profile_url: targetApp.app_profile_url,
+                  results_url: targetApp.results_url
+                },
+                scan_status: {
+                  has_scans: false,
+                  message: 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.',
+                  requested_scan_type: args.scan_type || 'any',
+                  available_scan_types: []
+                },
+                pagination: {
+                  current_page: 0,
+                  page_size: args.page_size || 100,
+                  total_pages: 0,
+                  total_elements: 0,
+                  has_next: false,
+                  has_previous: false
+                },
+                findings: [],
+                page_info: {
+                  current_page: 0,
+                  findings_on_page: 0,
+                  has_next_page: false,
+                  has_previous_page: false,
+                  total_pages: 0,
+                  total_findings: 0
+                },
+                navigation: {
+                  next_page: null,
+                  previous_page: null,
+                  last_page: 0
+                }
+              }
             };
           }
 
-          // Find exact match or use first result
-          let targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.name.toLowerCase());
-          if (!targetApp) {
-            targetApp = searchResults[0];
-            console.warn(`No exact match found for "${args.name}". Using first result: "${targetApp.profile.name}"`);
+          // Check if requested scan type is available
+          if (args.scan_type && !scanCheck.scanTypes.includes(args.scan_type)) {
+            return {
+              success: true,
+              data: {
+                application: {
+                  name: targetApp.profile.name,
+                  id: targetApp.guid,
+                  app_profile_url: targetApp.app_profile_url,
+                  results_url: targetApp.results_url
+                },
+                scan_status: {
+                  has_scans: true,
+                  message: `No scans of type '${args.scan_type}' found for this application.`,
+                  requested_scan_type: args.scan_type,
+                  available_scan_types: scanCheck.scanTypes
+                },
+                pagination: {
+                  current_page: 0,
+                  page_size: args.page_size || 100,
+                  total_pages: 0,
+                  total_elements: 0,
+                  has_next: false,
+                  has_previous: false
+                },
+                findings: [],
+                page_info: {
+                  current_page: 0,
+                  findings_on_page: 0,
+                  has_next_page: false,
+                  has_previous_page: false,
+                  total_pages: 0,
+                  total_findings: 0
+                },
+                navigation: {
+                  next_page: null,
+                  previous_page: null,
+                  last_page: 0
+                }
+              }
+            };
           }
 
           // Get paginated findings
@@ -293,6 +552,12 @@ export function createFindingsTools(): MCPToolHandler[] {
                 id: targetApp.guid,
                 app_profile_url: targetApp.app_profile_url,
                 results_url: targetApp.results_url
+              },
+              scan_status: {
+                has_scans: scanCheck.hasScans,
+                message: `Found ${scanCheck.scanCount} scan(s) for this application.`,
+                requested_scan_type: args.scan_type || 'any',
+                available_scan_types: scanCheck.scanTypes
               },
               pagination: result.pagination,
               findings: result.findings,

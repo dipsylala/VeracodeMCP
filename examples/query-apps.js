@@ -1,10 +1,6 @@
 #!/usr/bin/env node
 
 import { VeracodeClient } from "../build/veracode-rest-client.js";
-import * as dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
 
 async function testVeracodeConnection() {
   // Optional search term from command line arguments
@@ -17,19 +13,18 @@ async function testVeracodeConnection() {
     console.log("💡 Tip: You can search for specific apps using: node query-apps.js \"search-term\"\n");
   }
 
-  const apiId = process.env.VERACODE_API_ID;
-  const apiKey = process.env.VERACODE_API_KEY;
-
-  if (!apiId || !apiKey) {
-    console.error("❌ Missing API credentials in .env file");
+  let client;
+  try {
+    console.log('Loading Veracode credentials from environment...');
+    client = VeracodeClient.fromEnvironment();
+    console.log('✅ Credentials loaded successfully\n');
+  } catch (error) {
+    console.error("❌ Failed to load Veracode credentials:", error.message);
+    console.error("Please ensure VERACODE_API_ID and VERACODE_API_KEY are set in your .env file");
     process.exit(1);
   }
 
-  console.log(`📡 Using API ID: ${apiId.substring(0, 8)}...`);
-
   try {
-    const client = new VeracodeClient(apiId, apiKey);
-
     let applications;
     if (searchTerm) {
       console.log(`📱 Searching for applications matching "${searchTerm}"...`);

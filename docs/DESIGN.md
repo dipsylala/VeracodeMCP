@@ -83,21 +83,18 @@ docs/                            # Documentation
 **Tools Provided** (via MCP Server):
 - `get-applications`: List all accessible applications
 - `search-applications`: Search applications by name pattern
-- `get-application-details`: Get detailed application information by ID
-- `get-application-details-by-name`: Get detailed application information by name
-- `get-scan-results`: Retrieve scan results for an application by ID
-- `get-scan-results-by-name`: Retrieve scan results for an application by name
-- `get-findings`: Get findings summary and metadata by application ID
-- `get-findings-by-name`: Get findings summary and metadata by application name (basic)
-- `get-findings-advanced-by-name`: Get findings with comprehensive filtering and pagination support
-- `get-findings-paginated`: Get paginated findings results with detailed pagination control
-- `get-sca-results-by-name`: **COMPREHENSIVE SCA** - Detailed SCA analysis including exploitability, licensing, and component risk assessment
-- `get-sca-summary-by-name`: High-level SCA overview with risk metrics and component statistics
+- `get-application-details`: Get detailed application information by ID (GUID) or name
+- `get-scan-results`: Retrieve scan results for an application by ID (GUID) or name  
+- `get-findings`: Get findings summary and metadata by application ID (GUID) or name
+- `get-findings-advanced`: Get findings with comprehensive filtering and pagination support by application ID (GUID) or name
+- `get-findings-paginated`: Get paginated findings results with detailed pagination control by application ID (GUID) or name
+- `get-sca-results`: **COMPREHENSIVE SCA** - Detailed SCA analysis including exploitability, licensing, and component risk assessment by application ID (GUID) or name
+- `get-sca-summary`: High-level SCA overview with risk metrics and component statistics by application ID (GUID) or name
 - `get-sca-apps`: List all applications with SCA scanning enabled, including risk analysis
-- `get-static-flaw-info`: **RECOMMENDED for flaw analysis** - Detailed static flaw information including data paths and call stack
-- `get-static-flaw-info-by-name`: **RECOMMENDED for flaw analysis** - Detailed static flaw information by application name and flaw ID
-- `get-policy-compliance`: Check policy compliance by application ID
-- `get-policy-compliance-by-name`: Check policy compliance by application name
+- `get-static-flaw-info`: **RECOMMENDED for flaw analysis** - Detailed static flaw information including data paths and call stack by application ID (GUID) or name
+- `get-policy-compliance`: Check policy compliance by application ID (GUID) or name
+- `get-sandboxes`: List all sandboxes for an application by application ID (GUID) or name
+- `get-sandbox-summary`: Get summary information for sandboxes by application ID (GUID) or name
 
 ### 2. Veracode API Client (`src/veracode-rest-client.ts`)
 
@@ -506,8 +503,8 @@ node build/veracode-mcp-client.js <tool-name> [args...]
 
 # Available tools via CLI
 node build/veracode-mcp-client.js get-applications
-node build/veracode-mcp-client.js get-sca-results-by-name --name "MyApp"
-node build/veracode-mcp-client.js get-static-flaw-info-by-name --name "MyApp" --issue_id "123"
+node build/veracode-mcp-client.js get-sca-results --application "MyApp"
+node build/veracode-mcp-client.js get-static-flaw-info --application "MyApp" --issue_id "123"
 ```
 
 ### Example Scripts
