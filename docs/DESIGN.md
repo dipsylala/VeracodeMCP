@@ -30,7 +30,7 @@ Understanding how an MCP query flows through the system is crucial for maintaini
 
 ```
 ┌─────────────────┐    1. MCP Request     ┌──────────────────┐
-│   AI Assistant  │ ──────────────────► │   MCP Server     │
+│   AI Assistant  │ ───────────────────► │   MCP Server     │
 │   (Claude, etc) │                      │   (index.ts)     │
 └─────────────────┘                      └──────────────────┘
                                                   │
@@ -119,7 +119,7 @@ Understanding how an MCP query flows through the system is crucial for maintaini
                                                   │
                                                   ▼
 ┌─────────────────┐                      ┌──────────────────┐
-│   AI Assistant  │ ◄────────────────── │   MCP Server     │
+│   AI Assistant  │ ◄─────────────────── │   MCP Server     │
 │    Response     │                      │   Response       │
 └─────────────────┘                      └──────────────────┘
 ```
