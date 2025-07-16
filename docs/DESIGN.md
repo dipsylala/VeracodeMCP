@@ -255,10 +255,35 @@ return {
 Understanding this flow helps with:
 
 1. **Adding New Tools**: Follow the same pattern in `*.tools.ts` files
+   - Create tool handler functions with proper Zod schema validation
+   - Add to the appropriate category file (application.tools.ts, sca.tools.ts, etc.)
+   - The ToolRegistry automatically discovers and registers new tools
+   - Ensure tools return consistent `ToolResponse` format from shared-types.ts
+
 2. **Debugging Issues**: Trace through each step to isolate problems
+   - Check tool registration in ToolRegistry.getAllTools()
+   - Verify input validation in Zod schemas
+   - Monitor API calls through structured logging
+   - Use examples/ directory tests to isolate tool-specific issues
+
 3. **Performance Optimization**: Identify bottlenecks in API calls or processing
+   - Monitor execution times in structured logs
+   - Check for excessive API calls in service layer
+   - Optimize pagination and filtering logic
+   - Use category-based tool organization for efficient discovery
+
 4. **Error Handling**: Understand where failures can occur and how to handle them
+   - Input validation errors (Zod schema failures)
+   - API authentication and authorization errors
+   - Network connectivity and timeout issues
+   - Data processing and transformation errors
+   - Consistent error response format through ToolResponse interface
+
 5. **Testing**: Know which components to mock and test independently
+   - Use VeracodeMCPClient for integration testing
+   - Mock BaseVeracodeClient for unit testing service layer
+   - Test tool handlers with sample data using examples/ scripts
+   - Validate tool registration and categorization through ToolRegistry methods
 ```
 
 ### Component Architecture
@@ -266,26 +291,48 @@ Understanding this flow helps with:
 ```
 src/
 ├── index.ts                     # MCP Server Entry Point  
-├── veracode-rest-client.ts      # Veracode API REST Client
+├── veracode-rest-client.ts      # Backward compatibility exports
+├── veracode-mcp-client.ts       # Direct MCP client for testing/examples
 ├── types/                       # Shared Type Definitions
 │   └── shared-types.ts          # Common interfaces and enums (ToolResponse, ToolCategory, ToolCall)
 ├── tools/                       # MCP Protocol Tool Implementations
-│   ├── tool-types.ts            # MCP-specific types (ToolHandler, ToolContext + re-exports)
+│   ├── tool-types.ts            # MCP-specific types (ToolHandler, ToolContext)
 │   ├── tool.registry.ts         # MCP Tool Registration System
-│   ├── *.tools.ts               # MCP tools broken up by category
+│   ├── application.tools.ts     # Application management tools
+│   ├── findings.tools.ts        # Findings and vulnerability tools
+│   ├── sca.tools.ts             # Software Composition Analysis tools
+│   ├── static-analysis.tools.ts # Static analysis tools
+│   ├── scan.tools.ts            # Scan management tools
+│   ├── policy.tools.ts          # Policy management tools
+│   └── sandbox.tools.ts         # Sandbox tools
+├── veracode/                    # Veracode API Integration Layer
+│   ├── client/                  # Client implementation
+│   │   ├── base-client.ts       # Base authentication and HTTP client
+│   │   └── veracode-client.ts   # Main composed client
+│   ├── services/                # Individual API service modules
+│   │   ├── application-service.ts
+│   │   ├── findings-service.ts
+│   │   ├── policy-service.ts
+│   │   ├── sandbox-service.ts
+│   │   └── scan-service.ts
+│   └── types/                   # Service-specific type definitions
 └── utils/
     └── logger.ts                # Structured Logging Utility
 
 examples/                        # Usage Examples & Test Scripts
-├── get-sca-results.js           # SCA Results Example
-├── find-sca-apps.js             # SCA Discovery Example  
-├── query-apps.js                # Application Search Example
-├── list-apps.js                 # List All Apps Example
-├── test-search.js               # Search Testing Example
-├── get-static-flaw-info.js      # Static Flaw Analysis Example
-├── compare-analysis-approaches.js # Comparison Testing
-├── inspect-api-responses.js     # API Response Analysis
-└── README.md                    # Examples Documentation
+├── analyze-static-sca-findings.js  # SCA Analysis Example
+├── capture-actual-sca-response.js  # SCA Response Capture
+├── debug-client-sca.js         # SCA Client Debugging
+├── find-sca-apps-mcp.js        # SCA Discovery Example  
+├── get-sca-results-mcp.js      # SCA Results Example
+├── list-applications-mcp.js    # Application List Example
+├── policy-management-mcp.js    # Policy Management Example
+├── policy-tools-mcp.js         # Policy Tools Example
+├── sandbox-functionality-mcp.js # Sandbox Testing Example
+├── search-application-profiles-mcp.js # Application Search Example
+├── static-findings-pagination-mcp.js # Static Analysis Example
+├── test-verademo-net.js        # VeraDemo.NET Testing
+└── README.md                   # Examples Documentation
 
 docs/                            # Documentation
 ├── DESIGN.md                    # Architecture & Design
@@ -316,7 +363,7 @@ docs/                            # Documentation
 **Tools Provided** (via MCP Server):
 - `get-application-profiles`: List all accessible application profiles
 - `search-application-profiles`: Search application profiles by name pattern
-- `get-application-details`: Get detailed application information by ID (GUID) or name
+- `get-application-profile-details`: Get detailed application information by ID (GUID) or name
 - `get-scan-results`: Retrieve scan results for an application by ID (GUID) or name  
 - `get-findings`: **UNIFIED FINDINGS TOOL** - Get security findings with intelligent filtering and pagination. Two modes:
   - Basic Overview (no filters): Returns first 300 findings ordered by highest severity  
@@ -324,27 +371,54 @@ docs/                            # Documentation
 - `get-sca-results`: **COMPREHENSIVE SCA** - Detailed SCA analysis including exploitability, licensing, and component risk assessment by application ID (GUID) or name
 - `get-sca-summary`: High-level SCA overview with risk metrics and component statistics by application ID (GUID) or name
 - `get-sca-apps`: List all applications with SCA scanning enabled, including risk analysis
+- `get-sca-licenses`: Get SCA license information and risk analysis
 - `get-static-flaw-info`: **RECOMMENDED for flaw analysis** - Detailed static flaw information including data paths and call stack by application ID (GUID) or name
-- `get-policy-compliance`: Check policy compliance by application ID (GUID) or name
+- `get-sandbox-scans`: Get scan information for sandboxes
+- `get-scans-by-sandbox`: Retrieve scans filtered by sandbox
+- `compare-policy-vs-sandbox-scans`: Compare policy and sandbox scan results
+- `get-policies`: List all accessible policies
+- `get-policy`: Get detailed policy information
+- `get-policy-versions`: Get policy version information
+- `get-policy-version`: Get specific policy version details
+- `get-policy-settings`: Get policy configuration settings
 - `get-sandboxes`: List all sandboxes for an application by application ID (GUID) or name
 - `get-sandbox-summary`: Get summary information for sandboxes by application ID (GUID) or name
 
-### 2. Veracode API Client (`src/veracode-rest-client.ts`)
+### 2. Veracode API Client (Modular Architecture)
 
-**Purpose**: Abstraction layer for Veracode API interactions with comprehensive type safety.
+**Purpose**: Modular, service-based abstraction layer for Veracode API interactions with comprehensive type safety.
+
+**Current Architecture**: The client has evolved from a monolithic `veracode-rest-client.ts` to a modular service-based architecture:
+
+```
+src/veracode/
+├── client/
+│   ├── base-client.ts           # Base authentication and HTTP client
+│   └── veracode-client.ts       # Main composed client
+├── services/                    # Individual API service modules
+│   ├── application-service.ts   # Application management
+│   ├── findings-service.ts      # Findings and vulnerability data
+│   ├── policy-service.ts        # Policy management
+│   ├── sandbox-service.ts       # Sandbox operations
+│   └── scan-service.ts          # Scan operations
+└── types/                       # Service-specific type definitions
+```
 
 **Key Features**:
-- VERACODE-HMAC-SHA-256 authentication implementation
+- VERACODE-HMAC-SHA-256 authentication implementation via BaseVeracodeClient
 - Type-safe API responses with comprehensive interfaces
+- Service-based dependency injection for shared client instances
 - Enhanced SCA analysis capabilities
 - Error handling and retry logic
 - Support for multiple Veracode API endpoints
 
 **API Integration Points**:
-- Applications API (REST v3)
-- Findings API 
-- SCA Results API
-- Results API (XML-based legacy endpoints)
+- Applications API (REST v1) - via ApplicationService (`appsec/v1/applications`)
+- Findings API (REST v2) - via FindingsService (`appsec/v2/applications/{id}/findings`)
+- SCA Results API - via ScanService and FindingsService (REST v1/v2)
+- Policy API (REST v1) - via PolicyService (`appsec/v1/policies`)
+- Sandbox API (REST v1) - via SandboxService (`appsec/v1/applications/{id}/sandboxes`)
+- Scan API (REST v1) - via ScanService (`appsec/v1/applications/{id}/scans`)
 
 ### 3. Tool Registry System
 
