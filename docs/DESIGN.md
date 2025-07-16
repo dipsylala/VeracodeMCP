@@ -284,7 +284,7 @@ Understanding this flow helps with:
    - Mock BaseVeracodeClient for unit testing service layer
    - Test tool handlers with sample data using examples/ scripts
    - Validate tool registration and categorization through ToolRegistry methods
-```
+
 
 ### Component Architecture
 
