@@ -111,13 +111,22 @@ export function createFindingsTools(): ToolHandler[] {
   return [
     {
       name: 'get-findings',
-      description: `Get security findings from Veracode scans with intelligent filtering and pagination.
+      description: `Get security findings (vulnerabilities) from Veracode scans with flaw ID tracking and intelligent filtering.
       
+IMPORTANT: Each finding includes a unique 'issue_id' field which serves as the primary flaw identifier for tracking, referencing, and managing specific vulnerabilities. Always display the issue_id when showing findings to users as it's essential for vulnerability tracking and remediation workflows.
+
 This unified tool has two main modes:
-- **Basic Overview** (no filters/pagination): Returns first 300 findings ordered by highest severity
+- **Basic Overview** (no filters/pagination): Returns first 300 findings ordered by highest severity with issue IDs
 - **Filtered Mode** (with filters and/or pagination): Applies filters and returns results with pagination support
 
 The tool automatically handles application and sandbox resolution (GUID or name), scan validation, and provides comprehensive error handling. Perfect for security analysis, vulnerability management, and compliance reporting.
+
+Key Fields Returned:
+- issue_id: Unique flaw identifier (CRITICAL - always display this)
+- severity: Risk level (Very High, High, Medium, Low, Very Low)
+- cwe_id: Common Weakness Enumeration classification
+- description: Vulnerability description
+- status: Remediation status (NEW, OPEN, FIXED, etc.)
 
 Examples:
 - Get overview: {"application": "MyApp"}
@@ -243,11 +252,15 @@ Examples:
                 showing_count: findings?.length || 0,
                 findings_summary: stats,
                 findings: (findings || []).map((finding: any) => ({
-                  issue_id: finding.issue_id,
+                  flaw_id: finding.issue_id,           // Primary identifier for tracking
                   severity: finding.severity,
+                  severity_level: finding.severity,   // Alternative name for clarity
                   cwe_id: finding.cwe_id,
+                  weakness_type: finding.cwe_id,      // Alternative name
                   description: finding.description,
+                  vulnerability_title: finding.description, // Alternative name
                   status: finding.status,
+                  remediation_status: finding.status, // Alternative name
                   scan_type: finding.scan_type,
                   file_path: finding.file_path,
                   line_number: finding.line_number
@@ -288,12 +301,23 @@ Examples:
                 showing_count: findings.length,
                 findings_summary: stats,
                 findings: (includeDetails ? findings : findings.map((f: any) => ({
-                  issue_id: f.issue_id,
+                  flaw_id: f.issue_id,           // Primary identifier for tracking
+                  issue_id: f.issue_id,         // Also keep original name for compatibility
                   severity: f.severity,
+                  severity_level: f.severity,   // Alternative name for clarity
                   cwe_id: f.cwe_id,
+                  weakness_type: f.cwe_id,      // Alternative name
                   description: f.description,
+                  vulnerability_title: f.description, // Alternative name
                   status: f.status,
-                  scan_type: f.scan_type
+                  remediation_status: f.status, // Alternative name
+                  scan_type: f.scan_type,
+                  // Additional prominent display
+                  tracking_info: {
+                    flaw_id: f.issue_id,
+                    reference_id: f.issue_id,
+                    veracode_issue_id: f.issue_id
+                  }
                 }))),
                 pagination_info: formatPaginationInfo(pageNumber, pageSize, totalElements),
                 recommendations: {

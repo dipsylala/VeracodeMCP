@@ -38,7 +38,7 @@ export function createSCATools(): ToolHandler[] {
     {
       name: 'get-sca-results',
       description:
-        'Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components. SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses. Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates. Critical for supply chain security and license compliance.',
+        'Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components. Each SCA finding includes CVE identifiers and component filenames for tracking vulnerable libraries and dependencies. SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses. Always display the CVE identifier and component filename when showing SCA findings to users as these are essential for vulnerability tracking and remediation workflows. Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates. Critical for supply chain security and license compliance.',
       schema: GetSCAResultsSchema,
       handler: async(args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
@@ -185,11 +185,23 @@ export function createSCATools(): ToolHandler[] {
               .filter((f: any) => f.finding_details?.cve?.cvss)
               .map((f: any) => ({
                 cve: f.finding_details.cve.name,
+                cve_id: f.finding_details.cve.name, // Alias for LLM emphasis
+                vulnerability_id: f.finding_details.cve.name, // Alternative field name
                 cvss: f.finding_details.cve.cvss,
+                cvss_score: f.finding_details.cve.cvss, // Alias for LLM emphasis
                 severity: f.finding_details.cve.severity,
+                severity_level: f.finding_details.cve.severity, // Alias for clarity
                 component: f.finding_details.component_filename,
+                component_filename: f.finding_details.component_filename, // Alias for LLM emphasis
+                vulnerable_file: f.finding_details.component_filename, // Alternative field name
                 component_path: f.finding_details.component_path,
-                exploitable: f.finding_details.cve.exploitability?.exploit_observed || false
+                file_location: f.finding_details.component_path, // Alternative field name
+                exploitable: f.finding_details.cve.exploitability?.exploit_observed || false,
+                tracking_info: {
+                  primary_id: f.finding_details.cve.name,
+                  component_name: f.finding_details.component_filename,
+                  full_path: f.finding_details.component_path
+                }
               }))
               .sort((a: any, b: any) => b.cvss - a.cvss)
               .slice(0, 10)
@@ -225,7 +237,23 @@ export function createSCATools(): ToolHandler[] {
                   note: 'No SCA scan information available'
                 },
               analysis,
-              detailed_findings: filteredFindings,
+              detailed_findings: filteredFindings.map((finding: any) => ({
+                ...finding,
+                // Add alias fields for LLM emphasis
+                cve_id: finding.finding_details?.cve?.name,
+                vulnerability_id: finding.finding_details?.cve?.name,
+                component_filename: finding.finding_details?.component_filename,
+                vulnerable_file: finding.finding_details?.component_filename,
+                file_location: finding.finding_details?.component_path,
+                cvss_score: finding.finding_details?.cve?.cvss,
+                severity_level: finding.finding_details?.severity,
+                tracking_info: {
+                  primary_cve: finding.finding_details?.cve?.name,
+                  component_name: finding.finding_details?.component_filename,
+                  full_path: finding.finding_details?.component_path,
+                  remediation_guidance: `Update component: ${finding.finding_details?.component_filename}`
+                }
+              })),
               filters_applied: {
                 scan_type: 'SCA',
                 severity_gte: args.severity_gte,
@@ -360,10 +388,20 @@ export function createSCATools(): ToolHandler[] {
               .filter((f: any) => f.finding_details?.cve?.cvss)
               .map((f: any) => ({
                 cve: f.finding_details.cve.name,
+                cve_id: f.finding_details.cve.name, // Alias for LLM emphasis
+                vulnerability_id: f.finding_details.cve.name, // Alternative field name
                 cvss: f.finding_details.cve.cvss,
+                cvss_score: f.finding_details.cve.cvss, // Alias for LLM emphasis
                 severity: f.finding_details.cve.severity,
+                severity_level: f.finding_details.cve.severity, // Alias for clarity
                 component: f.finding_details.component_filename,
-                exploitable: f.finding_details.cve.exploitability?.exploit_observed || false
+                component_filename: f.finding_details.component_filename, // Alias for LLM emphasis
+                vulnerable_file: f.finding_details.component_filename, // Alternative field name
+                exploitable: f.finding_details.cve.exploitability?.exploit_observed || false,
+                tracking_info: {
+                  primary_id: f.finding_details.cve.name,
+                  component_name: f.finding_details.component_filename
+                }
               }))
               .sort((a: any, b: any) => b.cvss - a.cvss)
               .slice(0, 10)
