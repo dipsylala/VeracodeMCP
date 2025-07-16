@@ -9,9 +9,20 @@ import { logger } from '../../utils/logger.js';
 export class SandboxService extends BaseVeracodeClient {
   private applicationService: ApplicationService;
 
-  constructor(apiId?: string, apiKey?: string, options?: any) {
+  constructor(
+    apiId?: string, 
+    apiKey?: string, 
+    options?: any,
+    applicationService?: ApplicationService
+  ) {
     super(apiId, apiKey, options);
-    this.applicationService = new ApplicationService(apiId, apiKey, options);
+    
+    // Require dependency to be explicitly injected
+    if (!applicationService) {
+      throw new Error('ApplicationService dependency is required for SandboxService');
+    }
+    
+    this.applicationService = applicationService;
   }
 
   // Get sandboxes for a specific application by application ID

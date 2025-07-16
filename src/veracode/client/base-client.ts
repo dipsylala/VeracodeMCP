@@ -96,7 +96,7 @@ export class BaseVeracodeClient {
       }
     );
 
-    logger.info('BaseVeracodeClient initialized successfully', 'CLIENT');
+    logger.info(`${this.constructor.name} initialized successfully`, 'CLIENT');
   }
 
   // Create a client instance using credentials from environment variables

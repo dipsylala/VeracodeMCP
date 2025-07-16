@@ -13,10 +13,25 @@ export class ScanService extends BaseVeracodeClient {
   private applicationService: ApplicationService;
   private sandboxService: SandboxService;
 
-  constructor(apiId?: string, apiKey?: string, options?: any) {
+  constructor(
+    apiId?: string, 
+    apiKey?: string, 
+    options?: any,
+    applicationService?: ApplicationService,
+    sandboxService?: SandboxService
+  ) {
     super(apiId, apiKey, options);
-    this.applicationService = new ApplicationService(apiId, apiKey, options);
-    this.sandboxService = new SandboxService(apiId, apiKey, options);
+    
+    // Require dependencies to be explicitly injected
+    if (!applicationService) {
+      throw new Error('ApplicationService dependency is required for ScanService');
+    }
+    if (!sandboxService) {
+      throw new Error('SandboxService dependency is required for ScanService');
+    }
+    
+    this.applicationService = applicationService;
+    this.sandboxService = sandboxService;
   }
 
   // Get scans for an application (auto-detects GUID vs name)

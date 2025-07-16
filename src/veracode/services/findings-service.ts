@@ -17,10 +17,25 @@ export class FindingsService extends BaseVeracodeClient {
   private applicationService: ApplicationService;
   private scanService: ScanService;
 
-  constructor(apiId?: string, apiKey?: string, options?: any) {
+  constructor(
+    apiId?: string, 
+    apiKey?: string, 
+    options?: any,
+    applicationService?: ApplicationService,
+    scanService?: ScanService
+  ) {
     super(apiId, apiKey, options);
-    this.applicationService = new ApplicationService(apiId, apiKey, options);
-    this.scanService = new ScanService(apiId, apiKey, options);
+    
+    // Require dependencies to be explicitly injected
+    if (!applicationService) {
+      throw new Error('ApplicationService dependency is required for FindingsService');
+    }
+    if (!scanService) {
+      throw new Error('ScanService dependency is required for FindingsService');
+    }
+    
+    this.applicationService = applicationService;
+    this.scanService = scanService;
   }
 
   // Get findings for an application with pagination metadata
