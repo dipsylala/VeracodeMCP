@@ -7,16 +7,7 @@ export function createPolicyTools(): ToolHandler[] {
     {
       name: 'get-policies',
       description: 'Get security policies that define compliance rules and vulnerability thresholds for applications. Policies control what security findings will fail a build or deployment gate. Use this to discover available policies, understand security requirements, or manage compliance configurations across your organization.',
-      schema: {
-        category: z.enum(['APPLICATION', 'COMPONENT']).optional().describe('Filter by policy type: APPLICATION (for code scanning policies) or COMPONENT (for open-source/SCA policies). Leave empty for all types.'),
-        legacy_policy_id: z.number().optional().describe('Filter by numeric legacy policy ID from older Veracode Platform (for migration/compatibility purposes).'),
-        name: z.string().optional().describe('Filter by policy name (partial match, case-insensitive). Use to find policies like "PCI", "OWASP", or organization-specific names.'),
-        name_exact: z.boolean().optional().describe('Use exact name matching instead of partial search (default: false). Set true when you know the precise policy name.'),
-        page: z.number().optional().describe('Page number for pagination (starts at 0). Most organizations have few policies, so default page usually sufficient.'),
-        public_policy: z.boolean().optional().describe('Include Veracode\'s standard public policies like "Veracode Recommended Very High" (default: true). Set false to see only custom organization policies.'),
-        size: z.number().min(1).max(500).optional().describe('Number of policies per page (1-500, default 50). Use smaller values for quick discovery, larger for bulk operations.'),
-        vendor_policy: z.boolean().optional().describe('Filter by vendor-managed vs customer-managed policies. Vendor policies are maintained by Veracode.')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const options = {
@@ -54,9 +45,7 @@ export function createPolicyTools(): ToolHandler[] {
     {
       name: 'get-policy',
       description: 'Get detailed information about a specific security policy including its rules, thresholds, and compliance criteria. Use this to understand what security requirements an application must meet, review policy configurations, or troubleshoot compliance failures. Essential for security teams managing policy enforcement.',
-      schema: {
-        policy_guid: z.string().describe('Policy unique identifier (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890"). Get this from get-policies or application profile details.')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicy(args.policy_guid);
@@ -76,11 +65,7 @@ export function createPolicyTools(): ToolHandler[] {
     {
       name: 'get-policy-versions',
       description: 'Get all historical versions of a security policy to track changes, understand evolution, or access previous configurations. Useful for policy auditing, rollback planning, or understanding how security requirements have changed over time.',
-      schema: {
-        policy_guid: z.string().describe('Policy unique identifier (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") to get version history for.'),
-        page: z.number().optional().describe('Page number for pagination (starts at 0). Policies typically have few versions unless actively managed.'),
-        size: z.number().min(1).max(500).optional().describe('Number of versions per page (1-500, default 50). Use smaller values for recent changes, larger for complete history.')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicyVersions(
@@ -104,10 +89,7 @@ export function createPolicyTools(): ToolHandler[] {
     {
       name: 'get-policy-version',
       description: 'Get a specific version of a policy',
-      schema: {
-        policy_guid: z.string().describe('The unique identifier (GUID) of the policy'),
-        version: z.number().describe('The specific version number of the policy')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicyVersion(
@@ -130,7 +112,7 @@ export function createPolicyTools(): ToolHandler[] {
     {
       name: 'get-policy-settings',
       description: 'Get policy settings (default policies for business criticality levels)',
-      schema: {},
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getPolicySettings();
@@ -150,11 +132,7 @@ export function createPolicyTools(): ToolHandler[] {
     {
       name: 'get-sca-licenses',
       description: 'Get a list of component licenses for SCA policies',
-      schema: {
-        page: z.number().optional().describe('Page number'),
-        size: z.number().optional().describe('Page size'),
-        sort: z.string().optional().describe('Sort order')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const result = await context.veracodeClient.policies.getScaLicenses(

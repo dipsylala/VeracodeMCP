@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
+import { isGuid } from '../utils/validation.js';
 
 // Schema for the unified get-findings tool
 const GetFindingsSchema = z.object({
   application: z.string().describe('Application GUID or name to get findings for'),
+  sandbox: z.string().optional().describe('Sandbox GUID or name to get findings from. If not specified, returns findings from policy scan (production). Use this to get findings from development/testing sandbox environments'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'SCA', 'MANUAL']).optional().describe('Type of scan to filter findings by. If not specified, returns all finding types'),
   severity: z.array(z.enum(['Very High', 'High', 'Medium', 'Low', 'Very Low', 'Informational'])).optional().describe('Filter findings by severity levels. Example: ["Very High", "High"] for critical findings only'),
   status: z.array(z.enum(['NEW', 'OPEN', 'FIXED', 'CANNOT_REPRODUCE', 'ACCEPTED', 'FALSE_POSITIVE', 'MITIGATED'])).optional().describe('Filter findings by remediation status. Example: ["NEW", "OPEN"] for unresolved findings'),
@@ -115,13 +117,14 @@ This unified tool has two main modes:
 - **Basic Overview** (no filters/pagination): Returns first 300 findings ordered by highest severity
 - **Filtered Mode** (with filters and/or pagination): Applies filters and returns results with pagination support
 
-The tool automatically handles application resolution (GUID or name), scan validation, and provides comprehensive error handling. Perfect for security analysis, vulnerability management, and compliance reporting.
+The tool automatically handles application and sandbox resolution (GUID or name), scan validation, and provides comprehensive error handling. Perfect for security analysis, vulnerability management, and compliance reporting.
 
 Examples:
 - Get overview: {"application": "MyApp"}
+- Get sandbox findings: {"application": "MyApp", "sandbox": "feature-branch-123"}
 - Filter critical issues: {"application": "MyApp", "severity": ["Very High", "High"], "status": ["NEW", "OPEN"]}
 - Paginate results: {"application": "MyApp", "page": 1, "size": 50}
-- Target specific vulnerabilities: {"application": "MyApp", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
+- Sandbox with filters: {"application": "MyApp", "sandbox": "dev-env", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
       schema: GetFindingsSchema,
 
       handler: async (params: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
@@ -132,7 +135,7 @@ Examples:
 
           // Step 1: Resolve application (GUID or name)
           let applicationGuid = params.application;
-          if (!params.application.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+          if (!isGuid(params.application)) {
             // It's a name, need to resolve to GUID
             const apps = await client.applications.getApplications();
             const matchingApp = apps.find((app: any) =>
@@ -152,7 +155,34 @@ Examples:
             applicationGuid = matchingApp.guid;
           }
 
-          // Step 2: Check if application has scans
+          // Step 2: Resolve sandbox if specified (GUID or name)
+          let sandboxGuid: string | undefined;
+          if (params.sandbox) {
+            if (isGuid(params.sandbox)) {
+              // It's already a GUID
+              sandboxGuid = params.sandbox;
+            } else {
+              // It's a name, need to resolve to GUID
+              const sandboxes = await client.sandboxes.getSandboxes(applicationGuid);
+              const matchingSandbox = sandboxes.find((sandbox: any) =>
+                sandbox.name?.toLowerCase() === params.sandbox!.toLowerCase()
+              );
+
+              if (!matchingSandbox) {
+                return {
+                  success: false,
+                  error: `Sandbox '${params.sandbox}' not found in application '${params.application}'`,
+                  data: {
+                    available_sandboxes: sandboxes.slice(0, 5).map((sb: any) => sb.name).filter(Boolean)
+                  }
+                };
+              }
+
+              sandboxGuid = matchingSandbox.guid;
+            }
+          }
+
+          // Step 3: Check if application has scans
           const appDetails = await client.applications.getApplicationDetails(applicationGuid);
           if (!appDetails.scans || appDetails.scans.length === 0) {
             return {
@@ -163,6 +193,7 @@ Examples:
                   name: appDetails.profile?.name,
                   guid: applicationGuid
                 },
+                sandbox: sandboxGuid ? { guid: sandboxGuid, name: params.sandbox } : null,
                 suggestions: [
                   'Upload and scan code using Veracode Static Analysis',
                   'Configure Dynamic Analysis for runtime testing',
@@ -172,8 +203,12 @@ Examples:
             };
           }
 
-          // Step 3: Get findings based on mode
+          // Step 4: Get findings based on mode
           const filters = buildFilterParams(params);
+          // Add sandbox context if specified
+          if (sandboxGuid) {
+            filters.sandbox_id = sandboxGuid;
+          }
 
           if (mode === 'basic_overview') {
             // Get first 300 findings ordered by highest severity, no filtering
@@ -196,6 +231,10 @@ Examples:
                   name: appDetails.profile?.name,
                   guid: applicationGuid
                 },
+                sandbox: sandboxGuid ? {
+                  name: params.sandbox,
+                  guid: sandboxGuid
+                } : null,
                 scan_status: {
                   total_scans: appDetails.scans.length,
                   latest_scan: appDetails.scans[appDetails.scans.length - 1]
@@ -240,6 +279,10 @@ Examples:
                   name: appDetails.profile?.name,
                   guid: applicationGuid
                 },
+                sandbox: sandboxGuid ? {
+                  name: params.sandbox,
+                  guid: sandboxGuid
+                } : null,
                 filters_applied: filters,
                 total_findings_count: totalElements,
                 showing_count: findings.length,
@@ -275,7 +318,8 @@ Examples:
               details: error.message,
               troubleshooting: [
                 'Verify the application exists and you have access',
-                'Check that scans have been completed for this application',
+                'If using sandbox parameter, ensure the sandbox exists in the application',
+                'Check that scans have been completed for this application/sandbox',
                 'Ensure your Veracode API credentials are valid',
                 'Try with a smaller page size if experiencing timeouts'
               ]

@@ -9,15 +9,7 @@ export function createSCATools(): ToolHandler[] {
       name: 'get-sca-results-by-name',
       description:
         'Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components. SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses. Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates. Critical for supply chain security and license compliance.',
-      schema: {
-        name: z.string().describe('Application profile name to analyze for SCA findings (exact match, e.g., "MyWebApp-Production"). Case-sensitive - use search-application-profiles first if unsure of exact name.'),
-        severity_gte: z.number().optional().describe('Minimum severity level (0-5): 5=Very High, 4=High, 3=Medium, 2=Low, 1=Very Low, 0=Informational. Use 3+ for actionable vulnerabilities, 4+ for critical issues.'),
-        cvss_gte: z.number().optional().describe('Minimum CVSS score (0.0-10.0). Common thresholds: 7.0+ for High, 4.0+ for Medium severity. CVSS provides standardized vulnerability scoring.'),
-        only_policy_violations: z.boolean().optional().describe('Only show findings that violate your organization\'s security policy (default: false). Use for compliance reporting and gate decisions.'),
-        only_new_findings: z.boolean().optional().describe('Only show newly discovered vulnerabilities not seen in previous scans (default: false). Essential for continuous monitoring and CI/CD integration.'),
-        only_exploitable: z.boolean().optional().describe('Only show vulnerabilities with active exploits in the wild (default: false). Prioritizes immediate security threats requiring urgent patching.'),
-        max_results: z.number().optional().describe('Maximum number of findings to retrieve (default: unlimited, up to 500 per call). Use smaller values (50-100) for quick overviews or to reduce API response time.')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting get-sca-results-by-name execution', 'SCA_TOOL', { args });
@@ -316,9 +308,7 @@ export function createSCATools(): ToolHandler[] {
       name: 'get-sca-summary-by-name',
       description:
         'Get a high-level Software Composition Analysis (SCA) overview with key metrics, risk assessment, and component summary. Perfect for executive reporting, quick risk assessment, or initial security evaluation. Provides vulnerability counts, risk scores, and component statistics without overwhelming detail. Use this before get-sca-results-by-name for efficient triage.',
-      schema: {
-        name: z.string().describe('Application profile name for SCA summary (exact match, e.g., "MyWebApp-Production"). Case-sensitive - verify exact name with search-application-profiles if needed.')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           // First get the application to get its ID
@@ -486,17 +476,7 @@ export function createSCATools(): ToolHandler[] {
       name: 'get-sca-apps',
       description:
         'Discover all applications with Software Composition Analysis (SCA) scanning enabled and get their security posture overview. Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities. Use this to understand your organization\'s SCA coverage and prioritize security efforts across multiple applications.',
-      schema: {
-        include_recent_only: z
-          .boolean()
-          .optional()
-          .describe('Only include applications with recent SCA scans (last 30 days, default: false). Use true to focus on actively maintained applications with current security data.'),
-        include_risk_analysis: z.boolean().optional().describe('Include detailed risk assessment and vulnerability metrics for each application (default: true). Set false for faster response when you only need basic application lists.'),
-        min_business_criticality: z
-          .string()
-          .optional()
-          .describe('Filter by minimum business criticality level: VERY_LOW, LOW, MEDIUM, HIGH, VERY_HIGH. Use HIGH or VERY_HIGH to focus on mission-critical applications.')
-      },
+      schema: z.object({}),
       handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Get all applications first

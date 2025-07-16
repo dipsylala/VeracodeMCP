@@ -8,7 +8,7 @@ export function createApplicationTools(): ToolHandler[] {
     {
       name: 'get-application-profiles',
       description: 'List all application profiles (security projects) in your Veracode account with powerful filtering options. An application profile represents a software project being scanned for security vulnerabilities. Use this when you need to discover available applications, find specific applications by name/tags, or get an overview of your security scanning portfolio. Perfect for reporting, application discovery, and initial security assessment setup.',
-      schema: {
+      schema: z.object({
         business_unit: z.string().optional().describe('Filter by business unit name (exact match). Use when you need applications from a specific organizational division.'),
         custom_field_names: z.array(z.string()).optional().describe('Custom field names to search in. Combined with custom_field_values for targeted filtering based on your organization\'s metadata.'),
         custom_field_values: z.array(z.string()).optional().describe('Custom field values to match against. Use with custom_field_names to find applications with specific metadata tags or properties.'),
@@ -26,8 +26,8 @@ export function createApplicationTools(): ToolHandler[] {
         sort_by_custom_field_name: z.string().optional().describe('Custom field name to sort results by. Useful for organizing results by your organization\'s metadata.'),
         tag: z.string().optional().describe('Filter by application tag (exact match). Tags are used for categorization, environment marking (prod/dev), or team ownership.'),
         team: z.string().optional().describe('Filter by team name (exact match). Find applications owned or managed by a specific team.')
-      },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      }),
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const applications = await context.veracodeClient.applications.getApplications(args);
           return {
@@ -108,7 +108,7 @@ export function createApplicationTools(): ToolHandler[] {
     {
       name: 'search-application-profiles',
       description: 'Search for application profiles by name with smart matching and additional filters. This is the fastest way to find a specific application when you know its name (or part of it). Use this instead of get-application-profiles when you\'re looking for particular applications rather than browsing the full list. Supports partial name matching and key filtering options for refined results.',
-      schema: {
+      schema: z.object({
         name: z.string().describe('Application profile name (or partial name) to search for. Supports fuzzy matching - e.g., "WebApp" will find "MyWebApp", "WebApp-Prod", etc. Case-insensitive search.'),
         business_unit: z.string().optional().describe('Filter results to specific business unit (exact match). Useful when multiple teams have similarly named applications.'),
         team: z.string().optional().describe('Filter by team name (exact match). Find applications owned by a specific development or security team.'),
@@ -116,8 +116,8 @@ export function createApplicationTools(): ToolHandler[] {
         tag: z.string().optional().describe('Filter by application tag (exact match). Tags often indicate environment (prod/dev), criticality, or ownership.'),
         page: z.number().optional().describe('Page number for pagination (starts at 0). Most searches return results on first page unless you have many similarly named applications.'),
         size: z.number().optional().describe('Number of results per page, maximum 500 (default 50). Use 10-20 for quick searches, larger values for comprehensive discovery.')
-      },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      }),
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           const searchResults = await context.veracodeClient.applications.getApplications({
             name: args.name,
@@ -178,10 +178,10 @@ export function createApplicationTools(): ToolHandler[] {
     {
       name: 'get-application-profile-details',
       description: 'Get comprehensive details for a specific application profile (security project) including configuration, policies, teams, and scan history. Use this when you need complete information about a single application for detailed analysis, security assessment, or configuration review. Essential for understanding application security posture and setup.',
-      schema: {
+      schema: z.object({
         app_profile: z.string().describe('Application profile ID (GUID like "a1b2c3d4-e5f6-7890-abcd-ef1234567890") or exact application profile name (like "MyWebApp-Production"). Required to identify the specific application.')
-      },
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      }),
+      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
           let result;
 

@@ -45,6 +45,30 @@ export class ToolRegistry {
     if (!tool) {
       throw new Error(`Tool not found: ${toolCall.tool}`);
     }
+
+    // Validate arguments using Zod schema if present
+    if (tool.schema) {
+      try {
+        const validatedArgs = tool.schema.parse(toolCall.args || {});
+        return await tool.handler(validatedArgs, this.context);
+      } catch (error: any) {
+        // Return a consistent error format for validation errors
+        return {
+          success: false,
+          error: 'Invalid arguments provided',
+          data: {
+            details: error.message,
+            validation_errors: error.errors || [],
+            troubleshooting: [
+              'Check that all required parameters are provided',
+              'Verify parameter types match the expected schema',
+              'Review the tool documentation for proper usage'
+            ]
+          }
+        };
+      }
+    }
+
     return await tool.handler(toolCall.args || {}, this.context);
   }
 
@@ -58,20 +82,20 @@ export class ToolRegistry {
     return this.allTools.filter(tool => {
       const name = tool.name;
       switch (category) {
-      case ToolCategory.APPLICATION:
-        return name.includes('application') || name === 'get-applications' || name === 'search-applications';
-      case ToolCategory.FINDINGS:
-        return name.includes('finding');
-      case ToolCategory.STATIC_ANALYSIS:
-        return name.includes('static-flaw');
-      case ToolCategory.SCA:
-        return name.includes('sca');
-      case ToolCategory.SCAN:
-        return name.includes('scan');
-      case ToolCategory.POLICY:
-        return name.includes('policy');
-      default:
-        return false;
+        case ToolCategory.APPLICATION:
+          return name.includes('application') || name === 'get-applications' || name === 'search-applications';
+        case ToolCategory.FINDINGS:
+          return name.includes('finding');
+        case ToolCategory.STATIC_ANALYSIS:
+          return name.includes('static-flaw');
+        case ToolCategory.SCA:
+          return name.includes('sca');
+        case ToolCategory.SCAN:
+          return name.includes('scan');
+        case ToolCategory.POLICY:
+          return name.includes('policy');
+        default:
+          return false;
       }
     });
   }
