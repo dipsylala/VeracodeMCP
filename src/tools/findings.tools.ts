@@ -40,7 +40,7 @@ function buildFilterParams(params: GetFindingsParams): Record<string, any> {
   const filters: Record<string, any> = {};
 
   if (params.scan_type) {
-    filters.scan_type = params.scan_type;
+    filters.scanType = params.scan_type;  // Fixed: use scanType instead of scan_type
   }
 
   if (params.severity && params.severity.length > 0) {
@@ -52,7 +52,7 @@ function buildFilterParams(params: GetFindingsParams): Record<string, any> {
   }
 
   if (params.cwe_ids && params.cwe_ids.length > 0) {
-    filters.cwe_id = params.cwe_ids;
+    filters.cwe = params.cwe_ids;  // Fixed: use cwe instead of cwe_id
   }
 
   return filters;

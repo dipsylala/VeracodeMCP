@@ -1,30 +1,100 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { logger } from '../utils/logger.js';
+import { isGuid } from '../utils/validation.js';
+
+// Schema for SCA results tool
+const GetSCAResultsSchema = z.object({
+  application: z.string().describe('Application GUID or name to get SCA results for'),
+  severity_gte: z.number().min(1).max(5).optional().describe('Minimum severity level (1=Very Low, 2=Low, 3=Medium, 4=High, 5=Very High). Example: 4 for High and Very High findings only'),
+  cvss_gte: z.number().min(0).max(10).optional().describe('Minimum CVSS score (0-10). Example: 7.0 for high severity vulnerabilities'),
+  only_policy_violations: z.boolean().optional().describe('Show only findings that violate policy. Default is false'),
+  only_new_findings: z.boolean().optional().describe('Show only new findings since last scan. Default is false'),
+  only_exploitable: z.boolean().optional().describe('Show only vulnerabilities with known exploits. Default is false'),
+  max_results: z.number().min(1).max(500).optional().describe('Maximum number of findings to return (1-500). Default is 500')
+});
+
+type GetSCAResultsParams = z.infer<typeof GetSCAResultsSchema>;
+
+// Schema for SCA summary tool
+const GetSCASummarySchema = z.object({
+  application: z.string().describe('Application GUID or name to get SCA summary for')
+});
+
+type GetSCASummaryParams = z.infer<typeof GetSCASummarySchema>;
+
+// Schema for SCA apps discovery tool
+const GetSCAAppsSchema = z.object({
+  min_business_criticality: z.enum(['VERY_LOW', 'LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH']).optional().describe('Minimum business criticality level to include. Example: "HIGH" to only include high and very high criticality applications'),
+  include_recent_only: z.boolean().optional().describe('Only include applications with SCA scans in the last 30 days. Default is false'),
+  include_risk_analysis: z.boolean().optional().describe('Include risk assessment for each application. Default is true')
+});
+
+type GetSCAAppsParams = z.infer<typeof GetSCAAppsSchema>;
 
 // Create SCA tools for MCP
 export function createSCATools(): ToolHandler[] {
   return [
     {
-      name: 'get-sca-results-by-name',
+      name: 'get-sca-results',
       description:
         'Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components. SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses. Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates. Critical for supply chain security and license compliance.',
-      schema: z.object({}),
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetSCAResultsSchema,
+      handler: async(args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
-        logger.debug('Starting get-sca-results-by-name execution', 'SCA_TOOL', { args });
+        logger.debug('Starting get-sca-results execution', 'SCA_TOOL', { args });
 
         try {
-          // Use getFindingsByName with scanType SCA - same as get-findings-by-name/get-findings-advanced-by-name but filtered to SCA
-          logger.debug('Calling getFindingsByName with SCA filter', 'SCA_TOOL', {
-            name: args.name,
+          // Step 1: Resolve application (GUID or name)
+          let applicationGuid = args.application;
+          let targetApp: any;
+
+          if (!isGuid(args.application)) {
+            // It's a name, need to resolve to GUID
+            logger.debug('Searching for application by name', 'SCA_TOOL', { name: args.application });
+            const searchResults = await context.veracodeClient.applications.searchApplications(args.application);
+            
+            if (searchResults.length === 0) {
+              return {
+                success: false,
+                error: `No application found with name: ${args.application}`
+              };
+            }
+
+            // Look for exact match first, otherwise use first result
+            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
+            if (!targetApp) {
+              targetApp = searchResults[0];
+              logger.debug('Using first search result as no exact match found', 'SCA_TOOL', {
+                searchName: args.application,
+                foundName: targetApp.profile.name
+              });
+            }
+
+            applicationGuid = targetApp.guid;
+          } else {
+            // It's already a GUID, get the application details
+            try {
+              targetApp = await context.veracodeClient.applications.getApplicationDetails(applicationGuid);
+            } catch (error) {
+              return {
+                success: false,
+                error: `Application with GUID ${args.application} not found or not accessible`
+              };
+            }
+          }
+
+          // Get SCA findings directly by scan type
+          logger.debug('Calling getFindingsByName with SCA scan type', 'SCA_TOOL', {
+            applicationName: targetApp.profile.name,
+            applicationGuid: applicationGuid,
             scanType: 'SCA',
             severityGte: args.severity_gte,
             cvssGte: args.cvss_gte,
             size: args.max_results ? Math.min(args.max_results, 500) : 500
           });
 
-          const findings = await context.veracodeClient.findings.getFindingsByName(args.name, {
+          const findings = await context.veracodeClient.findings.getFindingsByName(targetApp.profile.name, {
             scanType: 'SCA',
             severityGte: args.severity_gte,
             cvssGte: args.cvss_gte,
@@ -34,8 +104,9 @@ export function createSCATools(): ToolHandler[] {
           });
 
           logger.debug('SCA findings retrieved', 'SCA_TOOL', {
-            name: args.name,
-            findingsCount: findings.length,
+            applicationName: targetApp.profile.name,
+            totalFindings: findings.length,
+            scaFindings: findings.length,
             hasFindings: findings.length > 0
           });
 
@@ -51,124 +122,6 @@ export function createSCATools(): ToolHandler[] {
               afterFilter: filteredFindings.length,
               removed: beforeFilter - filteredFindings.length
             });
-          }
-
-          // Get application details for metadata
-          logger.debug('Searching for application details', 'SCA_TOOL', { name: args.name });
-          const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
-          if (searchResults.length === 0) {
-            logger.warn('No application found for SCA results', 'SCA_TOOL', { name: args.name });
-            return {
-              success: false,
-              error: `No application found with name: ${args.name}`
-            };
-          }
-          let targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.name.toLowerCase());
-          if (!targetApp) {
-            targetApp = searchResults[0];
-            logger.debug('Using first search result as no exact match found', 'SCA_TOOL', {
-              searchName: args.name,
-              foundName: targetApp.profile.name
-            });
-          }
-
-          // Check if the application has scans first
-          const scanCheck = await context.veracodeClient.scans.hasScans(targetApp.guid);
-
-          if (!scanCheck.hasScans) {
-            logger.warn('No scans found for application', 'SCA_TOOL', {
-              appName: targetApp.profile.name,
-              appGuid: targetApp.guid
-            });
-
-            return {
-              success: true,
-              data: {
-                application: {
-                  name: targetApp.profile.name,
-                  id: targetApp.guid,
-                  business_criticality: targetApp.profile.business_criticality,
-                  app_profile_url: targetApp.app_profile_url,
-                  results_url: targetApp.results_url
-                },
-                scan_information: {
-                  latest_scan: null,
-                  scan_summary: null,
-                  note: 'No scans found for this application. The application may not have been scanned yet, or you may not have permission to view scan results.'
-                },
-                analysis: {
-                  totalFindings: 0,
-                  exploitableFindings: 0,
-                  highRiskComponents: 0,
-                  severityBreakdown: {},
-                  topVulnerabilities: []
-                },
-                detailed_findings: [],
-                filters_applied: {
-                  scan_type: 'SCA',
-                  severity_gte: args.severity_gte,
-                  cvss_gte: args.cvss_gte,
-                  only_policy_violations: args.only_policy_violations,
-                  only_new_findings: args.only_new_findings,
-                  only_exploitable: args.only_exploitable,
-                  max_results: args.max_results
-                },
-                metadata: {
-                  total_findings_analyzed: 0,
-                  analysis_timestamp: new Date().toISOString(),
-                  execution_time_ms: Date.now() - startTime
-                }
-              }
-            };
-          }
-
-          // Check if SCA or STATIC scans are available (SCA findings are part of STATIC scans)
-          const hasStaticOrSCA = scanCheck.scanTypes.some((type: string) => type === 'STATIC' || type === 'SCA');
-          if (!hasStaticOrSCA) {
-            logger.warn('No STATIC or SCA scans found for application', 'SCA_TOOL', {
-              appName: targetApp.profile.name,
-              availableScanTypes: scanCheck.scanTypes
-            });
-
-            return {
-              success: true,
-              data: {
-                application: {
-                  name: targetApp.profile.name,
-                  id: targetApp.guid,
-                  business_criticality: targetApp.profile.business_criticality,
-                  app_profile_url: targetApp.app_profile_url,
-                  results_url: targetApp.results_url
-                },
-                scan_information: {
-                  latest_scan: null,
-                  scan_summary: null,
-                  note: `No STATIC scans found for this application. SCA findings are part of STATIC scans. Available scan types: ${scanCheck.scanTypes.join(', ')}`
-                },
-                analysis: {
-                  totalFindings: 0,
-                  exploitableFindings: 0,
-                  highRiskComponents: 0,
-                  severityBreakdown: {},
-                  topVulnerabilities: []
-                },
-                detailed_findings: [],
-                filters_applied: {
-                  scan_type: 'SCA',
-                  severity_gte: args.severity_gte,
-                  cvss_gte: args.cvss_gte,
-                  only_policy_violations: args.only_policy_violations,
-                  only_new_findings: args.only_new_findings,
-                  only_exploitable: args.only_exploitable,
-                  max_results: args.max_results
-                },
-                metadata: {
-                  total_findings_analyzed: 0,
-                  analysis_timestamp: new Date().toISOString(),
-                  execution_time_ms: Date.now() - startTime
-                }
-              }
-            };
           }
 
           // Get basic scan information (if available)
@@ -305,40 +258,61 @@ export function createSCATools(): ToolHandler[] {
     },
 
     {
-      name: 'get-sca-summary-by-name',
+      name: 'get-sca-summary',
       description:
-        'Get a high-level Software Composition Analysis (SCA) overview with key metrics, risk assessment, and component summary. Perfect for executive reporting, quick risk assessment, or initial security evaluation. Provides vulnerability counts, risk scores, and component statistics without overwhelming detail. Use this before get-sca-results-by-name for efficient triage.',
-      schema: z.object({}),
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+        'Get a high-level Software Composition Analysis (SCA) overview with key metrics, risk assessment, and component summary. Perfect for executive reporting, quick risk assessment, or initial security evaluation. Provides vulnerability counts, risk scores, and component statistics without overwhelming detail. Use this before get-sca-results for efficient triage.',
+      schema: GetSCASummarySchema,
+      handler: async(args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
         try {
-          // First get the application to get its ID
-          const searchResults = await context.veracodeClient.applications.searchApplications(args.name);
+          // Step 1: Resolve application (GUID or name)
+          let applicationGuid = args.application;
+          let targetApp: any;
 
-          if (searchResults.length === 0) {
-            return {
-              success: false,
-              error: `No application found with name: ${args.name}`
-            };
-          }
+          if (!isGuid(args.application)) {
+            // It's a name, need to resolve to GUID
+            const searchResults = await context.veracodeClient.applications.searchApplications(args.application);
 
-          // Find exact match or use first result
-          let targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.name.toLowerCase());
-          if (!targetApp) {
-            targetApp = searchResults[0];
-            console.warn(`No exact match found for "${args.name}". Using first result: "${targetApp.profile.name}"`);
+            if (searchResults.length === 0) {
+              return {
+                success: false,
+                error: `No application found with name: ${args.application}`
+              };
+            }
+
+            // Find exact match or use first result
+            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
+            if (!targetApp) {
+              targetApp = searchResults[0];
+              console.warn(`No exact match found for "${args.application}". Using first result: "${targetApp.profile.name}"`);
+            }
+
+            applicationGuid = targetApp.guid;
+          } else {
+            // It's already a GUID, get the application details
+            try {
+              targetApp = await context.veracodeClient.applications.getApplicationDetails(applicationGuid);
+            } catch (error) {
+              return {
+                success: false,
+                error: `Application with GUID ${args.application} not found or not accessible`
+              };
+            }
           }
 
           // Get SCA findings for summary (limited to 1000 for performance)
-          const summaryResult = await context.veracodeClient.findings.getAllFindings(targetApp.guid, {
+          const summaryResult = await context.veracodeClient.findings.getAllFindings(applicationGuid, {
             scanType: 'SCA',
             pageSize: 500,
             maxPages: 2 // Max 1000 findings for summary
           });
 
+          // Use all findings since we're already filtering by SCA scan type
+          const scaFindings = summaryResult.findings;
+
           // Get latest scan information
           let latestScanResults = null;
           try {
-            const scans = await context.veracodeClient.scans.getScans(targetApp.guid, 'SCA');
+            const scans = await context.veracodeClient.scans.getScans(applicationGuid, 'SCA');
             if (scans.length > 0) {
               const latestScan = scans.sort(
                 (a: any, b: any) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime()
@@ -350,7 +324,7 @@ export function createSCATools(): ToolHandler[] {
           }
 
           // Create summary analysis from the findings
-          const summaryFindings = summaryResult.findings;
+          const summaryFindings = scaFindings;
           const summaryAnalysis = {
             totalComponents: new Set(summaryFindings.map((f: any) => f.finding_details?.component_id)).size,
             vulnerableComponents: new Set(summaryFindings.map((f: any) => f.finding_details?.component_id)).size,
@@ -417,7 +391,7 @@ export function createSCATools(): ToolHandler[] {
             data: {
               application: {
                 name: targetApp.profile.name,
-                id: targetApp.guid,
+                id: applicationGuid,
                 business_criticality: targetApp.profile.business_criticality,
                 app_profile_url: targetApp.app_profile_url,
                 results_url: targetApp.results_url
@@ -476,8 +450,8 @@ export function createSCATools(): ToolHandler[] {
       name: 'get-sca-apps',
       description:
         'Discover all applications with Software Composition Analysis (SCA) scanning enabled and get their security posture overview. Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities. Use this to understand your organization\'s SCA coverage and prioritize security efforts across multiple applications.',
-      schema: z.object({}),
-      handler: async(args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetSCAAppsSchema,
+      handler: async(args: GetSCAAppsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Get all applications first
           const allApps = await context.veracodeClient.applications.getApplications();
@@ -490,7 +464,7 @@ export function createSCATools(): ToolHandler[] {
             ? allApps.filter((app: any) => {
               const criticalityLevels = ['VERY_LOW', 'LOW', 'MEDIUM', 'HIGH', 'VERY_HIGH'];
               const appLevel = criticalityLevels.indexOf(app.profile.business_criticality);
-              const minLevel = criticalityLevels.indexOf(args.min_business_criticality);
+              const minLevel = criticalityLevels.indexOf(args.min_business_criticality!);
               return appLevel >= minLevel;
             })
             : allApps;
@@ -527,7 +501,9 @@ export function createSCATools(): ToolHandler[] {
                         maxPages: 1
                       });
 
+                      // Use all findings since we're already filtering by SCA scan type
                       const findings = quickAnalysis.findings;
+                      
                       const hasHighRisk = findings.filter((f: any) => f.finding_details?.severity >= 4).length > 0;
                       const hasPolicyViolations = findings.filter((f: any) => f.violates_policy).length > 0;
 

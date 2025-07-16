@@ -21,6 +21,244 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
                        │   Local Cache    │
                        │  (In Memory)     │
                        └──────────────────┘
+
+## MCP Query Flow Architecture
+
+### Detailed Request Flow
+
+Understanding how an MCP query flows through the system is crucial for maintaining and extending the codebase. Here's the complete flow from AI assistant request to Veracode API response:
+
+```
+┌─────────────────┐    1. MCP Request     ┌──────────────────┐
+│   AI Assistant  │ ──────────────────► │   MCP Server     │
+│   (Claude, etc) │                      │   (index.ts)     │
+└─────────────────┘                      └──────────────────┘
+                                                  │
+                                         2. Tool Discovery
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │   Tool Registry  │
+                                         │ (tool.registry)  │
+                                         └──────────────────┘
+                                                  │
+                                         3. Route to Handler
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │   Tool Handler   │
+                                         │ (*.tools.ts)     │
+                                         └──────────────────┘
+                                                  │
+                                         4. Input Validation
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │   Zod Schema     │
+                                         │   Validation     │
+                                         └──────────────────┘
+                                                  │
+                                         5. Create Context
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │  ToolContext     │
+                                         │ {veracodeClient} │
+                                         └──────────────────┘
+                                                  │
+                                         6. Business Logic
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │ Veracode Client  │
+                                         │ (veracode-rest-  │
+                                         │    client.ts)    │
+                                         └──────────────────┘
+                                                  │
+                                         7. API Authentication
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │ HMAC-SHA256      │
+                                         │ Authentication   │
+                                         └──────────────────┘
+                                                  │
+                                         8. HTTP Request
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │  Veracode API    │
+                                         │   Platform       │
+                                         └──────────────────┘
+                                                  │
+                                         9. API Response
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │ Response Parser  │
+                                         │ & Type Mapping   │
+                                         └──────────────────┘
+                                                  │
+                                         10. Data Processing
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │   Tool Handler   │
+                                         │ Business Logic   │
+                                         └──────────────────┘
+                                                  │
+                                         11. Format Response
+                                                  │
+                                                  ▼
+                                         ┌──────────────────┐
+                                         │   ToolResponse   │
+                                         │   Interface      │
+                                         └──────────────────┘
+                                                  │
+                                         12. MCP Response
+                                                  │
+                                                  ▼
+┌─────────────────┐                      ┌──────────────────┐
+│   AI Assistant  │ ◄────────────────── │   MCP Server     │
+│    Response     │                      │   Response       │
+└─────────────────┘                      └──────────────────┘
+```
+
+### Step-by-Step Flow Breakdown
+
+#### 1. **MCP Request Initiation**
+- AI assistant (Claude) sends MCP tool call request
+- Request includes tool name and parameters
+- MCP SDK handles protocol-level communication
+
+#### 2. **Tool Discovery**
+- `index.ts` receives the request via MCP SDK
+- Tool Registry (`tool.registry.ts`) looks up the requested tool
+- Registry returns tool handler and schema information
+
+#### 3. **Route to Handler**
+- Request is routed to appropriate tool handler in `*.tools.ts`
+- Tool handler receives raw parameters from MCP request
+
+#### 4. **Input Validation**
+- Zod schema validates input parameters
+- Type safety ensures parameters match expected format
+- Validation errors return early with proper error response
+
+#### 5. **Create Context**
+- `ToolContext` object created with initialized `veracodeClient`
+- Context provides access to all Veracode API methods
+- Shared context ensures consistent authentication across tools
+
+#### 6. **Business Logic Execution**
+- Tool handler implements specific business logic
+- May include multiple Veracode API calls
+- Data processing, filtering, and analysis
+
+#### 7. **API Authentication**
+- Veracode client (`veracode-rest-client.ts`) handles HMAC-SHA256 auth
+- Credentials loaded from environment variables
+- Authentication headers automatically added to requests
+
+#### 8. **HTTP Request to Veracode**
+- Axios HTTP client sends authenticated requests
+- Rate limiting and retry logic handled automatically
+- Multiple API endpoints may be called (Applications, Findings, Scans)
+
+#### 9. **API Response Processing**
+- Raw API responses parsed and typed
+- TypeScript interfaces ensure type safety
+- Error handling for API failures
+
+#### 10. **Data Processing**
+- Business logic processes API data
+- May include aggregation, filtering, risk analysis
+- Additional API calls may be made based on initial results
+
+#### 11. **Format Response**
+- Results formatted into standardized `ToolResponse` interface
+- Consistent structure: `{ success: boolean, data?: any, error?: string }`
+- Rich metadata and analysis included in response
+
+#### 12. **Return to AI Assistant**
+- MCP server returns formatted response
+- AI assistant receives structured data for analysis
+- Response can be used for further queries or analysis
+
+### Example: `get-sca-results` Flow
+
+Let's trace through a specific example of how `get-sca-results` works:
+
+```typescript
+// 1. MCP Server Request (via Claude, VS Code, etc.)
+{
+  "tool": "get-sca-results",
+  "arguments": {
+    "application": "MyApp",
+    "severity_gte": 4,
+    "only_exploitable": true
+  }
+}
+
+// 1b. Direct Client Request (via VeracodeMCPClient)
+{
+  "tool": "get-sca-results",
+  "args": {
+    "application": "MyApp",
+    "severity_gte": 4,
+    "only_exploitable": true
+  }
+}
+
+// 2. Tool Discovery (tool.registry.ts)
+const scaTools = createSCATools();
+const handler = scaTools.find(t => t.name === 'get-sca-results');
+
+// 3. Input Validation (sca.tools.ts)
+const validatedArgs = GetSCAResultsSchema.parse(request.arguments);
+
+// 4. Context Creation
+const context = { veracodeClient: new VeracodeClient() };
+
+// 5. Business Logic
+// - Resolve application name to GUID
+// - Fetch SCA findings with severity >= 4
+// - Filter for exploitable vulnerabilities only
+// - Perform risk analysis
+
+// 6. Veracode API Calls
+const searchResults = await veracodeClient.applications.searchApplications("MyApp");
+const findings = await veracodeClient.findings.getFindingsByName("MyApp", {
+  scanType: 'SCA',
+  severityGte: 4
+});
+
+// 7. Data Processing
+const filteredFindings = findings.filter(f => 
+  f.finding_details?.cve?.exploitability?.exploit_observed === true
+);
+
+// 8. Response Formatting
+return {
+  success: true,
+  data: {
+    application: { name: "MyApp", id: "guid-123" },
+    analysis: { totalFindings: 15, exploitableFindings: 3 },
+    detailed_findings: filteredFindings,
+    metadata: { execution_time_ms: 1250 }
+  }
+};
+```
+
+### Key Maintenance Points
+
+Understanding this flow helps with:
+
+1. **Adding New Tools**: Follow the same pattern in `*.tools.ts` files
+2. **Debugging Issues**: Trace through each step to isolate problems
+3. **Performance Optimization**: Identify bottlenecks in API calls or processing
+4. **Error Handling**: Understand where failures can occur and how to handle them
+5. **Testing**: Know which components to mock and test independently
 ```
 
 ### Component Architecture
@@ -29,16 +267,11 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
 src/
 ├── index.ts                     # MCP Server Entry Point  
 ├── veracode-rest-client.ts      # Veracode API REST Client
-├── veracode-mcp-client.ts       # MCP Client & CLI Interface
 ├── types/                       # Shared Type Definitions
 │   └── shared-types.ts          # Common interfaces and enums (ToolResponse, ToolCategory, ToolCall)
-├── tools (removed)/                   # CLI-specific Tool System (Factory Pattern)
-│   ├── cli-types.ts             # CLI-specific types (ToolHandler (CLI removed) + re-exports)
-│   ├── cli-tool-registry.ts     # CLI Tool Registry and Management
-│   ├── *.tools.ts               # CLI tools broken up by category
-├── tools/                   # MCP Protocol Tool Implementations
-│   ├── tool-types.ts             # MCP-specific types (ToolHandler, ToolContext + re-exports)
-│   ├── tool.registry.ts     # MCP Tool Registration System
+├── tools/                       # MCP Protocol Tool Implementations
+│   ├── tool-types.ts            # MCP-specific types (ToolHandler, ToolContext + re-exports)
+│   ├── tool.registry.ts         # MCP Tool Registration System
 │   ├── *.tools.ts               # MCP tools broken up by category
 └── utils/
     └── logger.ts                # Structured Logging Utility
@@ -81,8 +314,8 @@ docs/                            # Documentation
 - Input validation using Zod schemas
 
 **Tools Provided** (via MCP Server):
-- `get-applications`: List all accessible applications
-- `search-applications`: Search applications by name pattern
+- `get-application-profiles`: List all accessible application profiles
+- `search-application-profiles`: Search application profiles by name pattern
 - `get-application-details`: Get detailed application information by ID (GUID) or name
 - `get-scan-results`: Retrieve scan results for an application by ID (GUID) or name  
 - `get-findings`: **UNIFIED FINDINGS TOOL** - Get security findings with intelligent filtering and pagination. Two modes:
@@ -113,44 +346,24 @@ docs/                            # Documentation
 - SCA Results API
 - Results API (XML-based legacy endpoints)
 
-### 3. Veracode MCP Client (`src/veracode-mcp-client.ts`)
-
-**Purpose**: Command-line interface and testing utility for validating MCP server functionality.
-
-**Features**:
-- Command-line tool execution via simplified CLI tool registry
-- Direct tool execution without MCP protocol overhead using factory functions
-- Response validation and formatting with shared `ToolResponse` interface
-- Debugging utilities with structured logging
-- Support for all MCP server tools via CLI interface
-
-**CLI Tool Registry Architecture**:
-- **Factory Function Pattern**: Each tool category exports a `createXXXTools(client)` function
-- **Simplified Registration**: No complex inheritance - just arrays of `ToolHandler (CLI removed)` objects
-- **Shared Types**: Uses `ToolCategory` enum and `ToolResponse` interface from shared types
-- **Consistent Error Handling**: All tools return `ToolResponse` format for consistency
-
-### 4. Tool Registry System
+### 3. Tool Registry System
 
 **MCP Tool Registry** (`src/tools/tool.registry.ts`):
 **Purpose**: Centralized tool registration and management system for MCP server tools.
 
-**CLI Tool Registry** (`src/tools (removed)/cli-tool-registry.ts`):
-**Purpose**: Simplified factory-function based tool registry for CLI tools.
-
-**Architecture Pattern**: Both systems now use consistent patterns:
+**Architecture Pattern**: Uses consistent factory function patterns:
 - **Factory Functions**: Simple functions that return arrays of tool handlers
 - **Shared Types**: Common interfaces and enums from `shared-types.ts`
 - **Modular Organization**: Tools organized by category (Application, Scan, Policy, SCA, Findings, Static Analysis)
-- **No Inheritance**: Eliminated complex class hierarchies in favor of simple functions
+- **No Inheritance**: Simple function-based architecture for easy extension
 
-**Shared Features**:
+**Features**:
 - Dynamic tool registration by category
 - Tool discovery and metadata management
 - Category-based tool organization using shared `ToolCategory` enum
 - Consistent error handling and response formatting using shared `ToolResponse` interface
 
-**Tool Categories** (shared between CLI and MCP):
+**Tool Categories**:
 - **Application Tools**: Application management and search
 - **Findings Tools**: General findings and vulnerability data
 - **Scan Tools**: Scan results and metadata
@@ -158,7 +371,7 @@ docs/                            # Documentation
 - **Static Analysis Tools**: Detailed flaw analysis and SAST data
 - **Policy Tools**: Compliance and policy validation
 
-### 5. Structured Logging (`src/utils/logger.ts`)
+### 4. Structured Logging (`src/utils/logger.ts`)
 
 **Purpose**: Comprehensive logging system with structured output and multiple levels.
 
@@ -173,7 +386,7 @@ docs/                            # Documentation
 
 ### Shared Type Architecture
 
-The project uses a **three-tier type system** for maintainability and consistency:
+The project uses a **two-tier type system** for maintainability and consistency:
 
 ```typescript
 // 1. Shared Types (src/types/shared-types.ts)
@@ -208,17 +421,11 @@ export interface ToolHandler {
 export interface ToolContext {
     veracodeClient: any;
 }
-
-// 3. CLI-Specific Types (src/tools (removed)/cli-types.ts)
-export interface ToolHandler (CLI removed) {
-    name: string;
-    handler: (args: any) => Promise<ToolResponse>;
-}
 ```
 
 ### Benefits of Shared Type System
 
-- **Consistency**: Both CLI and MCP systems use the same response format (`ToolResponse`)
+- **Consistency**: All systems use the same response format (`ToolResponse`)
 - **Single Source of Truth**: Common types defined once in `shared-types.ts`
 - **No Duplication**: Eliminated redundant interfaces and type aliases
 - **Clean Imports**: Simple re-exports without confusing workarounds
@@ -494,20 +701,9 @@ npm run start        # Start MCP server
 npm run dev          # Watch mode for development
 ```
 
-### CLI Usage
+### Testing MCP Tools
 
-```bash
-# Build and run CLI tools
-npm run build
-node build/veracode-mcp-client.js <tool-name> [args...]
-
-# Available tools via CLI
-node build/veracode-mcp-client.js get-applications
-node build/veracode-mcp-client.js get-sca-results --application "MyApp"
-node build/veracode-mcp-client.js get-static-flaw-info --application "MyApp" --issue_id "123"
-```
-
-### Example Scripts
+The MCP server tools can be tested using the example scripts provided:
 
 ```bash
 # Pre-configured example scripts
@@ -522,25 +718,19 @@ npm run test:search              # Test search functionality
 
 ### Adding New Tools
 
-1. **For MCP Server Tools**:
-   - Create tool handler in appropriate `src/tools/*.tools.ts` file
+1. **Create Tool Handler**:
+   - Add tool handler in appropriate `src/tools/*.tools.ts` file
    - Define input schema with Zod validation
    - Implement tool handler function that returns `ToolResponse`
    - Add tool to tool array export
    - Tool registry automatically registers it
 
-2. **For CLI Tools** (optional):
-   - Add tool to appropriate `src/tools (removed)/*.tools.ts` file  
-   - Follow factory function pattern: `createXXXTools(client: VeracodeClient)`
-   - Return `ToolHandler (CLI removed)` objects with `ToolResponse` format
-   - CLI tool registry automatically discovers it via factory function
-
-3. **Create Example Usage**:
+2. **Create Example Usage**:
    - Add example script in `examples/` directory
    - Update `examples/README.md` with usage instructions
    - Add npm script to `package.json` if needed
 
-4. **Update Documentation**:
+3. **Update Documentation**:
    - Add tool description to this design document
    - Update README.md with new tool information
    - Add testing instructions to TESTING.md
@@ -548,13 +738,12 @@ npm run test:search              # Test search functionality
 ### Type System Extension
 
 1. **Shared Types** (`src/types/shared-types.ts`):
-   - Add new shared interfaces, enums, or types used by both systems
+   - Add new shared interfaces, enums, or types
    - Extend `ToolCategory` enum for new tool categories
    - Extend `ToolCall` interface for new parameter patterns
 
-2. **System-Specific Types**:
-   - **MCP**: Add types to `src/tools/tool-types.ts` for MCP-only concepts
-   - **CLI**: Add types to `src/tools (removed)/cli-types.ts` for CLI-only concepts
+2. **MCP-Specific Types**:
+   - Add types to `src/tools/tool-types.ts` for MCP-only concepts
 
 3. **Consistency Guidelines**:
    - Use `ToolResponse` for all tool return values
@@ -570,7 +759,7 @@ npm run test:search              # Test search functionality
    - Follow existing patterns for consistency
 
 2. **Create Tool Handlers**:
-   - Add tool implementations that use new API methods in both MCP and CLI systems
+   - Add tool implementations that use new API methods
    - Include input validation and response formatting using shared `ToolResponse`
    - Add to appropriate tool category file using factory function pattern
 
@@ -587,7 +776,7 @@ npm run test:search              # Test search functionality
 
 **Rationale**:
 - **Eliminated Over-engineering**: The `ToolCategory` base classes provided no functional benefit
-- **Improved Consistency**: Both CLI and MCP systems now use the same simple pattern
+- **Improved Consistency**: The MCP system now uses a simple, maintainable pattern
 - **Reduced Complexity**: Factory functions are easier to understand and maintain than inheritance hierarchies
 - **Better Performance**: Direct function calls instead of class instantiation and method binding
 
@@ -599,7 +788,7 @@ class ApplicationTools extends ToolCategory {
 }
 
 // After: Simple factory function
-export function createApplicationTools(client: VeracodeClient): ToolHandler (CLI removed)[] {
+export function createApplicationTools(client: VeracodeClient): ToolHandler[] {
   return [
     { name: "get-applications", handler: async (args) => { ... } }
   ];
@@ -608,12 +797,12 @@ export function createApplicationTools(client: VeracodeClient): ToolHandler (CLI
 
 ### Shared Type System
 
-**Decision**: Created a three-tier type system with shared common types.
+**Decision**: Created a two-tier type system with shared common types.
 
 **Rationale**:
 - **Single Source of Truth**: Common concepts defined once
 - **Eliminated Duplication**: No more redundant interfaces like `ToolResult` vs `ToolResponse`
-- **Improved Consistency**: Both systems use exactly the same response format
+- **Improved Consistency**: All systems use exactly the same response format
 - **Better Maintainability**: Changes to shared concepts only require one edit
 
 **Implementation**:
@@ -621,9 +810,8 @@ export function createApplicationTools(client: VeracodeClient): ToolHandler (CLI
 // Shared types for common concepts
 src/types/shared-types.ts: ToolResponse, ToolCategory, ToolCall
 
-// System-specific types with re-exports
+// MCP-specific types with re-exports
 src/tools/tool-types.ts: ToolHandler, ToolContext + re-exports
-src/tools (removed)/cli-types.ts: ToolHandler (CLI removed) + re-exports
 ```
 
 ## Security Design
@@ -664,12 +852,12 @@ src/tools (removed)/cli-types.ts: ToolHandler (CLI removed) + re-exports
 ## Extensibility
 
 The architecture supports:
-- **Modular Tool System**: Factory-function based tool additions through simplified registries
-- **Shared Type System**: Consistent interfaces and responses across CLI and MCP systems
+- **Modular Tool System**: Factory-function based tool additions through simplified registry
+- **Shared Type System**: Consistent interfaces and responses across the system
 - **Custom Authentication**: Support for alternative authentication providers
 - **Multiple API Backends**: Support for different Veracode API versions and environments
 - **Enhanced Data Processing**: Custom data transformation and analysis pipelines
-- **CLI and MCP Dual Mode**: Tools available both via MCP protocol and direct CLI access with consistent interfaces
+- **MCP Integration**: Tools available via MCP protocol with consistent interfaces
 - **Structured Logging Integration**: Pluggable logging backends and formatters
 - **Zero Inheritance Overhead**: Simple function-based architecture for easy extension and testing
 

@@ -83,7 +83,7 @@ export class ToolRegistry {
       const name = tool.name;
       switch (category) {
         case ToolCategory.APPLICATION:
-          return name.includes('application') || name === 'get-applications' || name === 'search-applications';
+          return name.includes('application') || name === 'get-application-profiles' || name === 'search-application-profiles';
         case ToolCategory.FINDINGS:
           return name.includes('finding');
         case ToolCategory.STATIC_ANALYSIS:

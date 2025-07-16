@@ -78,7 +78,7 @@ Once configured and VS Code is restarted, you can interact with Veracode data di
 
 **User:** "Show me applications with COBOL in the name"
 
-**Expected Response:** *Uses the search-applications tool to find applications containing "COBOL" and displays results like "COBOL Demo Reference App"*
+**Expected Response:** *Uses the search-application-profiles tool to find application profiles containing "COBOL" and displays results like "COBOL Demo Reference App"*
 
 **User:** "List all Veracode applications"
 

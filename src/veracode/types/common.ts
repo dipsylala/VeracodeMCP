@@ -33,7 +33,7 @@ export type BusinessCriticality = 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW' | 'VER
 // Common scan types
 export type ScanType = 'STATIC' | 'DYNAMIC' | 'MANUAL' | 'SCA';
 
-// Common scan statuses
+// Common scan statuses (aligned with Swagger API v1.0 specification)
 export type ScanStatus =
     | 'CREATED' | 'UNPUBLISHED' | 'DELETED' | 'PARTIAL_PUBLISH' | 'PARTIAL_UNPUBLISH'
     | 'INCOMPLETE' | 'SCAN_SUBMITTED' | 'IN_QUEUE' | 'STOPPING' | 'PAUSING' | 'IN_PROGRESS'

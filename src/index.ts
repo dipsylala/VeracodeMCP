@@ -63,97 +63,113 @@ for (const tool of allTools) {
     hasZodDef: tool.schema?._def ? 'yes' : 'no'
   });
 
-  // Validate that we have a proper Zod schema before converting
-  let jsonSchema;
+  // Use the MCP SDK's tool() method with proper signature 
   if (tool.schema && tool.schema._def && tool.schema._def.typeName) {
-    try {
-      jsonSchema = zodToJsonSchema(tool.schema);
-    } catch (error) {
-      logger.error(`Failed to convert schema for tool ${tool.name}`, 'TOOL_REGISTRY', error);
-      jsonSchema = {
-        type: 'object',
-        properties: {},
-        additionalProperties: true
-      };
-    }
-  } else {
-    logger.warn(`Tool ${tool.name} has invalid or missing schema, using fallback`, 'TOOL_REGISTRY');
-    jsonSchema = {
-      type: 'object',
-      properties: {},
-      additionalProperties: true
-    };
-  }
+    // Extract the shape from the ZodObject for MCP SDK
+    const rawShape = tool.schema.shape; // This gives us the ZodRawShape
+    
+    server.tool(tool.name, tool.description, rawShape, async (args, extra) => {
+      const startTime = Date.now();
 
-  server.tool(tool.name, tool.description, jsonSchema, async (request) => {
-    const startTime = Date.now();
+      logger.toolExecution(tool.name, args);
 
-    // Debug logging to see what we're receiving
-    logger.debug(`Tool ${tool.name} received request`, 'TOOL_DEBUG', {
-      requestType: typeof request,
-      hasParams: 'params' in request,
-      paramsKeys: request.params ? Object.keys(request.params) : [],
-      hasArguments: request.params && 'arguments' in request.params,
-      argumentsValue: request.params?.arguments,
-      fullRequest: request
+      try {
+        const result = await toolRegistry.executeTool({ tool: tool.name, args: args });
+        const executionTime = Date.now() - startTime;
+
+        logger.toolResult(
+          tool.name,
+          result.success,
+          executionTime,
+          result.data ? JSON.stringify(result.data).length : undefined
+        );
+
+        logger.debug(`Tool ${tool.name} result`, 'TOOL_RESULT', {
+          success: result.success,
+          hasData: !!result.data,
+          hasError: !!result.error
+        });
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2)
+            }
+          ]
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+
+        logger.toolError(tool.name, error);
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(
+                {
+                  success: false,
+                  error: `Error executing ${tool.name}: ${errorMessage}`
+                },
+                null,
+                2
+              )
+            }
+          ]
+        };
+      }
     });
+  } else {
+    // Fallback for tools without schema - register without parameters
+    logger.warn(`Tool ${tool.name} has invalid or missing schema, registering without parameters`, 'TOOL_REGISTRY');
+    server.tool(tool.name, tool.description, async (extra) => {
+      const startTime = Date.now();
 
-    // Extract arguments from MCP request - correct MCP pattern
-    let toolArguments: Record<string, any> = {};
+      logger.toolExecution(tool.name, {});
 
-    if (request && request.params && request.params.arguments) {
-      toolArguments = request.params.arguments;
-    }
+      try {
+        const result = await toolRegistry.executeTool({ tool: tool.name, args: {} });
+        const executionTime = Date.now() - startTime;
 
-    logger.toolExecution(tool.name, toolArguments);
+        logger.toolResult(
+          tool.name,
+          result.success,
+          executionTime,
+          result.data ? JSON.stringify(result.data).length : undefined
+        );
 
-    try {
-      const result = await toolRegistry.executeTool({ tool: tool.name, args: toolArguments });
-      const executionTime = Date.now() - startTime;
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2)
+            }
+          ]
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
 
-      logger.toolResult(
-        tool.name,
-        result.success,
-        executionTime,
-        result.data ? JSON.stringify(result.data).length : undefined
-      );
+        logger.toolError(tool.name, error);
 
-      logger.debug(`Tool ${tool.name} result`, 'TOOL_RESULT', {
-        success: result.success,
-        hasData: !!result.data,
-        hasError: !!result.error
-      });
-
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify(result, null, 2)
-          }
-        ]
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-
-      logger.toolError(tool.name, error);
-
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: JSON.stringify(
-              {
-                success: false,
-                error: `Error executing ${tool.name}: ${errorMessage}`
-              },
-              null,
-              2
-            )
-          }
-        ]
-      };
-    }
-  });
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(
+                {
+                  success: false,
+                  error: `Error executing ${tool.name}: ${errorMessage}`
+                },
+                null,
+                2
+              )
+            }
+          ]
+        };
+      }
+    });
+  }
 }
 
 // Log tool registration summary

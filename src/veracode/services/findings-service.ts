@@ -48,26 +48,8 @@ export class FindingsService extends BaseVeracodeClient {
         };
       }
 
-      // If a specific scan type was requested but not available, return empty results
-      if (options?.scanType && !scanCheck.scanTypes.includes(options.scanType)) {
-        logger.warn('Requested scan type not available for application', 'API', {
-          appId,
-          requestedScanType: options.scanType,
-          availableScanTypes: scanCheck.scanTypes
-        });
-
-        return {
-          findings: [],
-          pagination: {
-            current_page: 0,
-            page_size: options?.size || 500,
-            total_pages: 0,
-            total_elements: 0,
-            has_next: false,
-            has_previous: false
-          }
-        };
-      }
+      // Let the API handle scan type validation - don't pre-filter
+      // The API will return appropriate results for the requested scan type
 
       let url = `appsec/v2/applications/${appId}/findings`;
       const params = new URLSearchParams();

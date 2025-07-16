@@ -111,9 +111,9 @@ Once Claude restarts, you should be able to use these commands:
 
 ### Available Tools
 
-- **`get-applications`** - List all applications in your Veracode account
-- **`search-applications`** - Search for applications by name
-- **`get-application-details`** - Get detailed info about a specific application
+- **`get-application-profiles`** - List all application profiles in your Veracode account
+- **`search-application-profiles`** - Search for application profiles by name
+- **`get-application-profile-details`** - Get detailed info about a specific application profile
 - **`get-scan-results`** - Get scan results for an application
 - **`get-findings`** - Get findings from scans
 - **`get-policy-compliance`** - Check policy compliance status

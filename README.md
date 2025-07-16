@@ -155,9 +155,9 @@ Then restart Claude Desktop and ask: *"What SCA vulnerabilities do I have in my 
 ### MCP Tools (Claude Desktop)
 
 #### 📋 **Application Management**
-- `get-applications` - List all applications
-- `search-applications` - Search applications by name
-- `get-application-details` - Get detailed application information by ID (GUID) or name
+- `get-application-profiles` - List all application profiles
+- `search-application-profiles` - Search application profiles by name
+- `get-application-profile-details` - Get detailed application profile information by ID (GUID) or name
 
 #### 🔍 **Scan Results & Findings**
 - `get-scan-results` - Get scan results for an application by ID (GUID) or name

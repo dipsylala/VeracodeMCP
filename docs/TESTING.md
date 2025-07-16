@@ -77,9 +77,9 @@ npm run start
 
 The server provides these tools that can be tested via MCP clients:
 
-1. **get-applications** - List all applications
-2. **search-applications** - Search applications by name
-3. **get-application-details** - Get detailed application information
+1. **get-application-profiles** - List all application profiles
+2. **search-application-profiles** - Search application profiles by name
+3. **get-application-profile-details** - Get detailed application profile information
 4. **get-scan-results** - Get scan results for an application
 5. **get-findings** - **UNIFIED FINDINGS TOOL** - Get security findings with intelligent filtering and pagination
    - Basic overview: First 300 findings by severity 

@@ -90,8 +90,8 @@ The MCP server configuration is in `.vscode/mcp.json`. This allows VS Code exten
 
 When the server is running, these tools are available:
 
-- `get-applications` - List all applications
-- `search-applications` - Search by name
+- `get-application-profiles` - List all application profiles
+- `search-application-profiles` - Search by name
 - `get-application-details` - Get app details
 - `get-scan-results` - Get scan results
 - `get-findings` - **UNIFIED FINDINGS TOOL** - Get security findings with intelligent filtering and pagination
