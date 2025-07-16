@@ -29,7 +29,7 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
 Understanding how an MCP query flows through the system is crucial for maintaining and extending the codebase. Here's the complete flow from AI assistant request to Veracode API response:
 
 ```
-┌─────────────────┐    1. MCP Request     ┌──────────────────┐
+┌─────────────────┐   1. MCP Request     ┌──────────────────┐
 │   AI Assistant  │ ───────────────────► │   MCP Server     │
 │   (Claude, etc) │                      │   (index.ts)     │
 └─────────────────┘                      └──────────────────┘
