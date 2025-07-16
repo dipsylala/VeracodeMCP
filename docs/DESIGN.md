@@ -21,7 +21,7 @@ The Veracode MCP Server is a TypeScript-based server that implements the Model C
                        │   Local Cache    │
                        │  (In Memory)     │
                        └──────────────────┘
-
+```
 ## MCP Query Flow Architecture
 
 ### Detailed Request Flow
