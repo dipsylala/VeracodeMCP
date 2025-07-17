@@ -306,7 +306,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🎯 Project Status
 
-### ✅ Production Ready
+### ✅ Production Ready (Note the Disclaimers and Warnings!)
 - **Full MCP Server** - Works with Claude Desktop
 - **Comprehensive SCA Analysis** - EPSS scores, exploitability data, license risks
 - **Command-Line Tools** - Perfect for automation and CI/CD
