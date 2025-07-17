@@ -2,18 +2,48 @@ import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { validateAndResolveApplication } from '../utils/application-resolver.js';
 
+// Schema for getting scan results with optional sandbox filtering
+const GetScanResultsSchema = z.object({
+  application: z.string().describe('Application GUID or name to get scan results for'),
+  sandbox_identifier: z.string().optional().describe('Sandbox GUID or name to get scans from specific sandbox'),
+  scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type')
+});
+
+type GetScanResultsParams = z.infer<typeof GetScanResultsSchema>;
+
+// Schema for getting all sandbox scans for an application
+const GetSandboxScansSchema = z.object({
+  identifier: z.string().describe('Application GUID or name to get sandbox scans for'),
+  scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type (optional)')
+});
+
+type GetSandboxScansParams = z.infer<typeof GetSandboxScansSchema>;
+
+// Schema for getting scans from a specific sandbox
+const GetScansBySandboxSchema = z.object({
+  identifier: z.string().describe('Application GUID or name'),
+  sandbox_name: z.string().describe('Sandbox name to get scans from'),
+  scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type (optional)')
+});
+
+type GetScansBySandboxParams = z.infer<typeof GetScansBySandboxSchema>;
+
+// Schema for comparing policy vs sandbox scans
+const ComparePolicyVsSandboxScansSchema = z.object({
+  identifier: z.string().describe('Application GUID or name to compare scans for'),
+  scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter comparison by scan type (optional)')
+});
+
+type ComparePolicyVsSandboxScansParams = z.infer<typeof ComparePolicyVsSandboxScansSchema>;
+
 // Create scan tools for MCP
 export function createScanTools(): ToolHandler[] {
   return [
     {
       name: 'get-scan-results',
       description: 'Get comprehensive scan history and results for an application including all scan types (STATIC, DYNAMIC, MANUAL, SCA). Auto-detects whether input is an application name or GUID. Use this to understand scan coverage, track scan progress, review compliance status, and access scan reports. Essential for security program management and audit compliance.',
-      schema: z.object({
-        application: z.string().describe('Application GUID or name to get scan results for'),
-        sandbox_identifier: z.string().optional().describe('Sandbox GUID or name to get scans from specific sandbox'),
-        scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type')
-      }),
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetScanResultsSchema,
+      handler: async (args: GetScanResultsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           let sandboxId: string | undefined;
           let sandboxContext = 'policy';
@@ -61,7 +91,7 @@ export function createScanTools(): ToolHandler[] {
           return {
             success: true,
             data: {
-              application_identifier: args.identifier,
+              application_identifier: args.application,
               context: sandboxContext,
               sandbox_identifier: args.sandbox_identifier,
               scan_type_filter: args.scan_type || 'all',
@@ -86,11 +116,8 @@ export function createScanTools(): ToolHandler[] {
     {
       name: 'get-sandbox-scans',
       description: 'Get all scans across all sandboxes for an application. Perfect for understanding sandbox testing coverage, comparing development vs staging environments, and tracking scan progress across different testing phases.',
-      schema: z.object({
-        identifier: z.string().describe('Application GUID or name to get sandbox scans for'),
-        scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type (optional)')
-      }),
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetSandboxScansSchema,
+      handler: async (args: GetSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
@@ -141,12 +168,8 @@ export function createScanTools(): ToolHandler[] {
     {
       name: 'get-scans-by-sandbox',
       description: 'Get scans from a specific sandbox by sandbox name. Useful when you want to focus on a particular development environment, staging area, or testing context.',
-      schema: z.object({
-        identifier: z.string().describe('Application GUID or name'),
-        sandbox_name: z.string().describe('Sandbox name to get scans from'),
-        scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type (optional)')
-      }),
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetScansBySandboxSchema,
+      handler: async (args: GetScansBySandboxParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
@@ -198,11 +221,8 @@ export function createScanTools(): ToolHandler[] {
     {
       name: 'compare-policy-vs-sandbox-scans',
       description: 'Compare scan coverage between policy (main branch) and all sandboxes. Essential for understanding testing completeness, identifying coverage gaps, and ensuring proper scan distribution across environments.',
-      schema: z.object({
-        identifier: z.string().describe('Application GUID or name to compare scans for'),
-        scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter comparison by scan type (optional)')
-      }),
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: ComparePolicyVsSandboxScansSchema,
+      handler: async (args: ComparePolicyVsSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(

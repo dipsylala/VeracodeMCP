@@ -13,6 +13,6 @@ export interface ToolContext {
 export interface ToolHandler {
   name: string;
   description: string;
-  schema: any;
+  schema: any; // Mandatory - use z.void() for tools that take no parameters
   handler: (args: any, context: ToolContext) => Promise<ToolResponse>;
 }

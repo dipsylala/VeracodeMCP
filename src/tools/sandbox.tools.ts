@@ -2,18 +2,29 @@ import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { validateAndResolveApplication } from '../utils/application-resolver.js';
 
+// Schema definitions
+const GetSandboxesSchema = z.object({
+  app_profile: z.string().describe('Application profile ID (GUID) or exact application name to get sandboxes for'),
+  page: z.number().min(0).optional().describe('Page number for pagination (0-based)'),
+  size: z.number().min(1).max(500).optional().describe('Number of results per page')
+});
+
+const GetSandboxSummarySchema = z.object({
+  app_profile: z.string().describe('Application profile ID (GUID) or exact application name to get sandbox summary for')
+});
+
+// TypeScript types derived from schemas
+type GetSandboxesArgs = z.infer<typeof GetSandboxesSchema>;
+type GetSandboxSummaryArgs = z.infer<typeof GetSandboxSummarySchema>;
+
 // Create sandbox tools for MCP
 export function createSandboxTools(): ToolHandler[] {
   return [
     {
       name: 'get-sandboxes',
       description: 'Get all development/testing sandbox environments for a specific application profile. Sandboxes are isolated environments for testing security scans without affecting production results. Use this to discover available development environments, track feature branch scanning, or manage sandbox-specific security testing workflows.',
-      schema: z.object({
-        app_profile: z.string().describe('Application profile ID (GUID) or exact application name to get sandboxes for'),
-        page: z.number().min(0).optional().describe('Page number for pagination (0-based)'),
-        size: z.number().min(1).max(500).optional().describe('Number of results per page')
-      }),
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetSandboxesSchema,
+      handler: async (args: GetSandboxesArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Validate and resolve application identifier to GUID
           const appResolution = await validateAndResolveApplication(
@@ -82,10 +93,8 @@ export function createSandboxTools(): ToolHandler[] {
     {
       name: 'get-sandbox-summary',
       description: 'Get a concise overview of sandbox environments for an application, including counts, ownership, and activity status. Perfect for quick assessment of development environment security testing coverage. Use this to understand how many sandbox environments exist, who owns them, and their current status without detailed information.',
-      schema: z.object({
-        app_profile: z.string().describe('Application profile ID (GUID) or exact application name to get sandbox summary for')
-      }),
-      handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
+      schema: GetSandboxSummarySchema,
+      handler: async (args: GetSandboxSummaryArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
           const appResolution = await validateAndResolveApplication(
             args.app_profile, 
