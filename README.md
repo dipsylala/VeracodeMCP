@@ -23,7 +23,6 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 ### 🔧 Development & Integration
 - **[💻 VSCODE_INTEGRATION.md](docs/VSCODE_INTEGRATION.md)** - VS Code development environment setup
-- **[💬 VSCODE_CHAT_INTEGRATION.md](docs/VSCODE_CHAT_INTEGRATION.md)** - VS Code Chat/Copilot MCP integration
 - **[🤝 CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contributing guidelines and development setup
 
 ## ✨ Key Features
