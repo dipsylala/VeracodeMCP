@@ -6,7 +6,6 @@ import { VeracodeClient } from './veracode-rest-client.js';
 import { ToolRegistry } from './tools/tool.registry.js';
 import { logger } from './utils/logger.js';
 import { loadVeracodeCredentials } from './utils/credentials.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 import * as dotenv from 'dotenv';
 
 // Load environment variables

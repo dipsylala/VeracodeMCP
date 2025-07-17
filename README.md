@@ -10,20 +10,15 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 > ⚠️ **WARNING**: As with anything that involves the transfer of data to remote servers outside of your control, review whether discussions around your Veracode data and your source code can be considered acceptable risk if your LLM is maintained by a 3rd party.
 
-> ✅ **Production Ready**: Fully functional MCP server for Claude Desktop integration with comprehensive SCA analysis capabilities.
-
 ## 📚 Documentation
 
 ### 🚀 Getting Started
 - **[📋 TESTING.md](docs/TESTING.md)** - Comprehensive testing guide to verify your installation
-- **[🔗 INTEGRATION.md](docs/INTEGRATION.md)** - Claude Desktop integration setup guide
+- **[🔗 CLAUDE_QUICK_START.md](docs/CLAUDE_QUICK_START.md)** - Claude Desktop integration setup guide
 - **[⚡ VSCODE_QUICK_START.md](docs/VSCODE_QUICK_START.md)** - Quick VS Code setup and tasks guide
 
 ### 🏗️ Technical Documentation
 - **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
-- **[�️ POLICY_MANAGEMENT.md](docs/POLICY_MANAGEMENT.md)** - Policy management API reference and usage
-- **[�📝 HTML_ANALYSIS_REPORT.md](docs/HTML_ANALYSIS_REPORT.md)** - API response format analysis and decisions
-- **[✅ CALL_VERIFICATION_REPORT.md](docs/CALL_VERIFICATION_REPORT.md)** - MCP-to-REST client integration verification
 - **[📊 PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** - Current project status and recent changes
 
 ### 🔧 Development & Integration
