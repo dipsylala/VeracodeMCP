@@ -14,8 +14,8 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 ### 🚀 Getting Started
 - **[📋 TESTING.md](docs/TESTING.md)** - Comprehensive testing guide to verify your installation
-- **[🔗 CLAUDE_QUICK_START.md](docs/CLAUDE_QUICK_START.md)** - Claude Desktop integration setup guide
-- **[⚡ VSCODE_QUICK_START.md](docs/VSCODE_QUICK_START.md)** - Quick VS Code setup and tasks guide
+- **[🔗 CLAUDE_QUICK_START.md](docs/QUICK_START_CLAUDE.md)** - Claude Desktop integration setup guide
+- **[⚡ VSCODE_QUICK_START.md](docs/QUICK_START_VSCODE.md)** - Quick VS Code setup and tasks guide
 
 ### 🏗️ Technical Documentation
 - **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
