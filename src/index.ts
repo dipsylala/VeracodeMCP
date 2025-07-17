@@ -67,7 +67,8 @@ for (const tool of allTools) {
     // Extract the shape from the ZodObject for MCP SDK
     const rawShape = tool.schema.shape; // This gives us the ZodRawShape
 
-    server.tool(tool.name, tool.description, rawShape, async(args, extra) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    server.tool(tool.name, tool.description, rawShape, async(args, _) => {
       const startTime = Date.now();
 
       logger.toolExecution(tool.name, args);
@@ -122,7 +123,8 @@ for (const tool of allTools) {
   } else {
     // Fallback for tools without schema - register without parameters
     logger.warn(`Tool ${tool.name} has invalid or missing schema, registering without parameters`, 'TOOL_REGISTRY');
-    server.tool(tool.name, tool.description, async(extra) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    server.tool(tool.name, tool.description, async(_) => {
       const startTime = Date.now();
 
       logger.toolExecution(tool.name, {});

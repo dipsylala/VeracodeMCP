@@ -161,7 +161,6 @@ export class ApplicationService extends BaseVeracodeClient {
 
       return detailedApp;
     } catch (error) {
-      const executionTime = Date.now() - startTime;
       logger.apiError('GET', `application-by-name/${name}`, error);
       throw new Error(`Failed to fetch application details by name "${name}": ${this.getErrorMessage(error)}`);
     }

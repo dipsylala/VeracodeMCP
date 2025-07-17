@@ -33,7 +33,8 @@ export async function resolveApplicationIdentifier(
         details,
         resolvedFromName: false
       };
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
       throw new Error(`Application not found with GUID: ${identifier}`);
     }
   } else {

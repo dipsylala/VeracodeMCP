@@ -137,7 +137,8 @@ export class BaseVeracodeClient {
       // Ultimate fallback to commercial region
       console.warn(`Unknown API host: ${apiHost}. Using commercial region platform URL.`);
       return 'https://analysiscenter.veracode.com';
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_) {
       console.warn(`Invalid API base URL: ${apiBaseUrl}. Using commercial region platform URL.`);
       return 'https://analysiscenter.veracode.com';
     }
