@@ -10,20 +10,29 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 
 > ⚠️ **WARNING**: As with anything that involves the transfer of data to remote servers outside of your control, review whether discussions around your Veracode data and your source code can be considered acceptable risk if your LLM is maintained by a 3rd party.
 
+
 ## 📚 Documentation
 
 ### 🚀 Getting Started
-- **[📋 TESTING.md](docs/TESTING.md)** - Comprehensive testing guide to verify your installation
-- **[🔗 CLAUDE_QUICK_START.md](docs/QUICK_START_CLAUDE.md)** - Claude Desktop integration setup guide
-- **[⚡ VSCODE_QUICK_START.md](docs/QUICK_START_VSCODE.md)** - Quick VS Code setup and tasks guide
+- **[QUICK_START_CLAUDE.md](docs/QUICK_START_CLAUDE.md)** — Claude Desktop integration quick start
+- **[QUICK_START_VSCODE.md](docs/QUICK_START_VSCODE.md)** — Visual Studio Code integration quick start
 
-### 🏗️ Technical Documentation
-- **[🏗️ DESIGN.md](docs/DESIGN.md)** - Architecture and implementation details
-- **[📊 PROJECT_STATUS.md](docs/PROJECT_STATUS.md)** - Current project status and recent changes
+### 🧪 Testing & Troubleshooting
+- **[TESTING.md](docs/TESTING.md)** — Comprehensive testing and troubleshooting guide
 
-### 🔧 Development & Integration
-- **[💻 VSCODE_INTEGRATION.md](docs/VSCODE_INTEGRATION.md)** - VS Code development environment setup
-- **[🤝 CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contributing guidelines and development setup
+### 🏗️ Architecture & Design
+- **[DESIGN.md](docs/DESIGN.md)** — Architecture and implementation details
+
+### 🛠️ Tool Usage & Patterns
+- **[TOOL_CALLING_PATTERNS.md](docs/TOOL_CALLING_PATTERNS.md)** — How to call tools via MCP and direct client
+
+### 🤝 Contributing
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** — Contributing guidelines and development setup
+
+### 💻 VS Code Integration
+- **[VSCODE_INTEGRATION.md](docs/VSCODE_INTEGRATION.md)** — VS Code development environment setup
+
+---
 
 ## ✨ Key Features
 

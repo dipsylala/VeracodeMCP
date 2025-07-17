@@ -123,6 +123,4 @@ After learning from these basic examples, explore:
 
 ## Related Documentation
 
-- [Integration Guide](../../docs/INTEGRATION.md) - Setting up MCP integration
-- [VS Code Integration](../../docs/VSCODE_INTEGRATION.md) - Using with VS Code
-- [Testing Guide](../../docs/TESTING.md) - Running tests and validation
+- [Testing Guide](../docs/TESTING.md) - Running tests and validation
