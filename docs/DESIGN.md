@@ -507,39 +507,6 @@ export interface ToolContext {
 - **Clean Imports**: Simple re-exports without confusing workarounds
 - **Maintainability**: Changes to shared concepts only need to be made in one place
 
-### SCA Type System
-
-The SCA type system provides comprehensive analysis capabilities:
-
-```typescript
-interface VeracodeSCAFinding {
-  // Core vulnerability information
-  vulnerability_id: string;
-  cve_id?: string;
-  severity: number;
-  cvss_score?: number;
-  
-  // Component and library details
-  component_id: string;
-  component_filename: string;
-  library: string;
-  version: string;
-  
-  // Exploitability and risk assessment
-  epss_score?: number;
-  exploitability?: string;
-  in_exploits?: boolean;
-  
-  // Licensing and compliance
-  license_risk?: string;
-  violated_policy_rules?: Array<{
-    policy_name: string;
-    rule_name: string;
-    severity: string;
-  }>;
-}
-```
-
 ## Authentication Design
 
 ### VERACODE-HMAC-SHA-256 Authentication Flow
