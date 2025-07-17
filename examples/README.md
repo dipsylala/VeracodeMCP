@@ -118,8 +118,7 @@ All examples include comprehensive error handling and troubleshooting tips. Comm
 
 After learning from these basic examples, explore:
 
-- **Integration tests** in `tests/integration/` for more complex scenarios
-- **Debug tools** in `tools/debug/` for troubleshooting
+- **Integration tests** in `tests/integration/` for more complex scenarios involving the MCP
 - **Unit tests** in `tests/unit/` for testing individual components
 
 ## Related Documentation
