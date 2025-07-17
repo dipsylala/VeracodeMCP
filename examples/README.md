@@ -1,201 +1,129 @@
-# Veracode MCP Server Examples
+# Basic Examples
 
-This directory contains example scripts that demonstrate how to use the Veracode MCP Server and client library.
+This directory contains simple, well-commented examples for learning how to use the Veracode MCP Server. These examples are designed to be educational and demonstrate basic functionality.
 
 ## Available Examples
 
-### Connection and Basic Operations
+### 1. `list-applications.js`
+Lists all applications in your Veracode account.
 
-- **`query-apps.js`** - Test basic API connection and list applications
-  - Usage: `node query-apps.js [search-term]`
-  - Example: `node query-apps.js "Test"` (searches for applications containing "Test")
-  
-- **`test-search.js`** - Test application search functionality with various search terms
-
-### Scan Management Examples
-
-- **`scan-service-examples.js`** - **NEW!** Comprehensive examples of the ScanService API
-  - Usage: `node scan-service-examples.js`
-  - Demonstrates:
-    - Auto-detection of GUID vs application name parameters
-    - Getting all scans for an application
-    - Filtering scans by type (STATIC, SCA, DYNAMIC, etc.)
-    - Checking scan availability with `hasScans()`
-    - Working with sandbox scans
-  - **Key Features**: Clean API, consistent auto-detection, sandbox support
-
-- **`scan-information-examples.js`** - **NEW!** Detailed scan information retrieval
-  - Usage: `node scan-information-examples.js`
-  - Shows how to:
-    - Discover applications and retrieve comprehensive scan data
-    - Compare different scan types and their results
-    - Analyze scan status and compliance information
-    - Work with both policy and sandbox scans
-
-- **`sandbox-scan-examples.js`** - **NEW!** Complete sandbox scanning workflow
-  - Usage: `node sandbox-scan-examples.js` 
-  - Covers:
-    - Discovering sandboxes for applications
-    - Comparing policy vs sandbox scans
-    - Filtering sandbox scans by type
-    - Understanding sandbox scan contexts
-    - DevSecOps integration patterns
-
-- **`advanced-sandbox-scan-examples.js`** - **NEW!** Advanced sandbox-aware scan operations
-  - Usage: `node advanced-sandbox-scan-examples.js`
-  - **Enterprise Features**:
-    - Comprehensive sandbox scan analysis across all sandboxes
-    - Specific sandbox targeting by name with auto-discovery
-    - Policy vs sandbox comparison with detailed analytics
-    - Complete scan summaries with latest scan information
-    - Scan type filtering across multiple sandbox environments
-    - DevSecOps workflow automation examples
-  - **Perfect for**: Security teams managing multiple development branches and environments
-
-### SCA (Software Composition Analysis) Examples
-
-- **`get-sca-results.js`** - Get comprehensive SCA results for any application
-  - Usage: `node get-sca-results.js <application-name>`
-  - Example: `node get-sca-results.js "YourAppName"`
-  - **
-  
-- **`find-sca-apps.js`** - Find applications that have SCA scans available
-  - Usage: `node find-sca-apps.js [name-filter]`
-  - Example: `node find-sca-apps.js` (find all apps with SCA scans)
-  - Example: `node find-sca-apps.js "Test"` (find apps containing "Test" with SCA scans)
-
-### Static Analysis Examples
-
-- **`get-static-flaw-info.js`** - Get detailed data path information for static analysis findings
-  - Usage: `node get-static-flaw-info.js <app_id> <issue_id> [context]`
-  - Example: `node get-static-flaw-info.js 12345678-abcd-1234-5678-123456789012 67890`
-  - Example: `node get-static-flaw-info.js 12345678-abcd-1234-5678-123456789012 67890 sandbox-guid-here`
-  - Shows call stacks, data paths, function names, file locations, and line numbers for static findings
-
-### Analysis Comparison Examples
-
-- **`compare-analysis-approaches.js`** - Demonstrates the differences between general findings overview and detailed flaw analysis
-  - Usage: `node compare-analysis-approaches.js <app_name> <flaw_id>`
-  - Example: `node compare-analysis-approaches.js "MyApplication" "123"`
-  - Shows side-by-side comparison of:
-    - General findings (get-findings) - good for overviews and summaries
-    - Detailed flaw analysis (get-static-flaw-info) - good for technical investigation
-  - Helps understand when to use each tool type
-
-## Running Examples
-
-### Using npm scripts:
 ```bash
-# Test API connection
-npm run test:connection
-
-# Test search functionality  
-npm run test:search
-
-# Get SCA results for your application (requires app name parameter)
-npm run example:sca-results
-
-# Find applications with SCA scans
-npm run example:find-sca-apps
+node examples/list-applications.js
 ```
 
-### Using direct commands with parameters:
+**What it demonstrates:**
+- Basic MCP client initialization
+- Calling the `get-application-profiles` tool
+- Processing and displaying application data
+
+### 2. `search-applications.js`
+Searches for applications by name pattern.
+
 ```bash
-# Build first
-npm run build
-
-# NEW! Scan Service Examples - Demonstrates modern scan API
-node examples/scan-service-examples.js
-node examples/scan-information-examples.js  
-node examples/sandbox-scan-examples.js
-node examples/advanced-sandbox-scan-examples.js
-
-# Get comprehensive SCA analysis (
-# Use MCP client for programmatic access
-# Use MCP client for programmatic access
-
-# Get SCA results using example script (alternative approach)
-node examples/get-sca-results.js "Your-App-Name"
-node examples/get-sca-results.js "MyTestApp"
-
-# Get static flaw data paths
-node examples/get-static-flaw-info.js "app-guid-here" "issue-id-here"
-# Use MCP client for programmatic access
-
-# Search for specific applications
-node examples/query-apps.js "Test"
-node examples/query-apps.js "Production"
-# Use MCP client for programmatic access
-
-# Find SCA apps with optional filtering
-node examples/find-sca-apps.js
-node examples/find-sca-apps.js "Test"
-
-# Enable debug logging for examples
-LOG_LEVEL=debug # Use MCP client for programmatic access
-LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
+node examples/search-applications.js [search-term]
+node examples/search-applications.js "Demo"
 ```
 
-### Using VS Code tasks:
-- Open Command Palette (`Ctrl+Shift+P`)
-- Type "Tasks: Run Task"
-- Select the desired example task
-- For custom app analysis, use "Example: Get SCA Results (Custom App)" and enter your application name when prompted
+**What it demonstrates:**
+- Using the `search-application-profiles` tool
+- Passing parameters to MCP tools
+- Handling search results
 
-## Debug Logging
+### 3. `get-sca-results.js`
+Gets Software Composition Analysis (SCA) results for an application.
 
-All examples and 
-
-### Enable Debug Logging
 ```bash
-# Set LOG_LEVEL environment variable
-LOG_LEVEL=debug node examples/get-sca-results.js "MyApp"
-LOG_LEVEL=debug # Use MCP client for programmatic access
-
-# Or add to your .env file
-echo "LOG_LEVEL=debug" >> .env
+node examples/get-sca-results.js "MyApplication"
 ```
 
-### Debug Information Includes
-- **API Calls**: Request URLs, response codes, data sizes, and timing
-- **Application Search**: Search results and matching logic
-- **Data Processing**: Findings count, filtering steps, and analysis metrics
-- **Tool Execution**: Execution timing and performance data
-- **Error Details**: Comprehensive error information for troubleshooting
+**What it demonstrates:**
+- SCA analysis using the `get-sca-results` tool
+- Filtering by severity levels
+- Processing vulnerability data
 
-### Log Levels Available
-- `LOG_LEVEL=debug` - Shows all detailed debugging information
-- `LOG_LEVEL=info` - Shows normal operational messages (default)
-- `LOG_LEVEL=warn` - Shows warnings and errors only
-- `LOG_LEVEL=error` - Shows only error messages
+### 4. `get-findings.js`
+Gets security findings for an application.
 
-### Example Debug Output
+```bash
+node examples/get-findings.js "MyApplication"
+node examples/get-findings.js "MyApplication" STATIC
 ```
-[2025-07-12T21:10:09.259Z] DEBUG [API]: Getting findings by application name
-  Data: { "name": "ASC-597", "options": { "scanType": "SCA" } }
-[2025-07-12T21:10:09.648Z] DEBUG [CLIENT]: API Response received
-  Data: { "method": "GET", "url": "appsec/v1/applications/?name=ASC-597", "status": 200, "dataSize": 2174 }
-[2025-07-12T21:10:10.884Z] DEBUG [API]: Findings retrieved successfully
-  Data: { "appName": "ASC-597", "findingsCount": 20, "scanType": "SCA", "executionTime": 1625 }
-```
+
+**What it demonstrates:**
+- Using the `get-findings` tool
+- Optional scan type filtering
+- Processing different types of security findings
 
 ## Prerequisites
 
-1. Create a `.env` file in the project root with your Veracode API credentials:
-```
-VERACODE_API_ID=your_api_id_here
-VERACODE_API_KEY=your_api_key_here
+1. **Build the project first:**
+   ```bash
+   npm run build
+   ```
+
+2. **Set up your Veracode API credentials:**
+   ```bash
+   # Windows
+   $env:VERACODE_API_ID="your-api-id"
+   $env:VERACODE_API_KEY="your-api-key"
+   
+   # Linux/Mac
+   export VERACODE_API_ID="your-api-id"
+   export VERACODE_API_KEY="your-api-key"
+   ```
+
+3. **Ensure you have applications in your Veracode account** that you can test with.
+
+## Learning Path
+
+We recommend running the examples in this order:
+
+1. **Start with `list-applications.js`** to verify your setup and see available applications
+2. **Try `search-applications.js`** to learn parameter passing
+3. **Use `get-findings.js`** to see general security findings
+4. **Explore `get-sca-results.js`** for specialized SCA analysis
+
+## Code Structure
+
+Each example follows a consistent pattern:
+
+```javascript
+import { VeracodeMCPClient } from '../../build/veracode-mcp-client.js';
+
+async function exampleFunction() {
+    try {
+        const client = new VeracodeMCPClient();
+        const result = await client.callTool('tool-name', { parameters });
+        
+        if (result.success) {
+            // Process and display results
+        } else {
+            // Handle errors
+        }
+    } catch (error) {
+        // Handle exceptions
+    }
+}
 ```
 
-2. Build the project:
-```bash
-npm run build
-```
+## Error Handling
 
-## Notes
+All examples include comprehensive error handling and troubleshooting tips. Common issues:
 
-- All examples require valid Veracode API credentials
-- Application names are searched case-insensitively using partial matching
-- If multiple applications match your search term, the first one will be used
-- The TypeScript examples (`.ts`) are compiled to JavaScript in the `build/` directory
-- The JavaScript examples (`.js`) run directly and import from the compiled `build/` directory
+- **Authentication errors**: Check your API credentials
+- **Application not found**: Verify application names in your Veracode account
+- **No scan data**: Ensure applications have been scanned
+
+## Next Steps
+
+After learning from these basic examples, explore:
+
+- **Integration tests** in `tests/integration/` for more complex scenarios
+- **Debug tools** in `tools/debug/` for troubleshooting
+- **Unit tests** in `tests/unit/` for testing individual components
+
+## Related Documentation
+
+- [Integration Guide](../../docs/INTEGRATION.md) - Setting up MCP integration
+- [VS Code Integration](../../docs/VSCODE_INTEGRATION.md) - Using with VS Code
+- [Testing Guide](../../docs/TESTING.md) - Running tests and validation

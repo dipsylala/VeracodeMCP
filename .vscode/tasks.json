@@ -48,7 +48,7 @@
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"examples/query-apps.js"
+				"examples/list-applications.js"
 			],
 			"group": "test",
 			"presentation": {
@@ -67,7 +67,7 @@
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"examples/test-search.js"
+				"examples/search-applications.js"
 			],
 			"group": "test",
 			"presentation": {
@@ -102,31 +102,11 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Example: Get SCA Results (Custom App)",
+			"label": "Example: List Applications",
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"examples/get-sca-results.js",
-				"${input:applicationName}"
-			],
-			"group": "test",
-			"presentation": {
-				"echo": true,
-				"reveal": "always",
-				"focus": false,
-				"panel": "shared",
-				"showReuseMessage": true,
-				"clear": false
-			},
-			"dependsOn": "Build Veracode MCP Server",
-			"problemMatcher": []
-		},
-		{
-			"label": "Example: Find SCA Apps",
-			"type": "shell",
-			"command": "node",
-			"args": [
-				"examples/find-sca-apps.js"
+				"examples/list-applications.js"
 			],
 			"group": "test",
 			"presentation": {
@@ -145,7 +125,7 @@
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"examples/test-policy-management.js"
+				"tests/integration/mcp/policy-management-mcp.js"
 			],
 			"group": "test",
 			"presentation": {
@@ -164,7 +144,107 @@
 			"type": "shell",
 			"command": "node",
 			"args": [
-				"examples/test-policy-tools.js"
+				"tests/integration/mcp/policy-tools-mcp.js"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test: Unit Tests",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"test:unit"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test: MCP Integration",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"test:integration:mcp"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Test: API Integration",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"test:integration:api"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Debug: MCP Flow",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"debug:mcp-flow"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"dependsOn": "Build Veracode MCP Server",
+			"problemMatcher": []
+		},
+		{
+			"label": "Debug: SCA Client",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"debug:sca-client"
 			],
 			"group": "test",
 			"presentation": {

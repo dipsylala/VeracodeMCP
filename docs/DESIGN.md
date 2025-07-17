@@ -321,22 +321,65 @@ src/
 └── utils/
     └── logger.ts                # Structured Logging Utility
 
-examples/                        # Usage Examples & Test Scripts
-├── analyze-static-sca-findings.js  # SCA Analysis Example
-├── capture-actual-sca-response.js  # SCA Response Capture
-├── debug-client-sca.js         # SCA Client Debugging
-├── find-sca-apps-mcp.js        # SCA Discovery Example  
-├── get-sca-results-mcp.js      # SCA Results Example
-├── list-applications-mcp.js    # Application List Example
-├── policy-management-mcp.js    # Policy Management Example
-├── policy-tools-mcp.js         # Policy Tools Example
-├── sandbox-functionality-mcp.js # Sandbox Testing Example
-├── search-application-profiles-mcp.js # Application Search Example
-├── static-findings-pagination-mcp.js # Static Analysis Example
-├── test-verademo-net.js        # VeraDemo.NET Testing
-└── README.md                   # Examples Documentation
+examples/                        # Usage Examples (Documentation & Learning)
+├── README.md                    # Basic usage documentation
+├── list-applications.js         # Basic application listing   
+├── search-applications.js       # Basic application search   
+├── get-sca-results.js           # Basic SCA analysis   
+├── get-findings.js              # Basic findings retrieval
+└── README.md                    # Examples overview documentation
 
-docs/                            # Documentation
+tests/                          # Automated Testing Suite
+├── integration/                # Integration Tests (Live API Calls)
+│   ├── mcp/                   # MCP Protocol Integration Tests
+│   │   ├── list-applications-mcp.js
+│   │   ├── search-application-profiles-mcp.js
+│   │   ├── get-sca-results-mcp.js
+│   │   ├── static-findings-pagination-mcp.js
+│   │   ├── sandbox-functionality-mcp.js
+│   │   ├── policy-management-mcp.js
+│   │   ├── policy-tools-mcp.js
+│   │   └── test-verademo-net.js
+│   ├── api/                   # Direct API Integration Tests
+│   │   ├── analyze-static-sca-findings.js
+│   │   ├── simple-direct-call.js
+│   │   ├── direct-sca-api-call.js
+│   │   ├── capture-actual-sca-response.js
+│   │   ├── capture-sca-rest-output.js
+│   │   ├── show-actual-sca-findings.js
+│   │   └── verify-swagger-compliance-rest.js
+│   └── README.md              # Integration testing documentation
+├── unit/                      # Unit Tests (Mocked Dependencies)
+│   ├── test-argument-validation.js
+│   ├── test-mcp-protocol.js
+│   ├── test-real-mcp-call.js
+│   ├── test-registry.js
+│   ├── test-consolidation-summary.js
+│   ├── test-dependency-injection.js
+│   ├── test-direct-sca-findings.js
+│   ├── test-swagger-alignment.js
+│   ├── test-flaw-id-display.js
+│   ├── test-sca-cve-display.js
+│   ├── test-mcp-sca.js
+│   └── README.md              # Unit testing documentation
+└── README.md                  # Testing strategy documentation
+
+tools/                          # Development & Debugging Tools
+├── debug/                     # Debugging Utilities
+│   ├── debug-mcp-flow.js      # MCP protocol flow debugging
+│   ├── debug-client-sca.js    # SCA client debugging
+│   ├── debug-search-application-profiles.js
+│   ├── debug-ui-vs-api.js     # UI vs API comparison
+│   ├── send-debug-request.js  # Debug request testing
+│   ├── diagnose-sca-vs-findings.js
+│   └── README.md              # Debugging tools documentation
+├── inspect/                   # Data Inspection Tools
+│   ├── inspect-findings-structure.js
+│   ├── inspect-static-for-sca.js
+│   └── README.md              # Inspection tools documentation
+└── README.md                  # Development tools overview
+
+docs/                          # Documentation
 ├── DESIGN.md                    # Architecture & Design
 ├── INTEGRATION.md               # Integration Guide
 ├── TESTING.md                   # Testing Guide
@@ -715,23 +758,138 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 ### Unit Testing Approach
 
-- Type guard validation
-- API client method testing
-- Error handling verification
-- Input validation testing
+- **Type System Validation**: Zod schema validation and TypeScript type guards
+- **Service Layer Testing**: Individual API service methods with mocked HTTP clients
+- **Tool Handler Testing**: Tool logic with mocked Veracode client dependencies
+- **Authentication Testing**: HMAC signature generation and header formatting
+- **Error Handling Verification**: Edge cases and failure scenarios
 
 ### Integration Testing
 
-- End-to-end MCP communication
-- Veracode API integration
-- Authentication flow validation
-- Error scenario testing
+**Live API Integration Tests** (`tests/integration/` directory):
+- **End-to-end MCP Communication**: Full tool execution via VeracodeMCPClient (`tests/integration/mcp/`)
+- **Direct API Integration**: Real API calls with authentication flow validation (`tests/integration/api/`)
+- **Cross-tool Functionality**: Multi-step workflows combining multiple tools
+- **Error Scenario Testing**: Invalid credentials, missing applications, rate limiting
 
-### Example Testing
+**Integration Test Categories**:
+```bash
+# MCP Integration Tests (tests/integration/mcp/)
+tests/integration/mcp/list-applications-mcp.js           # Application discovery via MCP
+tests/integration/mcp/search-application-profiles-mcp.js # Application search via MCP
+tests/integration/mcp/get-sca-results-mcp.js            # SCA analysis via MCP
+tests/integration/mcp/static-findings-pagination-mcp.js  # Static analysis via MCP
+tests/integration/mcp/sandbox-functionality-mcp.js       # Sandbox workflow via MCP
+tests/integration/mcp/policy-management-mcp.js           # Policy compliance via MCP
+tests/integration/mcp/test-verademo-net.js              # Known application validation
 
-- Parameterized example scripts
-- Cross-platform compatibility
-- User experience validation
+# API Integration Tests (tests/integration/api/)
+tests/integration/api/analyze-static-sca-findings.js     # Multi-finding type analysis
+tests/integration/api/simple-direct-call.js             # Basic API connectivity
+tests/integration/api/direct-sca-api-call.js            # Direct SCA API testing
+tests/integration/api/capture-actual-sca-response.js    # API response validation
+tests/integration/api/verify-swagger-compliance-rest.js  # API specification compliance
+```
+
+### Unit Testing
+
+**Component Testing** (`tests/unit/` directory):
+- **Input Validation Testing**: Zod schema validation and parameter handling
+- **Protocol Testing**: MCP protocol compliance and message handling
+- **Registry Testing**: Tool discovery and registration functionality
+- **Authentication Testing**: HMAC signature generation and header formatting
+- **Error Handling Verification**: Edge cases and failure scenarios
+
+**Unit Test Categories**:
+```bash
+# Unit Tests (tests/unit/)
+tests/unit/test-argument-validation.js       # Input validation testing
+tests/unit/test-mcp-protocol.js             # MCP protocol testing
+tests/unit/test-registry.js                 # Tool registry testing
+tests/unit/test-real-mcp-call.js            # MCP call validation
+tests/unit/test-consolidation-summary.js    # Data consolidation testing
+tests/unit/test-dependency-injection.js     # Dependency injection testing
+```
+
+### Development Tools
+
+**Debugging & Analysis Tools** (`tools/` directory):
+- **Debug Tools** (`tools/debug/`): Protocol flow debugging, client troubleshooting
+- **Inspect Tools** (`tools/inspect/`): Data structure analysis, API response inspection
+
+**Development Tool Categories**:
+```bash
+# Debug Tools (tools/debug/)
+tools/debug/debug-mcp-flow.js                 # MCP protocol flow debugging
+tools/debug/debug-client-sca.js               # SCA client troubleshooting
+tools/debug/debug-search-application-profiles.js # Search debugging
+tools/debug/diagnose-sca-vs-findings.js       # Finding type analysis
+
+# Inspect Tools (tools/inspect/)
+tools/inspect/inspect-findings-structure.js     # Data structure analysis
+tools/inspect/inspect-static-for-sca.js         # Static scan SCA inspection
+```
+
+### Directory Organization Guidelines
+
+**examples/**: Simple, well-commented examples for documentation and learning
+- Focus on demonstrating basic tool capabilities for new users
+- Minimal error handling, optimized for readability
+- Used in documentation and quick-start guides
+
+**tests/integration/**: Integration tests with live API calls
+- **mcp/**: Test via MCP protocol with full end-to-end workflows
+- **api/**: Direct API calls for testing specific functionality
+- Comprehensive error handling and edge case coverage
+- Suitable for CI/CD pipelines with proper credentials
+
+**tests/unit/**: Unit tests with mocked dependencies
+- Test specific components or validation logic in isolation
+- Fast execution without external dependencies
+- Focus on individual functions, schemas, and protocol compliance
+
+**tools/debug/**: Development debugging utilities
+- Help developers troubleshoot issues and understand system behavior
+- Not automated tests, but diagnostic utilities for development
+- Protocol flow analysis, client debugging, and issue diagnosis
+
+**tools/inspect/**: Data analysis and inspection tools
+- Analyze API responses, data structures, and system state
+- Understand data formats and response patterns
+- Development utilities for exploring API behavior
+
+### Testing MCP Tools
+
+The MCP server tools can be tested at multiple levels:
+
+```bash
+# Unit Testing (planned)
+npm run test:unit              # Mock-based unit tests
+
+# Integration Testing (current examples)
+npm run example:list-apps      # Application listing integration test
+npm run example:find-sca-apps  # SCA discovery integration test
+npm run example:sca-results    # SCA analysis integration test
+npm run test:connection        # Basic API connectivity test
+npm run test:search           # Search functionality integration test
+
+# End-to-end Testing
+npm run test:e2e              # Full workflow testing (planned)
+```
+
+### Testing Data Requirements
+
+**Integration Tests Require**:
+- Valid Veracode API credentials (`VERACODE_API_ID`, `VERACODE_API_KEY`)
+- Access to applications with various scan types
+- Applications with SCA findings for comprehensive testing
+- Different application states (scanned, unscanned, policy violations)
+
+**Recommended Test Applications**:
+- **VeraDemo.NET**: Well-known test application with predictable findings
+- **Applications with SCA**: For testing software composition analysis features
+- **Multi-scan Applications**: Applications with both static and dynamic scans
+- **Policy-enabled Applications**: For testing compliance and policy features
 
 ## Deployment Considerations
 
@@ -746,15 +904,30 @@ npm run dev          # Watch mode for development
 
 ### Testing MCP Tools
 
-The MCP server tools can be tested using the example scripts provided:
+The MCP server provides multiple testing approaches:
 
+**Integration Tests** (Real API Calls):
 ```bash
-# Pre-configured example scripts
-npm run example:list-apps          # List all applications
-npm run example:find-sca-apps      # Find SCA-enabled applications
-npm run example:sca-results        # Get SCA results (with app name prompt)
+# Core functionality integration tests
+npm run example:list-apps          # List all applications (integration test)
+npm run example:find-sca-apps      # Find SCA-enabled applications (integration test)
+npm run example:sca-results        # Get SCA results with app name prompt (integration test)
+
+# Validation and connectivity tests
 npm run test:connection           # Test Veracode API connection
 npm run test:search              # Test search functionality
+
+# Advanced integration tests
+node examples/analyze-static-sca-findings.js    # Multi-finding analysis
+node examples/sandbox-functionality-mcp.js      # Sandbox workflows
+node examples/policy-management-mcp.js          # Policy compliance testing
+```
+
+**Unit Tests** (Planned):
+```bash
+npm run test:unit                 # Mock-based unit tests (future)
+npm run test:schemas             # Schema validation tests (future)
+npm run test:auth                # Authentication logic tests (future)
 ```
 
 ## Extension Points
