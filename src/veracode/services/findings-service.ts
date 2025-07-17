@@ -121,84 +121,6 @@ export class FindingsService extends BaseVeracodeClient {
     }
   }
 
-  // Get findings for an application by its name
-  // First searches for the application, then retrieves findings
-  async getFindingsByName(name: string, options?: FindingsQueryOptions): Promise<VeracodeFinding[]> {
-    const startTime = Date.now();
-    logger.debug('Getting findings by application name', 'API', {
-      name,
-      options: {
-        scanType: options?.scanType,
-        severityGte: options?.severityGte,
-        cvssGte: options?.cvssGte,
-        size: options?.size,
-        newFindingsOnly: options?.newFindingsOnly,
-        policyViolation: options?.policyViolation
-      }
-    });
-
-    try {
-      // First search for applications with this name
-      logger.debug('Searching for application', 'API', { name });
-      const searchResults = await this.applicationService.searchApplications(name);
-
-      if (searchResults.length === 0) {
-        logger.warn('No application found with name', 'API', { name });
-        throw new Error(`No application found with name: ${name}`);
-      }
-
-      logger.debug('Application search results', 'API', {
-        name,
-        resultsCount: searchResults.length,
-        applications: searchResults.map(app => ({ name: app.profile.name, guid: app.guid }))
-      });
-
-      // If multiple results, look for exact match first
-      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === name.toLowerCase());
-
-      // If no exact match, use the first result but warn about it
-      if (!targetApp) {
-        targetApp = searchResults[0];
-        logger.warn(`No exact match found for "${name}". Using first result: "${targetApp.profile.name}"`, 'API');
-      } else {
-        logger.debug('Exact application match found', 'API', {
-          searchName: name,
-          foundName: targetApp.profile.name,
-          guid: targetApp.guid
-        });
-      }
-
-      // Get findings using the GUID
-      logger.debug('Fetching findings for application', 'API', {
-        appName: targetApp.profile.name,
-        appGuid: targetApp.guid,
-        options
-      });
-
-      const result = await this.getFindingsPaginated(targetApp.guid, options);
-      const findings = result.findings;
-      const executionTime = Date.now() - startTime;
-
-      logger.debug('Findings retrieved successfully', 'API', {
-        appName: targetApp.profile.name,
-        findingsCount: findings.length,
-        scanType: options?.scanType,
-        executionTime
-      });
-
-      return findings;
-    } catch (error) {
-      const executionTime = Date.now() - startTime;
-      logger.error('Failed to fetch findings by name', 'API', {
-        name,
-        options,
-        executionTime,
-        error
-      });
-      throw new Error(`Failed to fetch findings by name: ${this.getErrorMessage(error)}`);
-    }
-  }
-
   // Get findings for an application across multiple pages
   // Automatically handles pagination to retrieve all findings
   async getAllFindings(
@@ -346,19 +268,6 @@ export class FindingsService extends BaseVeracodeClient {
     }
   }
 
-  // Get policy compliance for an application by name
-  async getPolicyComplianceByName(name: string): Promise<VeracodePolicyCompliance> {
-    try {
-      // First get the application to get its ID
-      const application = await this.applicationService.getApplicationDetailsByName(name);
-
-      // Then get policy compliance using the ID
-      return await this.getPolicyCompliance(application.guid);
-    } catch (error) {
-      throw new Error(`Failed to fetch policy compliance by name: ${this.getErrorMessage(error)}`);
-    }
-  }
-
   // Get detailed static flaw information
   async getStaticFlawInfo(appId: string, issueId: string, sandbox_id?: string): Promise<VeracodeStaticFlawInfo> {
     try {
@@ -388,16 +297,4 @@ Original error: ${errorMessage}`);
     }
   }
 
-  // Get detailed static flaw information by application name
-  async getStaticFlawInfoByName(name: string, issueId: string, sandbox_id?: string): Promise<VeracodeStaticFlawInfo> {
-    try {
-      // First get the application to get its ID
-      const application = await this.applicationService.getApplicationDetailsByName(name);
-
-      // Then get static flaw info using the ID
-      return await this.getStaticFlawInfo(application.guid, issueId, sandbox_id);
-    } catch (error) {
-      throw new Error(`Failed to fetch static flaw info by name: ${this.getErrorMessage(error)}`);
-    }
-  }
 }

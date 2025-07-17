@@ -2,27 +2,16 @@
 
 import { BaseVeracodeClient } from '../client/base-client.js';
 import { VeracodeSandbox, SandboxQueryParams } from '../types/sandbox.js';
-import { VeracodeApplication } from '../types/application.js';
-import { ApplicationService } from './application-service.js';
 import { logger } from '../../utils/logger.js';
 
 export class SandboxService extends BaseVeracodeClient {
-  private applicationService: ApplicationService;
 
   constructor(
     apiId?: string, 
     apiKey?: string, 
-    options?: any,
-    applicationService?: ApplicationService
+    options?: any
   ) {
     super(apiId, apiKey, options);
-    
-    // Require dependency to be explicitly injected
-    if (!applicationService) {
-      throw new Error('ApplicationService dependency is required for SandboxService');
-    }
-    
-    this.applicationService = applicationService;
   }
 
   // Get sandboxes for a specific application by application ID
@@ -62,37 +51,4 @@ export class SandboxService extends BaseVeracodeClient {
     }
   }
 
-  // Get sandboxes for a specific application by application name
-  async getSandboxesByName(applicationName: string, params?: SandboxQueryParams): Promise<{
-        application: VeracodeApplication;
-        sandboxes: VeracodeSandbox[];
-    }> {
-    try {
-      // First search for applications with this name
-      const searchResults = await this.applicationService.searchApplications(applicationName);
-
-      if (searchResults.length === 0) {
-        throw new Error(`No application found with name: ${applicationName}`);
-      }
-
-      // If multiple results, look for exact match first
-      let targetApp = searchResults.find(app => app.profile.name.toLowerCase() === applicationName.toLowerCase());
-
-      // If no exact match, use the first result
-      if (!targetApp) {
-        targetApp = searchResults[0];
-        logger.debug(`No exact match found for "${applicationName}". Using first result: "${targetApp.profile.name}"`);
-      }
-
-      // Get sandboxes for the selected application
-      const sandboxes = await this.getSandboxes(targetApp.guid, params);
-
-      return {
-        application: targetApp,
-        sandboxes
-      };
-    } catch (error) {
-      throw new Error(`Failed to fetch sandboxes for application "${applicationName}": ${this.getErrorMessage(error)}`);
-    }
-  }
 }

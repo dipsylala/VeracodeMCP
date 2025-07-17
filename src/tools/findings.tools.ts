@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
+import { validateAndResolveApplication } from '../utils/application-resolver.js';
 import { isGuid } from '../utils/validation.js';
 
 // Schema for the unified get-findings tool
@@ -136,51 +137,36 @@ Examples:
 - Sandbox with filters: {"application": "MyApp", "sandbox": "dev-env", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
       schema: GetFindingsSchema,
 
-      handler: async (params: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           const client = context.veracodeClient;
-          const mode = determineOperationMode(params);
-          const includeDetails = params.include_details !== false;
+          const mode = determineOperationMode(args);
+          const includeDetails = args.include_details !== false;
 
           // Step 1: Resolve application (GUID or name)
-          let applicationGuid = params.application;
-          if (!isGuid(params.application)) {
-            // It's a name, need to resolve to GUID
-            const apps = await client.applications.getApplications();
-            const matchingApp = apps.find((app: any) =>
-              app.profile?.name?.toLowerCase() === params.application.toLowerCase()
-            );
-
-            if (!matchingApp) {
-              return {
-                success: false,
-                error: `Application '${params.application}' not found`,
-                data: {
-                  available_applications: apps.slice(0, 5).map((app: any) => app.profile?.name).filter(Boolean)
-                }
-              };
-            }
-
-            applicationGuid = matchingApp.guid;
-          }
+          const appResolution = await validateAndResolveApplication(
+            args.application, 
+            client
+          );
+          const applicationGuid = appResolution.guid;
 
           // Step 2: Resolve sandbox if specified (GUID or name)
           let sandboxGuid: string | undefined;
-          if (params.sandbox) {
-            if (isGuid(params.sandbox)) {
+          if (args.sandbox) {
+            if (isGuid(args.sandbox)) {
               // It's already a GUID
-              sandboxGuid = params.sandbox;
+              sandboxGuid = args.sandbox;
             } else {
               // It's a name, need to resolve to GUID
               const sandboxes = await client.sandboxes.getSandboxes(applicationGuid);
               const matchingSandbox = sandboxes.find((sandbox: any) =>
-                sandbox.name?.toLowerCase() === params.sandbox!.toLowerCase()
+                sandbox.name?.toLowerCase() === args.sandbox!.toLowerCase()
               );
 
               if (!matchingSandbox) {
                 return {
                   success: false,
-                  error: `Sandbox '${params.sandbox}' not found in application '${params.application}'`,
+                  error: `Sandbox '${args.sandbox}' not found in application '${args.application}'`,
                   data: {
                     available_sandboxes: sandboxes.slice(0, 5).map((sb: any) => sb.name).filter(Boolean)
                   }
@@ -197,12 +183,12 @@ Examples:
             return {
               success: true,
               data: {
-                message: `Application '${params.application}' has no scans available yet.`,
+                message: `Application '${args.application}' has no scans available yet.`,
                 application: {
                   name: appDetails.profile?.name,
                   guid: applicationGuid
                 },
-                sandbox: sandboxGuid ? { guid: sandboxGuid, name: params.sandbox } : null,
+                sandbox: sandboxGuid ? { guid: sandboxGuid, name: args.sandbox } : null,
                 suggestions: [
                   'Upload and scan code using Veracode Static Analysis',
                   'Configure Dynamic Analysis for runtime testing',
@@ -213,7 +199,7 @@ Examples:
           }
 
           // Step 4: Get findings based on mode
-          const filters = buildFilterParams(params);
+          const filters = buildFilterParams(args);
           // Add sandbox context if specified
           if (sandboxGuid) {
             filters.sandbox_id = sandboxGuid;
@@ -241,7 +227,7 @@ Examples:
                   guid: applicationGuid
                 },
                 sandbox: sandboxGuid ? {
-                  name: params.sandbox,
+                  name: args.sandbox,
                   guid: sandboxGuid
                 } : null,
                 scan_status: {
@@ -272,8 +258,8 @@ Examples:
 
           if (mode === 'filtered') {
             // Use filtering and/or pagination
-            const pageSize = params.size || 300; // Default to 300 if not specified
-            const pageNumber = params.page || 0;
+            const pageSize = args.size || 300; // Default to 300 if not specified
+            const pageNumber = args.page || 0;
             const findingsResponse = await client.findings.getFindingsPaginated(applicationGuid, {
               ...filters,
               size: pageSize,
@@ -293,7 +279,7 @@ Examples:
                   guid: applicationGuid
                 },
                 sandbox: sandboxGuid ? {
-                  name: params.sandbox,
+                  name: args.sandbox,
                   guid: sandboxGuid
                 } : null,
                 filters_applied: filters,

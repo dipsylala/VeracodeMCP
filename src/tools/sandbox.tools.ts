@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
-import { isGuid } from '../utils/validation.js';
+import { validateAndResolveApplication } from '../utils/application-resolver.js';
 
 // Create sandbox tools for MCP
 export function createSandboxTools(): ToolHandler[] {
@@ -15,80 +15,54 @@ export function createSandboxTools(): ToolHandler[] {
       }),
       handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          let result;
-          const profileId = args.app_profile || args.application;
+          // Validate and resolve application identifier to GUID
+          const appResolution = await validateAndResolveApplication(
+            args.app_profile, 
+            context.veracodeClient
+          );
 
-          if (!profileId) {
-            return {
-              success: false,
-              error: 'Missing required argument: app_profile (or legacy application parameter)'
-            };
-          }
+          // Get sandboxes using the resolved GUID
+          const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(appResolution.guid, {
+            page: args.page,
+            size: args.size
+          });
 
-          if (isGuid(profileId)) {
-            // Handle as application ID
-            const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(profileId, {
-              page: args.page,
-              size: args.size
-            });
+          const result = {
+            application_id: appResolution.guid,
+            application_name: appResolution.details.profile?.name || null,
+            sandbox_count: sandboxes.length,
+            sandboxes: sandboxes.map((sandbox: any) => ({
+              name: sandbox.name,
+              guid: sandbox.guid,
+              id: sandbox.id,
+              application_guid: sandbox.application_guid,
+              organization_id: sandbox.organization_id,
+              owner_username: sandbox.owner_username,
+              auto_recreate: sandbox.auto_recreate,
+              created: sandbox.created,
+              modified: sandbox.modified,
+              custom_fields: sandbox.custom_fields || []
+            }))
+          };
 
-            result = {
-              application_id: profileId,
-              application_name: null, // Not available when using ID directly
-              sandbox_count: sandboxes.length,
-              sandboxes: sandboxes.map((sandbox: any) => ({
-                name: sandbox.name,
-                guid: sandbox.guid,
-                id: sandbox.id,
-                application_guid: sandbox.application_guid,
-                organization_id: sandbox.organization_id,
-                owner_username: sandbox.owner_username,
-                auto_recreate: sandbox.auto_recreate,
-                created: sandbox.created,
-                modified: sandbox.modified,
-                custom_fields: sandbox.custom_fields || []
-              }))
-            };
-          } else {
-            // Handle as application name
-            const sandboxResult = await context.veracodeClient.sandboxes.getSandboxesByName(profileId, {
-              page: args.page,
-              size: args.size
-            });
-
-            result = {
-              application_id: sandboxResult.application.guid,
-              application_name: sandboxResult.application.profile.name,
-              application_details: {
-                business_criticality: sandboxResult.application.profile.business_criticality,
-                description: sandboxResult.application.profile.description,
-                app_profile_url: sandboxResult.application.app_profile_url,
-                results_url: sandboxResult.application.results_url,
-                teams: sandboxResult.application.profile.teams?.map((team: any) => ({
-                  name: team.team_name,
-                  guid: team.guid,
-                  team_id: team.team_id
-                })) || [],
-                policies: sandboxResult.application.profile.policies?.map((policy: any) => ({
-                  name: policy.name,
-                  guid: policy.guid,
-                  is_default: policy.is_default,
-                  compliance_status: policy.policy_compliance_status
-                })) || []
-              },
-              sandbox_count: sandboxResult.sandboxes.length,
-              sandboxes: sandboxResult.sandboxes.map((sandbox: any) => ({
-                name: sandbox.name,
-                guid: sandbox.guid,
-                id: sandbox.id,
-                application_guid: sandbox.application_guid,
-                organization_id: sandbox.organization_id,
-                owner_username: sandbox.owner_username,
-                auto_recreate: sandbox.auto_recreate,
-                created: sandbox.created,
-                modified: sandbox.modified,
-                custom_fields: sandbox.custom_fields || []
-              }))
+          // Add application details if resolved from name
+          if (appResolution.resolvedFromName && appResolution.details.profile) {
+            (result as any).application_details = {
+              business_criticality: appResolution.details.profile.business_criticality,
+              description: appResolution.details.profile.description,
+              app_profile_url: appResolution.details.app_profile_url,
+              results_url: appResolution.details.results_url,
+              teams: appResolution.details.profile.teams?.map((team: any) => ({
+                name: team.team_name,
+                guid: team.guid,
+                team_id: team.team_id
+              })) || [],
+              policies: appResolution.details.profile.policies?.map((policy: any) => ({
+                name: policy.name,
+                guid: policy.guid,
+                is_default: policy.is_default,
+                compliance_status: policy.policy_compliance_status
+              })) || []
             };
           }
 
@@ -108,60 +82,40 @@ export function createSandboxTools(): ToolHandler[] {
     {
       name: 'get-sandbox-summary',
       description: 'Get a concise overview of sandbox environments for an application, including counts, ownership, and activity status. Perfect for quick assessment of development environment security testing coverage. Use this to understand how many sandbox environments exist, who owns them, and their current status without detailed information.',
-      schema: z.object({}),
+      schema: z.object({
+        app_profile: z.string().describe('Application profile ID (GUID) or exact application name to get sandbox summary for')
+      }),
       handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          let result;
-          const profileId = args.app_profile || args.application;
+          const appResolution = await validateAndResolveApplication(
+            args.app_profile, 
+            context.veracodeClient
+          );
 
-          if (!profileId) {
-            return {
-              success: false,
-              error: 'Missing required argument: app_profile (or legacy application parameter)'
-            };
-          }
+          // Get sandboxes using the resolved GUID
+          const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(appResolution.guid);
 
-          if (isGuid(profileId)) {
-            // Handle as application ID
-            const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(profileId);
+          const result = {
+            application_id: appResolution.guid,
+            application_name: appResolution.details.profile?.name || null,
+            sandbox_summary: {
+              total_count: sandboxes.length,
+              sandboxes: sandboxes.map((sandbox: any) => ({
+                name: sandbox.name,
+                guid: sandbox.guid,
+                owner: sandbox.owner_username,
+                auto_recreate: sandbox.auto_recreate,
+                created: sandbox.created,
+                modified: sandbox.modified
+              }))
+            }
+          };
 
-            result = {
-              application_id: profileId,
-              application_name: null, // Not available when using ID directly
-              sandbox_summary: {
-                total_count: sandboxes.length,
-                sandboxes: sandboxes.map((sandbox: any) => ({
-                  name: sandbox.name,
-                  guid: sandbox.guid,
-                  owner: sandbox.owner_username,
-                  auto_recreate: sandbox.auto_recreate,
-                  created: sandbox.created,
-                  modified: sandbox.modified
-                }))
-              }
-            };
-          } else {
-            // Handle as application name
-            const sandboxResult = await context.veracodeClient.sandboxes.getSandboxesByName(profileId);
-
-            result = {
-              application_id: sandboxResult.application.guid,
-              application_name: sandboxResult.application.profile.name,
-              application_details: {
-                business_criticality: sandboxResult.application.profile.business_criticality,
-                description: sandboxResult.application.profile.description
-              },
-              sandbox_summary: {
-                total_count: sandboxResult.sandboxes.length,
-                sandboxes: sandboxResult.sandboxes.map((sandbox: any) => ({
-                  name: sandbox.name,
-                  guid: sandbox.guid,
-                  owner: sandbox.owner_username,
-                  auto_recreate: sandbox.auto_recreate,
-                  created: sandbox.created,
-                  modified: sandbox.modified
-                }))
-              }
+          // Add application details if resolved from name
+          if (appResolution.resolvedFromName && appResolution.details.profile) {
+            (result as any).application_details = {
+              business_criticality: appResolution.details.profile.business_criticality,
+              description: appResolution.details.profile.description
             };
           }
 

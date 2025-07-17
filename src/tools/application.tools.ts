@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
-import { isGuid } from '../utils/validation.js';
+import { validateAndResolveApplication } from '../utils/application-resolver.js';
 
 // Create application tools for MCP
 export function createApplicationTools(): ToolHandler[] {
@@ -183,15 +183,12 @@ export function createApplicationTools(): ToolHandler[] {
       }),
       handler: async (args: any, context: ToolContext): Promise<ToolResponse> => {
         try {
-          let result;
+          const appResolution = await validateAndResolveApplication(
+            args.app_profile, 
+            context.veracodeClient
+          );
 
-          if (isGuid(args.app_profile)) {
-            // Handle as application ID
-            result = await context.veracodeClient.applications.getApplicationDetails(args.app_profile);
-          } else {
-            // Handle as application name
-            result = await context.veracodeClient.applications.getApplicationDetailsByName(args.app_profile);
-          }
+          const result = await context.veracodeClient.applications.getApplicationDetails(appResolution.guid);
 
           return {
             success: true,

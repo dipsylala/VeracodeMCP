@@ -24,8 +24,8 @@ export class VeracodeClient extends BaseVeracodeClient {
     // Initialize services with proper dependency injection to share instances
     this.applications = new ApplicationService(apiId, apiKey, options);
     this.policies = new PolicyService(apiId, apiKey, options);
-    this.sandboxes = new SandboxService(apiId, apiKey, options, this.applications);
-    this.scans = new ScanService(apiId, apiKey, options, this.applications, this.sandboxes);
+    this.sandboxes = new SandboxService(apiId, apiKey, options);
+    this.scans = new ScanService(apiId, apiKey, options, this.sandboxes);
     this.findings = new FindingsService(apiId, apiKey, options, this.applications, this.scans);
   }
 

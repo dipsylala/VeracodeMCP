@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { logger } from '../utils/logger.js';
-import { isGuid } from '../utils/validation.js';
+import { validateAndResolveApplication } from '../utils/application-resolver.js';
 
 // Schema for SCA results tool
 const GetSCAResultsSchema = z.object({
-  application: z.string().describe('Application GUID or name to get SCA results for'),
+  app_profile: z.string().describe('Application GUID or name to get SCA results for'),
   severity_gte: z.number().min(1).max(5).optional().describe('Minimum severity level (1=Very Low, 2=Low, 3=Medium, 4=High, 5=Very High). Example: 4 for High and Very High findings only'),
   cvss_gte: z.number().min(0).max(10).optional().describe('Minimum CVSS score (0-10). Example: 7.0 for high severity vulnerabilities'),
   only_policy_violations: z.boolean().optional().describe('Show only findings that violate policy. Default is false'),
@@ -18,7 +18,7 @@ type GetSCAResultsParams = z.infer<typeof GetSCAResultsSchema>;
 
 // Schema for SCA summary tool
 const GetSCASummarySchema = z.object({
-  application: z.string().describe('Application GUID or name to get SCA summary for')
+  app_profile: z.string().describe('Application GUID or name to get SCA summary for')
 });
 
 type GetSCASummaryParams = z.infer<typeof GetSCASummarySchema>;
@@ -46,46 +46,16 @@ export function createSCATools(): ToolHandler[] {
 
         try {
           // Step 1: Resolve application (GUID or name)
-          let applicationGuid = args.application;
-          let targetApp: any;
+          const appResolution = await validateAndResolveApplication(
+            args.app_profile, 
+            context.veracodeClient
+          );
 
-          if (!isGuid(args.application)) {
-            // It's a name, need to resolve to GUID
-            logger.debug('Searching for application by name', 'SCA_TOOL', { name: args.application });
-            const searchResults = await context.veracodeClient.applications.searchApplications(args.application);
-            
-            if (searchResults.length === 0) {
-              return {
-                success: false,
-                error: `No application found with name: ${args.application}`
-              };
-            }
-
-            // Look for exact match first, otherwise use first result
-            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
-            if (!targetApp) {
-              targetApp = searchResults[0];
-              logger.debug('Using first search result as no exact match found', 'SCA_TOOL', {
-                searchName: args.application,
-                foundName: targetApp.profile.name
-              });
-            }
-
-            applicationGuid = targetApp.guid;
-          } else {
-            // It's already a GUID, get the application details
-            try {
-              targetApp = await context.veracodeClient.applications.getApplicationDetails(applicationGuid);
-            } catch (error) {
-              return {
-                success: false,
-                error: `Application with GUID ${args.application} not found or not accessible`
-              };
-            }
-          }
+          const applicationGuid = appResolution.guid;
+          const targetApp = appResolution.details;
 
           // Get SCA findings directly by scan type
-          logger.debug('Calling getFindingsByName with SCA scan type', 'SCA_TOOL', {
+          logger.debug('Calling getFindingsPaginated with SCA scan type', 'SCA_TOOL', {
             applicationName: targetApp.profile.name,
             applicationGuid: applicationGuid,
             scanType: 'SCA',
@@ -94,7 +64,7 @@ export function createSCATools(): ToolHandler[] {
             size: args.max_results ? Math.min(args.max_results, 500) : 500
           });
 
-          const findings = await context.veracodeClient.findings.getFindingsByName(targetApp.profile.name, {
+          const result = await context.veracodeClient.findings.getFindingsPaginated(applicationGuid, {
             scanType: 'SCA',
             severityGte: args.severity_gte,
             cvssGte: args.cvss_gte,
@@ -102,6 +72,8 @@ export function createSCATools(): ToolHandler[] {
             newFindingsOnly: args.only_new_findings,
             size: args.max_results ? Math.min(args.max_results, 500) : 500
           });
+
+          const findings = result.findings;
 
           logger.debug('SCA findings retrieved', 'SCA_TOOL', {
             applicationName: targetApp.profile.name,
@@ -293,39 +265,13 @@ export function createSCATools(): ToolHandler[] {
       handler: async(args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
-          let applicationGuid = args.application;
-          let targetApp: any;
+          const appResolution = await validateAndResolveApplication(
+            args.app_profile, 
+            context.veracodeClient
+          );
 
-          if (!isGuid(args.application)) {
-            // It's a name, need to resolve to GUID
-            const searchResults = await context.veracodeClient.applications.searchApplications(args.application);
-
-            if (searchResults.length === 0) {
-              return {
-                success: false,
-                error: `No application found with name: ${args.application}`
-              };
-            }
-
-            // Find exact match or use first result
-            targetApp = searchResults.find((app: any) => app.profile.name.toLowerCase() === args.application.toLowerCase());
-            if (!targetApp) {
-              targetApp = searchResults[0];
-              console.warn(`No exact match found for "${args.application}". Using first result: "${targetApp.profile.name}"`);
-            }
-
-            applicationGuid = targetApp.guid;
-          } else {
-            // It's already a GUID, get the application details
-            try {
-              targetApp = await context.veracodeClient.applications.getApplicationDetails(applicationGuid);
-            } catch (error) {
-              return {
-                success: false,
-                error: `Application with GUID ${args.application} not found or not accessible`
-              };
-            }
-          }
+          const applicationGuid = appResolution.guid;
+          const targetApp = appResolution.details;
 
           // Get SCA findings for summary (limited to 1000 for performance)
           const summaryResult = await context.veracodeClient.findings.getAllFindings(applicationGuid, {

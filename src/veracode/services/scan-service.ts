@@ -1,70 +1,40 @@
 // Scan management service for Veracode API
-// Updated
+// Simplified - expects application GUIDs, tools handle resolution and add names
 
 import { BaseVeracodeClient } from '../client/base-client.js';
 import { VeracodeScan } from '../types/application.js';
 import { VeracodeSandbox } from '../types/sandbox.js';
-import { ApplicationService } from './application-service.js';
 import { SandboxService } from './sandbox-service.js';
-import { isGuid } from '../../utils/validation.js';
 import { logger } from '../../utils/logger.js';
 
 export class ScanService extends BaseVeracodeClient {
-  private applicationService: ApplicationService;
   private sandboxService: SandboxService;
 
   constructor(
     apiId?: string, 
     apiKey?: string, 
     options?: any,
-    applicationService?: ApplicationService,
     sandboxService?: SandboxService
   ) {
     super(apiId, apiKey, options);
     
-    // Require dependencies to be explicitly injected
-    if (!applicationService) {
-      throw new Error('ApplicationService dependency is required for ScanService');
-    }
     if (!sandboxService) {
       throw new Error('SandboxService dependency is required for ScanService');
     }
     
-    this.applicationService = applicationService;
     this.sandboxService = sandboxService;
   }
 
-  // Get scans for an application (auto-detects GUID vs name)
-  async getScans(identifier: string, scanType?: string, sandboxId?: string): Promise<VeracodeScan[]> {
+  // Get scans for an application by GUID
+  async getScans(applicationGuid: string, scanType?: string, sandboxId?: string): Promise<VeracodeScan[]> {
     try {
-      let appId: string;
+      logger.debug('Getting scans for application', 'API', {
+        applicationGuid,
+        scanType,
+        sandboxId
+      });
 
-      if (isGuid(identifier)) {
-        // Use the GUID directly
-        appId = identifier;
-        logger.debug('Getting scans by application GUID', 'API', {
-          appId: identifier,
-          scanType,
-          sandboxId
-        });
-      } else {
-        // Look up the application by name first
-        logger.debug('Getting scans by application name', 'API', {
-          name: identifier,
-          scanType,
-          sandboxId
-        });
-        const application = await this.applicationService.getApplicationDetailsByName(identifier);
-        appId = application.guid;
-        logger.debug('Application found', 'API', {
-          name: identifier,
-          appId,
-          appName: application.profile.name
-        });
-      }
-
-      // Get the actual scan data
-      let url = `appsec/v1/applications/${appId}/scans`;
+      let url = `appsec/v1/applications/${applicationGuid}/scans`;
       const params = new URLSearchParams();
 
       if (scanType) {
@@ -79,48 +49,23 @@ export class ScanService extends BaseVeracodeClient {
         url += `?${params.toString()}`;
       }
 
-      // Log the raw HTTP request details
       logger.debug('Raw HTTP Request for scans', 'API', {
         method: 'GET',
         url: url,
-        fullUrl: `${this.apiClient.defaults?.baseURL}/${url}`,
-        headers: {
-          'Authorization': sandboxId ? `VERACODE-HMAC-SHA-256 (context: ${sandboxId})` : 'VERACODE-HMAC-SHA-256',
-          'Content-Type': 'application/json'
-        },
         params: Object.fromEntries(params),
         context: sandboxId ? 'sandbox' : 'policy',
-        appId,
+        applicationGuid,
         scanType: scanType || 'all'
       });
 
       const response = await this.apiClient.get(url);
-
-      // Log the raw HTTP response details
-      logger.debug('Raw HTTP Response for scans', 'API', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        dataStructure: {
-          hasEmbedded: !!response.data._embedded,
-          hasScans: !!response.data._embedded?.scans,
-          scanCount: response.data._embedded?.scans?.length || 0,
-          topLevelKeys: Object.keys(response.data || {}),
-          embeddedKeys: response.data._embedded ? Object.keys(response.data._embedded) : []
-        },
-        rawResponseSize: JSON.stringify(response.data).length,
-        url: url
-      });
       const scans = response.data._embedded?.scans || [];
 
       logger.debug('Scans retrieved', 'API', {
-        identifier,
-        identifierType: isGuid(identifier) ? 'GUID' : 'name',
-        appId,
+        applicationGuid,
         scanType: scanType || 'all',
         sandboxId: sandboxId || 'policy (main branch)',
-        scanCount: scans.length,
-        scans: scans.map((scan: any) => ({ scan_id: scan.scan_id, scan_type: scan.scan_type, status: scan.status }))
+        scanCount: scans.length
       });
 
       return scans;
@@ -129,21 +74,11 @@ export class ScanService extends BaseVeracodeClient {
     }
   }
 
-  // Check if an application has any scans (auto-detects GUID vs name)
-  async hasScans(identifier: string, scanType?: string, sandboxId?: string): Promise<{ hasScans: boolean; scanCount: number; scanTypes: string[] }> {
+  // Check if an application has any scans
+  async hasScans(applicationGuid: string, scanType?: string, sandboxId?: string): Promise<{ hasScans: boolean; scanCount: number; scanTypes: string[] }> {
     try {
-      const scans = await this.getScans(identifier, scanType, sandboxId);
+      const scans = await this.getScans(applicationGuid, scanType, sandboxId);
       const scanTypes = Array.from(new Set(scans.map((scan: any) => scan.scan_type))) as string[];
-
-      logger.debug('Scan existence check completed', 'API', {
-        identifier,
-        identifierType: isGuid(identifier) ? 'GUID' : 'name',
-        requestedScanType: scanType,
-        sandboxId: sandboxId || 'policy (main branch)',
-        hasScans: scans.length > 0,
-        scanCount: scans.length,
-        availableScanTypes: scanTypes
-      });
 
       return {
         hasScans: scans.length > 0,
@@ -151,14 +86,13 @@ export class ScanService extends BaseVeracodeClient {
         scanTypes
       };
     } catch (error) {
-      logger.warn('Failed to check for scans', 'API', { identifier, scanType, sandboxId, error });
+      logger.warn('Failed to check for scans', 'API', { applicationGuid, scanType, sandboxId, error });
       throw new Error(`Failed to check for scans: ${this.getErrorMessage(error)}`);
     }
   }
 
-  // Get all sandbox scans for an application (auto-detects GUID vs name)
-  async getSandboxScans(identifier: string, scanType?: string): Promise<{
-        application: { name: string; guid: string };
+  // Get all sandbox scans for an application
+  async getSandboxScans(applicationGuid: string, scanType?: string): Promise<{
         sandboxes: Array<{
             sandbox: VeracodeSandbox;
             scans: VeracodeScan[];
@@ -168,54 +102,26 @@ export class ScanService extends BaseVeracodeClient {
         totalSandboxScans: number;
     }> {
     try {
-      let appId: string;
-      let appName: string;
+      logger.debug('Getting sandbox scans for application', 'API', {
+        applicationGuid,
+        scanType
+      });
 
-      if (isGuid(identifier)) {
-        // Get application details to get the name
-        const application = await this.applicationService.getApplicationDetails(identifier);
-        appId = identifier;
-        appName = application.profile.name;
-        logger.debug('Getting sandbox scans by application GUID', 'API', {
-          appId: identifier,
-          appName,
-          scanType
-        });
-      } else {
-        // Look up the application by name first
-        logger.debug('Getting sandbox scans by application name', 'API', {
-          name: identifier,
-          scanType
-        });
-        const application = await this.applicationService.getApplicationDetailsByName(identifier);
-        appId = application.guid;
-        appName = application.profile.name;
-        logger.debug('Application found', 'API', {
-          name: identifier,
-          appId,
-          appName
-        });
-      }
-
-      // Get all sandboxes for the application
-      const sandboxes = await this.sandboxService.getSandboxes(appId);
+      const sandboxes = await this.sandboxService.getSandboxes(applicationGuid);
 
       if (sandboxes.length === 0) {
-        logger.debug('No sandboxes found for application', 'API', { appId, appName });
         return {
-          application: { name: appName, guid: appId },
           sandboxes: [],
           totalSandboxScans: 0
         };
       }
 
-      // Get scans for each sandbox
       const sandboxScansData = [];
       let totalSandboxScans = 0;
 
       for (const sandbox of sandboxes) {
         try {
-          const scans = await this.getScans(appId, scanType, sandbox.guid);
+          const scans = await this.getScans(applicationGuid, scanType, sandbox.guid);
           const scanTypes = Array.from(new Set(scans.map(scan => scan.scan_type))) as string[];
 
           sandboxScansData.push({
@@ -226,20 +132,12 @@ export class ScanService extends BaseVeracodeClient {
           });
 
           totalSandboxScans += scans.length;
-
-          logger.debug('Sandbox scans retrieved', 'API', {
-            sandboxName: sandbox.name,
-            sandboxId: sandbox.guid,
-            scanCount: scans.length,
-            scanTypes
-          });
         } catch (error) {
           logger.warn('Failed to get scans for sandbox', 'API', {
             sandboxName: sandbox.name,
             sandboxId: sandbox.guid,
             error: error instanceof Error ? error.message : String(error)
           });
-          // Continue with other sandboxes even if one fails
           sandboxScansData.push({
             sandbox,
             scans: [],
@@ -249,16 +147,7 @@ export class ScanService extends BaseVeracodeClient {
         }
       }
 
-      logger.debug('All sandbox scans retrieved', 'API', {
-        appName,
-        appId,
-        sandboxCount: sandboxes.length,
-        totalSandboxScans,
-        requestedScanType: scanType || 'all'
-      });
-
       return {
-        application: { name: appName, guid: appId },
         sandboxes: sandboxScansData,
         totalSandboxScans
       };
@@ -268,59 +157,32 @@ export class ScanService extends BaseVeracodeClient {
   }
 
   // Get scans for a specific sandbox by sandbox name
-  async getScansBySandboxName(identifier: string, sandboxName: string, scanType?: string): Promise<{
-        application: { name: string; guid: string };
+  async getScansBySandboxName(applicationGuid: string, sandboxName: string, scanType?: string): Promise<{
         sandbox: VeracodeSandbox;
         scans: VeracodeScan[];
         scanCount: number;
         scanTypes: string[];
     }> {
     try {
-      let appId: string;
-      let appName: string;
-
-      // Resolve application identifier
-      if (isGuid(identifier)) {
-        const application = await this.applicationService.getApplicationDetails(identifier);
-        appId = identifier;
-        appName = application.profile.name;
-      } else {
-        const application = await this.applicationService.getApplicationDetailsByName(identifier);
-        appId = application.guid;
-        appName = application.profile.name;
-      }
-
       logger.debug('Getting scans for specific sandbox', 'API', {
-        appName,
-        appId,
+        applicationGuid,
         sandboxName,
         scanType
       });
 
-      // Get sandboxes and find the one with matching name
-      const sandboxes = await this.sandboxService.getSandboxes(appId);
+      const sandboxes = await this.sandboxService.getSandboxes(applicationGuid);
       const targetSandbox = sandboxes.find(sb =>
         sb.name.toLowerCase() === sandboxName.toLowerCase()
       );
 
       if (!targetSandbox) {
-        throw new Error(`Sandbox "${sandboxName}" not found for application "${appName}"`);
+        throw new Error(`Sandbox "${sandboxName}" not found for application`);
       }
 
-      // Get scans for the specific sandbox
-      const scans = await this.getScans(appId, scanType, targetSandbox.guid);
+      const scans = await this.getScans(applicationGuid, scanType, targetSandbox.guid);
       const scanTypes = Array.from(new Set(scans.map(scan => scan.scan_type))) as string[];
 
-      logger.debug('Sandbox scans retrieved by name', 'API', {
-        appName,
-        sandboxName,
-        sandboxId: targetSandbox.guid,
-        scanCount: scans.length,
-        scanTypes
-      });
-
       return {
-        application: { name: appName, guid: appId },
         sandbox: targetSandbox,
         scans,
         scanCount: scans.length,
@@ -332,8 +194,7 @@ export class ScanService extends BaseVeracodeClient {
   }
 
   // Compare policy scans vs sandbox scans
-  async comparePolicyVsSandboxScans(identifier: string, scanType?: string): Promise<{
-        application: { name: string; guid: string };
+  async comparePolicyVsSandboxScans(applicationGuid: string, scanType?: string): Promise<{
         policyScans: {
             scans: VeracodeScan[];
             scanCount: number;
@@ -358,32 +219,17 @@ export class ScanService extends BaseVeracodeClient {
         };
     }> {
     try {
-      let appId: string;
-      let appName: string;
-
-      // Resolve application identifier
-      if (isGuid(identifier)) {
-        const application = await this.applicationService.getApplicationDetails(identifier);
-        appId = identifier;
-        appName = application.profile.name;
-      } else {
-        const application = await this.applicationService.getApplicationDetailsByName(identifier);
-        appId = application.guid;
-        appName = application.profile.name;
-      }
-
       logger.debug('Comparing policy vs sandbox scans', 'API', {
-        appName,
-        appId,
+        applicationGuid,
         scanType
       });
 
       // Get policy scans (no sandbox context)
-      const policyScans = await this.getScans(appId, scanType);
+      const policyScans = await this.getScans(applicationGuid, scanType);
       const policyScanTypes = Array.from(new Set(policyScans.map(scan => scan.scan_type))) as string[];
 
       // Get all sandbox scans
-      const sandboxScansResult = await this.getSandboxScans(appId, scanType);
+      const sandboxScansResult = await this.getSandboxScans(applicationGuid, scanType);
 
       // Calculate summary statistics
       const allSandboxTypes = new Set<string>();
@@ -398,8 +244,7 @@ export class ScanService extends BaseVeracodeClient {
       const sandboxOnlyTypes = Array.from(sandboxTypesSet).filter(type => !policyTypesSet.has(type));
       const commonTypes = policyScanTypes.filter(type => sandboxTypesSet.has(type));
 
-      const result = {
-        application: { name: appName, guid: appId },
+      return {
         policyScans: {
           scans: policyScans,
           scanCount: policyScans.length,
@@ -418,28 +263,13 @@ export class ScanService extends BaseVeracodeClient {
           commonTypes
         }
       };
-
-      logger.debug('Policy vs sandbox comparison completed', 'API', {
-        appName,
-        totalPolicyScans: result.summary.totalPolicyScans,
-        totalSandboxScans: result.summary.totalSandboxScans,
-        totalScans: result.summary.totalScans,
-        policyTypes: policyScanTypes,
-        sandboxTypes: Array.from(sandboxTypesSet),
-        commonTypes,
-        policyOnlyTypes,
-        sandboxOnlyTypes
-      });
-
-      return result;
     } catch (error) {
       throw new Error(`Failed to compare policy vs sandbox scans: ${this.getErrorMessage(error)}`);
     }
   }
 
   // Get scan summary across policy and all sandboxes
-  async getScanSummary(identifier: string): Promise<{
-        application: { name: string; guid: string };
+  async getScanSummary(applicationGuid: string): Promise<{
         policy: {
             scanCount: number;
             scanTypes: string[];
@@ -459,24 +289,10 @@ export class ScanService extends BaseVeracodeClient {
         };
     }> {
     try {
-      let appId: string;
-      let appName: string;
-
-      // Resolve application identifier
-      if (isGuid(identifier)) {
-        const application = await this.applicationService.getApplicationDetails(identifier);
-        appId = identifier;
-        appName = application.profile.name;
-      } else {
-        const application = await this.applicationService.getApplicationDetailsByName(identifier);
-        appId = application.guid;
-        appName = application.profile.name;
-      }
-
-      logger.debug('Getting scan summary', 'API', { appName, appId });
+      logger.debug('Getting scan summary', 'API', { applicationGuid });
 
       // Get policy scans
-      const policyScans = await this.getScans(appId);
+      const policyScans = await this.getScans(applicationGuid);
       const policyScanTypes = Array.from(new Set(policyScans.map(scan => scan.scan_type))) as string[];
       const latestPolicyScans = policyScans.sort((a, b) => {
         const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
@@ -485,7 +301,7 @@ export class ScanService extends BaseVeracodeClient {
       });
 
       // Get sandbox scans
-      const sandboxScansResult = await this.getSandboxScans(appId);
+      const sandboxScansResult = await this.getSandboxScans(applicationGuid);
 
       // Process sandbox data to include latest scan info
       const sandboxSummaries = sandboxScansResult.sandboxes.map(sbData => {
@@ -512,8 +328,7 @@ export class ScanService extends BaseVeracodeClient {
         sb.scanTypes.forEach(type => allScanTypesSet.add(type));
       });
 
-      const result = {
-        application: { name: appName, guid: appId },
+      return {
         policy: {
           scanCount: policyScans.length,
           scanTypes: policyScanTypes,
@@ -527,17 +342,6 @@ export class ScanService extends BaseVeracodeClient {
           allScanTypes: Array.from(allScanTypesSet)
         }
       };
-
-      logger.debug('Scan summary completed', 'API', {
-        appName,
-        policyScans: result.totals.policyScans,
-        sandboxScans: result.totals.sandboxScans,
-        totalScans: result.totals.totalScans,
-        sandboxCount: sandboxSummaries.length,
-        allScanTypes: result.totals.allScanTypes
-      });
-
-      return result;
     } catch (error) {
       throw new Error(`Failed to get scan summary: ${this.getErrorMessage(error)}`);
     }

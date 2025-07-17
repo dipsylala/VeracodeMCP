@@ -228,7 +228,9 @@ const context = { veracodeClient: new VeracodeClient() };
 
 // 6. Veracode API Calls
 const searchResults = await veracodeClient.applications.searchApplications("MyApp");
-const findings = await veracodeClient.findings.getFindingsByName("MyApp", {
+// Get findings for an application (tools handle application resolution)
+const appResolution = await validateAndResolveApplication(appIdentifier, veracodeClient);
+const findings = await veracodeClient.findings.getFindingsPaginated(appResolution.guid, {
   scanType: 'SCA',
   severityGte: 4
 });
