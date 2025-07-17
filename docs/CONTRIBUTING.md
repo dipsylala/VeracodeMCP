@@ -20,17 +20,69 @@ Thank you for your interest in contributing to the Veracode MCP Server! This doc
 
 Before submitting changes:
 
-1. Ensure the project builds: `npm run build`
-2. Test with real Veracode API: `npm run test-connection`
-3. Test the generic client: `npm run client get-applications`
+1. **Build and type check**: `npm run build`
+2. **Check linting**: `npx tsc --noEmit` (checks types without compilation)
+3. **Test with real Veracode API**: `npm run test-connection`
+4. **Test the generic client**: `npm run client get-applications`
+5. **Verify no ESLint issues**: Check for unused variables, type safety violations
 
 ## 📝 Code Style
 
+We follow strict TypeScript and ESLint guidelines to maintain code quality and consistency.
+
+### TypeScript Guidelines
+
 - Use TypeScript for all new code
-- Follow existing code formatting
-- Add JSDoc comments for public functions
+- Prefer explicit types over `any` - use proper interfaces and types
+- Use `z.void()` for tools that don't require parameters instead of optional schemas
+- Extract Zod schemas to explicit variables with TypeScript types:
+  ```typescript
+  const GetApplicationsSchema = z.object({
+    name: z.string().describe('Application name')
+  });
+  
+  type GetApplicationsArgs = z.infer<typeof GetApplicationsSchema>;
+  ```
+- Handle errors gracefully with proper error types
 - Use meaningful variable and function names
-- Handle errors gracefully
+- Add JSDoc comments for public functions
+
+### ESLint Rules
+
+We use `@typescript-eslint` with strict rules. Common patterns:
+
+- **Unused variables**: Prefix with underscore (`_error`, `_extra`) for intentionally unused parameters
+- **Disable specific rules** when necessary:
+  ```typescript
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
+  ```
+- **Multiple rule disables**:
+  ```typescript
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+  ```
+
+### Checking Code Quality
+
+Run these commands before submitting:
+
+```bash
+# Build and check TypeScript compilation
+npm run build
+
+# Run linting
+npm run lint
+
+# Check for unused variables and type issues
+npx tsc --noEmit
+```
+
+### Architecture Guidelines
+
+- **Services**: Expect GUIDs only, don't handle name resolution
+- **Tools**: Handle user input and application resolution using `application-resolver.ts`
+- **Schemas**: Always mandatory, use explicit variable declarations
+- **Error handling**: Consistent error response format across all tools
 
 ## 🐛 Bug Reports
 
