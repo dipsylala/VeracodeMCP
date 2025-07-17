@@ -25,7 +25,7 @@ export async function resolveApplicationIdentifier(
   if (isGuid(identifier)) {
     // It's already a GUID, get the application details
     logger.debug('Resolving application by GUID', 'APP_RESOLVER', { guid: identifier });
-    
+
     try {
       const details = await veracodeClient.applications.getApplicationDetails(identifier);
       return {
@@ -39,18 +39,18 @@ export async function resolveApplicationIdentifier(
   } else {
     // It's a name, need to resolve to GUID
     logger.debug('Resolving application by name', 'APP_RESOLVER', { name: identifier });
-    
+
     const searchResults = await veracodeClient.applications.searchApplications(identifier);
-    
+
     if (searchResults.length === 0) {
       throw new Error(`No application found with name: ${identifier}`);
     }
 
     // Look for exact match first (case-insensitive), otherwise use first result
-    let targetApp = searchResults.find((app: any) => 
+    let targetApp = searchResults.find((app: any) =>
       app.profile.name.toLowerCase() === identifier.toLowerCase()
     );
-    
+
     if (!targetApp) {
       if (searchResults.length > 1) {
         logger.debug('Multiple applications found, using first result as no exact match found', 'APP_RESOLVER', {

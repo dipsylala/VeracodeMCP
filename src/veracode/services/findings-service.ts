@@ -18,14 +18,14 @@ export class FindingsService extends BaseVeracodeClient {
   private scanService: ScanService;
 
   constructor(
-    apiId?: string, 
-    apiKey?: string, 
+    apiId?: string,
+    apiKey?: string,
     options?: any,
     applicationService?: ApplicationService,
     scanService?: ScanService
   ) {
     super(apiId, apiKey, options);
-    
+
     // Require dependencies to be explicitly injected
     if (!applicationService) {
       throw new Error('ApplicationService dependency is required for FindingsService');
@@ -33,7 +33,7 @@ export class FindingsService extends BaseVeracodeClient {
     if (!scanService) {
       throw new Error('ScanService dependency is required for FindingsService');
     }
-    
+
     this.applicationService = applicationService;
     this.scanService = scanService;
   }

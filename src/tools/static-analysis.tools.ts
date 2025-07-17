@@ -19,18 +19,18 @@ export function createStaticAnalysisTools(): ToolHandler[] {
       description:
         'Get comprehensive static analysis flaw details including data paths, call stack traces, and expert remediation guidance. Use this when you need deep technical information about a specific security vulnerability found during static code analysis. Essential for developers fixing security issues - provides exact source code locations, attack vectors, and detailed remediation steps. Requires the specific flaw ID from scan results.',
       schema: GetStaticFlawInfoSchema,
-      handler: async (args: GetStaticFlawInfoParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetStaticFlawInfoParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Validate and resolve application identifier to GUID
           const appResolution = await validateAndResolveApplication(
-            args.app_profile, 
+            args.app_profile,
             context.veracodeClient
           );
 
           // Get static flaw information using the resolved GUID
           const result = await context.veracodeClient.findings.getStaticFlawInfo(
-            appResolution.guid, 
-            args.issue_id, 
+            appResolution.guid,
+            args.issue_id,
             args.sandbox_id
           );
 

@@ -11,17 +11,17 @@ export class ScanService extends BaseVeracodeClient {
   private sandboxService: SandboxService;
 
   constructor(
-    apiId?: string, 
-    apiKey?: string, 
+    apiId?: string,
+    apiKey?: string,
     options?: any,
     sandboxService?: SandboxService
   ) {
     super(apiId, apiKey, options);
-    
+
     if (!sandboxService) {
       throw new Error('SandboxService dependency is required for ScanService');
     }
-    
+
     this.sandboxService = sandboxService;
   }
 

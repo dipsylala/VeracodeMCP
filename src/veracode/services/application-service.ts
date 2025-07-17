@@ -32,7 +32,7 @@ export class ApplicationService extends BaseVeracodeClient {
       // URLSearchParams.toString() uses + for spaces, so we need to replace them
       const queryString = queryParams.toString().replace(/\+/g, '%20');
       const url = `appsec/v1/applications${queryString ? `?${queryString}` : ''}`;
-      
+
       logger.apiRequest('GET', url);
       const response = await this.apiClient.get(url);
       const responseTime = Date.now() - startTime;
@@ -72,9 +72,9 @@ export class ApplicationService extends BaseVeracodeClient {
   // Search applications by name (convenience method that uses getApplications with name filter)
   async searchApplications(name: string, additionalParams?: Omit<ApplicationQueryParams, 'name'>): Promise<VeracodeApplication[]> {
     try {
-      return await this.getApplications({ 
-        name, 
-        ...additionalParams 
+      return await this.getApplications({
+        name,
+        ...additionalParams
       });
     } catch (error) {
       throw new Error(`Failed to search applications by name "${name}": ${this.getErrorMessage(error)}`);
@@ -91,7 +91,7 @@ export class ApplicationService extends BaseVeracodeClient {
       logger.apiRequest('GET', url);
       const response = await this.apiClient.get(url);
       const responseTime = Date.now() - startTime;
-      
+
       const application = response.data;
       logger.apiResponse('GET', url, response.status, responseTime, 1);
 
@@ -134,7 +134,7 @@ export class ApplicationService extends BaseVeracodeClient {
       }
 
       // If multiple results, look for exact match first (case-insensitive)
-      let targetApp = searchResults.find(app => 
+      let targetApp = searchResults.find(app =>
         app.profile.name.toLowerCase() === name.toLowerCase()
       );
 
@@ -150,7 +150,7 @@ export class ApplicationService extends BaseVeracodeClient {
 
       // Get the full details for the selected application using its GUID
       const detailedApp = await this.getApplicationDetails(targetApp.guid);
-      
+
       const executionTime = Date.now() - startTime;
       logger.debug('Application details by name completed', 'API', {
         searchName: name,

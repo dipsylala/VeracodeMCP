@@ -62,12 +62,12 @@ for (const tool of allTools) {
     hasZodDef: tool.schema?._def ? 'yes' : 'no'
   });
 
-  // Use the MCP SDK's tool() method with proper signature 
+  // Use the MCP SDK's tool() method with proper signature
   if (tool.schema && tool.schema._def && tool.schema._def.typeName) {
     // Extract the shape from the ZodObject for MCP SDK
     const rawShape = tool.schema.shape; // This gives us the ZodRawShape
-    
-    server.tool(tool.name, tool.description, rawShape, async (args, extra) => {
+
+    server.tool(tool.name, tool.description, rawShape, async(args, extra) => {
       const startTime = Date.now();
 
       logger.toolExecution(tool.name, args);
@@ -122,7 +122,7 @@ for (const tool of allTools) {
   } else {
     // Fallback for tools without schema - register without parameters
     logger.warn(`Tool ${tool.name} has invalid or missing schema, registering without parameters`, 'TOOL_REGISTRY');
-    server.tool(tool.name, tool.description, async (extra) => {
+    server.tool(tool.name, tool.description, async(extra) => {
       const startTime = Date.now();
 
       logger.toolExecution(tool.name, {});

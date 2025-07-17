@@ -47,7 +47,7 @@ export function createSCATools(): ToolHandler[] {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.app_profile, 
+            args.app_profile,
             context.veracodeClient
           );
 
@@ -266,7 +266,7 @@ export function createSCATools(): ToolHandler[] {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.app_profile, 
+            args.app_profile,
             context.veracodeClient
           );
 
@@ -487,7 +487,7 @@ export function createSCATools(): ToolHandler[] {
 
                       // Use all findings since we're already filtering by SCA scan type
                       const findings = quickAnalysis.findings;
-                      
+
                       const hasHighRisk = findings.filter((f: any) => f.finding_details?.severity >= 4).length > 0;
                       const hasPolicyViolations = findings.filter((f: any) => f.violates_policy).length > 0;
 

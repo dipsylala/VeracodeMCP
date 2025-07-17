@@ -7,8 +7,8 @@ import { logger } from '../../utils/logger.js';
 export class SandboxService extends BaseVeracodeClient {
 
   constructor(
-    apiId?: string, 
-    apiKey?: string, 
+    apiId?: string,
+    apiKey?: string,
     options?: any
   ) {
     super(apiId, apiKey, options);

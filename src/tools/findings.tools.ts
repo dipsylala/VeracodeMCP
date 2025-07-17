@@ -137,7 +137,7 @@ Examples:
 - Sandbox with filters: {"application": "MyApp", "sandbox": "dev-env", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
       schema: GetFindingsSchema,
 
-      handler: async (args: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           const client = context.veracodeClient;
           const mode = determineOperationMode(args);
@@ -145,7 +145,7 @@ Examples:
 
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.application, 
+            args.application,
             client
           );
           const applicationGuid = appResolution.guid;
