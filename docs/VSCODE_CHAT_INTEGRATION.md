@@ -7,7 +7,7 @@ This guide explains how to use the Veracode MCP server directly from VS Code's c
 ## Current Status ✅
 
 ✅ **MCP Server**: Built and tested - successfully retrieves 50+ applications  
-✅ **Copilot MCP Extension**: Installed (`automatalabs.copilot-mcp`)  
+✅ **Copilot MCP Extension**: We used [Copilot MCP](https://marketplace.visualstudio.com/items?itemName=AutomataLabs.copilot-mcp)  
 ✅ **Server Configuration**: Configured in `.vscode/settings.json`  
 ✅ **API Integration**: Working - can list, search, and get details on applications  
 ✅ **Interactive Testing**: CLI test harness confirms all tools work properly  
@@ -20,21 +20,19 @@ This guide explains how to use the Veracode MCP server directly from VS Code's c
 - Veracode MCP server built and configured
 
 ### 2. Server Configuration ✅
-The MCP server is configured in `.vscode/settings.json` under the `copilot-mcp.servers` section:
+The MCP server is configured in `.vscode/mcp.json`:
 
 ```json
 {
-  "copilot-mcp.servers": {
+  "servers": {
     "veracode": {
       "command": "node",
-      "args": ["./build/index.js"],
+      "args": ["path_to_VeracodeMCP\\build\\index.js"],
       "cwd": "${workspaceFolder}",
       "env": {
         "VERACODE_API_ID": "your_api_id",
         "VERACODE_API_KEY": "your_api_key"
-      },
-      "enabled": true,
-      "description": "Veracode API integration for application security scanning"
+      }
     }
   }
 }
@@ -110,7 +108,7 @@ Example test queries:
 
 ### 3. Extension Not Recognizing Server
 - Restart VS Code after configuration changes
-- Check that `copilot-mcp.servers` is properly configured in `.vscode/settings.json`
+- Check that access to the MCP server is properly configured in `.vscode/mcp.json`
 - Verify the Copilot MCP extension is enabled and up to date
 - Check VS Code Command Palette for "MCP" related commands
 
