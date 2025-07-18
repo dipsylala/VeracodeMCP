@@ -19,7 +19,7 @@ async function getFindings(applicationName, scanType = 'ALL') {
 
         // Prepare the arguments
         const args = {
-            application: applicationName,
+            app_profile: applicationName,
             severity_gte: 3  // Get medium severity and above
         };
 
@@ -36,43 +36,46 @@ async function getFindings(applicationName, scanType = 'ALL') {
 
         if (result.success && result.data) {
             const findingsData = result.data;
-            
+
             console.log(`✅ Findings Analysis for "${applicationName}":\n`);
-            
+
             // Display summary
             console.log('📊 Summary:');
-            console.log(`   Total Findings: ${findingsData.summary?.total_findings || 0}`);
-            console.log(`   High Severity: ${findingsData.summary?.severity_counts?.['Very High'] || 0}`);
-            console.log(`   Medium Severity: ${findingsData.summary?.severity_counts?.['Medium'] || 0}`);
-            
-            if (findingsData.summary?.scan_type_counts) {
+            console.log(`   Total Findings: ${findingsData.total_findings_count || 0}`);
+            console.log(`   High Severity: ${findingsData.findings_summary?.by_severity?.['Very High'] || 0}`);
+            console.log(`   Medium Severity: ${findingsData.findings_summary?.by_severity?.['Medium'] || 0}`);
+
+            if (findingsData.findings_summary?.by_scan_type) {
                 console.log('\n📈 Breakdown by Type:');
-                Object.entries(findingsData.summary.scan_type_counts).forEach(([type, count]) => {
+                Object.entries(findingsData.findings_summary.by_scan_type).forEach(([type, count]) => {
                     console.log(`   ${type}: ${count}`);
                 });
             }
             console.log('');
-            
+
             // Display top findings
             if (findingsData.findings && findingsData.findings.length > 0) {
                 console.log('🚨 Recent Findings:');
                 findingsData.findings.slice(0, 5).forEach((finding, index) => {
-                    console.log(`   ${index + 1}. ${finding.finding_details?.finding_category?.name || 'Unknown Category'}`);
+                    console.log(`   ${index + 1}. Flaw ID: ${finding.flaw_id}`);
                     console.log(`      Type: ${finding.scan_type}`);
-                    console.log(`      Severity: ${finding.finding_details?.severity || 'Unknown'}`);
-                    if (finding.finding_details?.cwe?.id) {
-                        console.log(`      CWE: ${finding.finding_details.cwe.id} - ${finding.finding_details.cwe.name}`);
+                    console.log(`      Severity: ${finding.severity_text || finding.severity || 'Unknown'}`);
+                    if (finding.cwe_id) {
+                        console.log(`      CWE: ${finding.cwe_id}`);
+                    }
+                    if (finding.file_path) {
+                        console.log(`      File: ${finding.file_path}${finding.line_number ? `:${finding.line_number}` : ''}`);
                     }
                     console.log('');
                 });
-                
+
                 if (findingsData.findings.length > 5) {
                     console.log(`   ... and ${findingsData.findings.length - 5} more findings`);
                 }
             } else {
                 console.log('✅ No findings found at the specified severity level.');
             }
-            
+
         } else {
             console.error('❌ Failed to get findings:', result.error || 'Unknown error');
             console.log('\nTips:');
