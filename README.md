@@ -47,7 +47,7 @@ A Model Context Protocol (MCP) server that integrates with the Veracode API to p
 - **Combined Results**: Single static scans contain both SAST and SCA findings
 - **Policy Compliance**: Check compliance status against Veracode policies
 - **Risk Assessment**: Enhanced risk scoring and prioritization
-- **Comments & Annotations**: View mitigation details, security team comments, and risk assessments
+- **Comments & Mitigations**: View mitigation details, security team comments, and risk assessments
 
 ### 🛠️ Developer Tools
 - **MCP Integration**: Seamless integration with Model Context Protocol-compatible tools
