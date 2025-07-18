@@ -37,8 +37,12 @@ export function createSCATools(): ToolHandler[] {
   return [
     {
       name: 'get-sca-results',
-      description:
-        'Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components. Each SCA finding includes CVE identifiers and component filenames for tracking vulnerable libraries and dependencies. SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses. Always display the CVE identifier and component filename when showing SCA findings to users as these are essential for vulnerability tracking and remediation workflows. Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates. Critical for supply chain security and license compliance.',
+      description: `Get comprehensive Software Composition Analysis (SCA) results for third-party dependencies and open-source components.
+Each SCA finding includes CVE identifiers and component filenames for tracking vulnerable libraries and dependencies.
+SCA identifies security vulnerabilities in libraries, frameworks, and dependencies your application uses.
+Always display the CVE identifier and component filename when showing SCA findings to users as these are essential for vulnerability tracking and remediation workflows.
+Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates.
+Critical for supply chain security and license compliance.`,
       schema: GetSCAResultsSchema,
       handler: async(args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
@@ -259,8 +263,10 @@ export function createSCATools(): ToolHandler[] {
 
     {
       name: 'get-sca-summary',
-      description:
-        'Get a high-level Software Composition Analysis (SCA) overview with key metrics, risk assessment, and component summary. Perfect for executive reporting, quick risk assessment, or initial security evaluation. Provides vulnerability counts, risk scores, and component statistics without overwhelming detail. Use this before get-sca-results for efficient triage.',
+      description: `Get a high-level Software Composition Analysis (SCA) overview with key metrics, risk assessment, and component summary.
+Perfect for executive reporting, quick risk assessment, or initial security evaluation.
+Provides vulnerability counts, risk scores, and component statistics without overwhelming detail.
+Use this before get-sca-results for efficient triage.`,
       schema: GetSCASummarySchema,
       handler: async(args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -432,8 +438,9 @@ export function createSCATools(): ToolHandler[] {
 
     {
       name: 'get-sca-apps',
-      description:
-        'Discover all applications with Software Composition Analysis (SCA) scanning enabled and get their security posture overview. Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities. Use this to understand your organization\'s SCA coverage and prioritize security efforts across multiple applications.',
+      description: `Discover all applications with Software Composition Analysis (SCA) scanning enabled and get their security posture overview.
+Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities.
+Use this to understand your organization's SCA coverage and prioritize security efforts across multiple applications.`,
       schema: GetSCAAppsSchema,
       handler: async(args: GetSCAAppsParams, context: ToolContext): Promise<ToolResponse> => {
         try {

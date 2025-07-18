@@ -22,7 +22,9 @@ export function createSandboxTools(): ToolHandler[] {
   return [
     {
       name: 'get-sandboxes',
-      description: 'Get all development/testing sandbox environments for a specific application profile. Sandboxes are isolated environments for testing security scans without affecting production results. Use this to discover available development environments, track feature branch scanning, or manage sandbox-specific security testing workflows.',
+      description: `Get all development/testing sandbox environments for a specific application profile.
+Sandboxes are isolated environments for testing security scans without affecting production results.
+Use this to discover available development environments, track feature branch scanning, or manage sandbox-specific security testing workflows.`,
       schema: GetSandboxesSchema,
       handler: async(args: GetSandboxesArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -92,7 +94,9 @@ export function createSandboxTools(): ToolHandler[] {
 
     {
       name: 'get-sandbox-summary',
-      description: 'Get a concise overview of sandbox environments for an application, including counts, ownership, and activity status. Perfect for quick assessment of development environment security testing coverage. Use this to understand how many sandbox environments exist, who owns them, and their current status without detailed information.',
+      description: `Get a concise overview of sandbox environments for an application, including counts, ownership, and activity status.
+Perfect for quick assessment of development environment security testing coverage.
+Use this to understand how many sandbox environments exist, who owns them, and their current status without detailed information.`,
       schema: GetSandboxSummarySchema,
       handler: async(args: GetSandboxSummaryArgs, context: ToolContext): Promise<ToolResponse> => {
         try {

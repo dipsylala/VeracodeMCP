@@ -16,8 +16,10 @@ export function createStaticAnalysisTools(): ToolHandler[] {
   return [
     {
       name: 'get-static-flaw-info',
-      description:
-        'Get comprehensive static analysis flaw details including data paths, call stack traces, and expert remediation guidance. Use this when you need deep technical information about a specific security vulnerability found during static code analysis. Essential for developers fixing security issues - provides exact source code locations, attack vectors, and detailed remediation steps. Requires the specific flaw ID from scan results.',
+      description: `Get comprehensive static analysis flaw details including data paths, call stack traces, and expert remediation guidance.
+Use this when you need deep technical information about a specific security vulnerability found during static code analysis.
+Essential for developers fixing security issues - provides exact source code locations, attack vectors, and detailed remediation steps.
+Requires the specific flaw ID from scan results.`,
       schema: GetStaticFlawInfoSchema,
       handler: async(args: GetStaticFlawInfoParams, context: ToolContext): Promise<ToolResponse> => {
         try {

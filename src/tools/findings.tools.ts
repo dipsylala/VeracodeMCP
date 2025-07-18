@@ -123,7 +123,7 @@ This unified tool has two main modes:
 The tool automatically handles application and sandbox resolution (GUID or name), scan validation, and provides comprehensive error handling. Perfect for security analysis, vulnerability management, and compliance reporting.
 
 Key Fields Returned:
-- issue_id: Unique flaw identifier (CRITICAL - always display this)
+- flaw_id: Unique flaw identifier (CRITICAL - always display this)
 - severity: Risk level (Very High, High, Medium, Low, Very Low)
 - cwe_id: Common Weakness Enumeration classification
 - description: Vulnerability description

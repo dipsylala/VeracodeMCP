@@ -46,7 +46,10 @@ export function createApplicationTools(): ToolHandler[] {
   return [
     {
       name: 'get-application-profiles',
-      description: 'List all application profiles (security projects) in your Veracode account with powerful filtering options. An application profile represents a software project being scanned for security vulnerabilities. Use this when you need to discover available applications, find specific applications by name/tags, or get an overview of your security scanning portfolio. Perfect for reporting, application discovery, and initial security assessment setup.',
+      description: `List all application profiles (security projects) in your Veracode account with powerful filtering options.
+An application profile represents a software project being scanned for security vulnerabilities.
+Use this when you need to discover available applications, find specific applications by name/tags, or get an overview of your security scanning portfolio.
+Perfect for reporting, application discovery, and initial security assessment setup.`,
       schema: GetApplicationsSchema,
       handler: async(args: GetApplicationsArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -104,7 +107,6 @@ export function createApplicationTools(): ToolHandler[] {
                 git_repo_url: app.profile.git_repo_url,
                 archer_app_name: app.profile.archer_app_name,
                 custom_kms_alias: app.profile.custom_kms_alias,
-                // Veracode platform URLs for direct access
                 app_profile_url: app.app_profile_url,
                 results_url: app.results_url,
                 scans: app.scans?.map((scan: any) => ({
@@ -128,7 +130,10 @@ export function createApplicationTools(): ToolHandler[] {
 
     {
       name: 'search-application-profiles',
-      description: 'Search for application profiles by name with smart matching and additional filters. This is the fastest way to find a specific application when you know its name (or part of it). Use this instead of get-application-profiles when you\'re looking for particular applications rather than browsing the full list. Supports partial name matching and key filtering options for refined results.',
+      description: `Search for application profiles by name with smart matching and additional filters.
+This is the fastest way to find a specific application when you know its name (or part of it).
+Use this instead of get-application-profiles when you're looking for particular applications rather than browsing the full list.
+Supports partial name matching and key filtering options for refined results.`,
       schema: SearchApplicationsSchema,
       handler: async(args: SearchApplicationsArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -173,7 +178,6 @@ export function createApplicationTools(): ToolHandler[] {
                 created_date: app.created,
                 modified_date: app.modified,
                 last_completed_scan_date: app.last_completed_scan_date,
-                // Veracode platform URLs for direct access
                 app_profile_url: app.app_profile_url,
                 results_url: app.results_url
               }))
@@ -190,7 +194,9 @@ export function createApplicationTools(): ToolHandler[] {
 
     {
       name: 'get-application-profile-details',
-      description: 'Get comprehensive details for a specific application profile (security project) including configuration, policies, teams, and scan history. Use this when you need complete information about a single application for detailed analysis, security assessment, or configuration review. Essential for understanding application security posture and setup.',
+      description: `Get comprehensive details for a specific application profile (security project) including configuration, policies, teams, and scan history.
+Use this when you need complete information about a single application for detailed analysis, security assessment, or configuration review.
+Essential for understanding application security posture and setup.`,
       schema: GetApplicationProfileDetailsScheme,
       handler: async(args: GetApplicationProfileDetailsArgs, context: ToolContext): Promise<ToolResponse> => {
         try {

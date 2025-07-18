@@ -41,7 +41,10 @@ export function createScanTools(): ToolHandler[] {
   return [
     {
       name: 'get-scan-results',
-      description: 'Get comprehensive scan history and results for an application including all scan types (STATIC, DYNAMIC, MANUAL, SCA). Auto-detects whether input is an application name or GUID. Use this to understand scan coverage, track scan progress, review compliance status, and access scan reports. Essential for security program management and audit compliance.',
+      description: `Get comprehensive scan history and results for an application including all scan types (STATIC, DYNAMIC, MANUAL, SCA).
+Auto-detects whether input is an application name or GUID.
+Use this to understand scan coverage, track scan progress, review compliance status, and access scan reports.
+Essential for security program management and audit compliance.`,
       schema: GetScanResultsSchema,
       handler: async(args: GetScanResultsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -115,7 +118,9 @@ export function createScanTools(): ToolHandler[] {
 
     {
       name: 'get-sandbox-scans',
-      description: 'Get all scans across all sandboxes for an application. Perfect for understanding sandbox testing coverage, comparing development vs staging environments, and tracking scan progress across different testing phases.',
+      description: `Get all scans across all sandboxes for an application.
+Perfect for understanding sandbox testing coverage, comparing development vs staging environments,
+and tracking scan progress across different testing phases.`,
       schema: GetSandboxScansSchema,
       handler: async(args: GetSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -167,7 +172,8 @@ export function createScanTools(): ToolHandler[] {
 
     {
       name: 'get-scans-by-sandbox',
-      description: 'Get scans from a specific sandbox by sandbox name. Useful when you want to focus on a particular development environment, staging area, or testing context.',
+      description: `Get scans from a specific sandbox by sandbox name.
+Useful when you want to focus on a particular development environment, staging area, or testing context.`,
       schema: GetScansBySandboxSchema,
       handler: async(args: GetScansBySandboxParams, context: ToolContext): Promise<ToolResponse> => {
         try {
@@ -220,7 +226,8 @@ export function createScanTools(): ToolHandler[] {
 
     {
       name: 'compare-policy-vs-sandbox-scans',
-      description: 'Compare scan coverage between policy (main branch) and all sandboxes. Essential for understanding testing completeness, identifying coverage gaps, and ensuring proper scan distribution across environments.',
+      description: `Compare scan coverage between policy (main branch) and all sandboxes.
+Essential for understanding testing completeness, identifying coverage gaps, and ensuring proper scan distribution across environments.`,
       schema: ComparePolicyVsSandboxScansSchema,
       handler: async(args: ComparePolicyVsSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
         try {
