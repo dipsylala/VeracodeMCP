@@ -3,6 +3,19 @@ import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { validateAndResolveApplication } from '../utils/application-resolver.js';
 import { isGuid } from '../utils/validation.js';
 
+// Helper function to convert numeric severity to text
+function severityToText(severity: number): string {
+  switch (severity) {
+    case 5: return 'Very High';
+    case 4: return 'High';
+    case 3: return 'Medium';
+    case 2: return 'Low';
+    case 1: return 'Very Low';
+    case 0: return 'Informational';
+    default: return 'Unknown';
+  }
+}
+
 // Schema for the unified get-findings tool
 const GetFindingsSchema = z.object({
   application: z.string().describe('Application GUID or name to get findings for'),
@@ -88,12 +101,13 @@ function generateSummaryStats(findings: any[]) {
   };
 
   findings.forEach(finding => {
-    // Count by severity
-    const severity = finding.severity || 'Unknown';
-    stats.by_severity[severity] = (stats.by_severity[severity] || 0) + 1;
+    // Count by severity (both numeric and text)
+    const severityNum = finding.finding_details?.severity;
+    const severityText = severityToText(severityNum);
+    stats.by_severity[severityText] = (stats.by_severity[severityText] || 0) + 1;
 
     // Count by status
-    const status = finding.status || 'Unknown';
+    const status = finding.finding_status?.status || 'Unknown';
     stats.by_status[status] = (stats.by_status[status] || 0) + 1;
 
     // Count by scan type
@@ -101,7 +115,7 @@ function generateSummaryStats(findings: any[]) {
     stats.by_scan_type[scanType] = (stats.by_scan_type[scanType] || 0) + 1;
 
     // Count by CWE
-    const cweId = finding.cwe_id || 'Unknown';
+    const cweId = finding.finding_details?.cwe?.id || 'Unknown';
     stats.by_cwe[cweId] = (stats.by_cwe[cweId] || 0) + 1;
   });
 
@@ -239,17 +253,23 @@ Examples:
                 findings_summary: stats,
                 findings: (findings || []).map((finding: any) => ({
                   flaw_id: finding.issue_id,           // Primary identifier for tracking
-                  severity: finding.severity,
-                  severity_level: finding.severity,   // Alternative name for clarity
-                  cwe_id: finding.cwe_id,
-                  weakness_type: finding.cwe_id,      // Alternative name
+                  severity: finding.finding_details?.severity,
+                  severity_text: severityToText(finding.finding_details?.severity),
+                  severity_level: finding.finding_details?.severity,   // Alternative name for clarity
+                  cwe_id: finding.finding_details?.cwe?.id,
+                  weakness_type: finding.finding_details?.cwe?.id,      // Alternative name
                   description: finding.description,
                   vulnerability_title: finding.description, // Alternative name
-                  status: finding.status,
-                  remediation_status: finding.status, // Alternative name
+                  status: finding.finding_status?.status,
+                  remediation_status: finding.finding_status?.status, // Alternative name
                   scan_type: finding.scan_type,
-                  file_path: finding.file_path,
-                  line_number: finding.line_number
+                  file_path: finding.finding_details?.file_path,
+                  line_number: finding.finding_details?.file_line_number,
+                  // SCA-specific fields
+                  component_filename: finding.finding_details?.component_filename,
+                  version: finding.finding_details?.version,
+                  cve: finding.finding_details?.cve?.name,
+                  cvss_score: finding.finding_details?.cve?.cvss
                 })),
                 note: `Showing first 300 findings ordered by highest severity. Total findings: ${totalCount}`
               }
@@ -289,15 +309,21 @@ Examples:
                 findings: (includeDetails ? findings : findings.map((f: any) => ({
                   flaw_id: f.issue_id,           // Primary identifier for tracking
                   issue_id: f.issue_id,         // Also keep original name for compatibility
-                  severity: f.severity,
-                  severity_level: f.severity,   // Alternative name for clarity
-                  cwe_id: f.cwe_id,
-                  weakness_type: f.cwe_id,      // Alternative name
+                  severity: f.finding_details?.severity,
+                  severity_text: severityToText(f.finding_details?.severity),
+                  severity_level: f.finding_details?.severity,   // Alternative name for clarity
+                  cwe_id: f.finding_details?.cwe?.id,
+                  weakness_type: f.finding_details?.cwe?.id,      // Alternative name
                   description: f.description,
                   vulnerability_title: f.description, // Alternative name
-                  status: f.status,
-                  remediation_status: f.status, // Alternative name
+                  status: f.finding_status?.status,
+                  remediation_status: f.finding_status?.status, // Alternative name
                   scan_type: f.scan_type,
+                  // SCA-specific fields
+                  component_filename: f.finding_details?.component_filename,
+                  version: f.finding_details?.version,
+                  cve: f.finding_details?.cve?.name,
+                  cvss_score: f.finding_details?.cve?.cvss,
                   // Additional prominent display
                   tracking_info: {
                     flaw_id: f.issue_id,
