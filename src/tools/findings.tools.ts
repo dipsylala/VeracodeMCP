@@ -18,7 +18,7 @@ function severityToText(severity: number): string {
 
 // Schema for the unified get-findings tool
 const GetFindingsSchema = z.object({
-  application: z.string().describe('Application GUID or name to get findings for'),
+  app_profile: z.string().describe('Application GUID or name to get findings for'),
   sandbox: z.string().optional().describe('Sandbox GUID or name to get findings from. If not specified, returns findings from policy scan (production). Use this to get findings from development/testing sandbox environments'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'SCA', 'MANUAL']).optional().describe('Type of scan to filter findings by. If not specified, returns all finding types'),
   severity: z.array(z.enum(['Very High', 'High', 'Medium', 'Low', 'Very Low', 'Informational'])).optional().describe('Filter findings by severity levels. Example: ["Very High", "High"] for critical findings only'),
@@ -128,10 +128,10 @@ export function createFindingsTools(): ToolHandler[] {
       name: 'get-findings',
       description: `Get security findings (vulnerabilities) from Veracode scans with flaw ID tracking and intelligent filtering.
       
-IMPORTANT: Each finding includes a unique 'issue_id' field which serves as the primary flaw identifier for tracking, referencing, and managing specific vulnerabilities. Always display the issue_id when showing findings to users as it's essential for vulnerability tracking and remediation workflows.
+IMPORTANT: Each finding includes a unique 'flaw_id' field which serves as the primary flaw identifier for tracking, referencing, and managing specific vulnerabilities. Always display the flaw_id when showing findings to users as it's essential for vulnerability tracking and remediation workflows.
 
 This unified tool has two main modes:
-- **Basic Overview** (no filters/pagination): Returns first 300 findings ordered by highest severity with issue IDs
+- **Basic Overview** (no filters/pagination): Returns first 300 findings ordered by highest severity with flaw IDs
 - **Filtered Mode** (with filters and/or pagination): Applies filters and returns results with pagination support
 
 The tool automatically handles application and sandbox resolution (GUID or name), scan validation, and provides comprehensive error handling. Perfect for security analysis, vulnerability management, and compliance reporting.
@@ -144,11 +144,11 @@ Key Fields Returned:
 - status: Remediation status (NEW, OPEN, FIXED, etc.)
 
 Examples:
-- Get overview: {"application": "MyApp"}
-- Get sandbox findings: {"application": "MyApp", "sandbox": "feature-branch-123"}
-- Filter critical issues: {"application": "MyApp", "severity": ["Very High", "High"], "status": ["NEW", "OPEN"]}
-- Paginate results: {"application": "MyApp", "page": 1, "size": 50}
-- Sandbox with filters: {"application": "MyApp", "sandbox": "dev-env", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
+- Get overview: {"app_profile": "MyApp"}
+- Get sandbox findings: {"app_profile": "MyApp", "sandbox": "feature-branch-123"}
+- Filter critical issues: {"app_profile": "MyApp", "severity": ["Very High", "High"], "status": ["NEW", "OPEN"]}
+- Paginate results: {"app_profile": "MyApp", "page": 1, "size": 50}
+- Sandbox with filters: {"app_profile": "MyApp", "sandbox": "dev-env", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
       schema: GetFindingsSchema,
 
       handler: async(args: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
@@ -159,7 +159,7 @@ Examples:
 
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.application,
+            args.app_profile,
             client
           );
           const applicationGuid = appResolution.guid;
@@ -180,7 +180,7 @@ Examples:
               if (!matchingSandbox) {
                 return {
                   success: false,
-                  error: `Sandbox '${args.sandbox}' not found in application '${args.application}'`,
+                  error: `Sandbox '${args.sandbox}' not found in application '${args.app_profile}'`,
                   data: {
                     available_sandboxes: sandboxes.slice(0, 5).map((sb: any) => sb.name).filter(Boolean)
                   }
@@ -197,7 +197,7 @@ Examples:
             return {
               success: true,
               data: {
-                message: `Application '${args.application}' has no scans available yet.`,
+                message: `Application '${args.app_profile}' has no scans available yet.`,
                 application: {
                   name: appDetails.profile?.name,
                   guid: applicationGuid
@@ -306,9 +306,41 @@ Examples:
                 total_findings_count: totalElements,
                 showing_count: findings.length,
                 findings_summary: stats,
-                findings: (includeDetails ? findings : findings.map((f: any) => ({
+                findings: (includeDetails ? findings.map((f: any) => ({
                   flaw_id: f.issue_id,           // Primary identifier for tracking
-                  issue_id: f.issue_id,         // Also keep original name for compatibility
+                  severity: f.finding_details?.severity,
+                  severity_text: severityToText(f.finding_details?.severity),
+                  severity_level: f.finding_details?.severity,   // Alternative name for clarity
+                  cwe_id: f.finding_details?.cwe?.id,
+                  weakness_type: f.finding_details?.cwe?.id,      // Alternative name
+                  description: f.description,
+                  vulnerability_title: f.description, // Alternative name
+                  status: f.finding_status?.status,
+                  remediation_status: f.finding_status?.status, // Alternative name
+                  scan_type: f.scan_type,
+                  file_path: f.finding_details?.file_path,
+                  line_number: f.finding_details?.file_line_number,
+                  // SCA-specific fields
+                  component_filename: f.finding_details?.component_filename,
+                  version: f.finding_details?.version,
+                  cve: f.finding_details?.cve?.name,
+                  cvss_score: f.finding_details?.cve?.cvss,
+                  // Full details when requested
+                  module: f.finding_details?.module,
+                  procedure: f.finding_details?.procedure,
+                  attack_vector: f.finding_details?.attack_vector,
+                  exploitability: f.finding_details?.exploitability,
+                  finding_category: f.finding_details?.finding_category?.name,
+                  violates_policy: f.violates_policy,
+                  count: f.count,
+                  context_type: f.context_type,
+                  first_found_date: f.finding_status?.first_found_date,
+                  last_seen_date: f.finding_status?.last_seen_date,
+                  resolution: f.finding_status?.resolution,
+                  mitigation_review_status: f.finding_status?.mitigation_review_status,
+                  new: f.finding_status?.new
+                })) : findings.map((f: any) => ({
+                  flaw_id: f.issue_id,           // Primary identifier for tracking
                   severity: f.finding_details?.severity,
                   severity_text: severityToText(f.finding_details?.severity),
                   severity_level: f.finding_details?.severity,   // Alternative name for clarity
@@ -323,13 +355,7 @@ Examples:
                   component_filename: f.finding_details?.component_filename,
                   version: f.finding_details?.version,
                   cve: f.finding_details?.cve?.name,
-                  cvss_score: f.finding_details?.cve?.cvss,
-                  // Additional prominent display
-                  tracking_info: {
-                    flaw_id: f.issue_id,
-                    reference_id: f.issue_id,
-                    veracode_issue_id: f.issue_id
-                  }
+                  cvss_score: f.finding_details?.cve?.cvss
                 }))),
                 pagination_info: formatPaginationInfo(pageNumber, pageSize, totalElements),
                 recommendations: {
