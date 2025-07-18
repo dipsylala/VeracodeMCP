@@ -1,9 +1,9 @@
-import { VeracodeMCPClient } from '../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../build/test-utils/veracode-direct-client.js';
 
 console.log('🧪 Testing argument validation scenarios...');
 
 try {
-  const client = new VeracodeMCPClient();
+  const client = new VeracodeDirectClient();
   console.log('✅ Client initialized successfully');
 
   // Test scenarios that might cause validation errors
@@ -41,7 +41,7 @@ try {
   for (const testCase of testCases) {
     console.log(`\n🔍 Testing: ${testCase.name}`);
     console.log('📤 Call structure:', JSON.stringify(testCase.call, null, 2));
-    
+
     try {
       const result = await client.callTool(testCase.call);
       if (result.success) {

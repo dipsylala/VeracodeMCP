@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { VeracodeMCPClient } from "../../build/veracode-mcp-client.js";
+import { VeracodeDirectClient } from "../../build/test-utils/veracode-direct-client.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -17,7 +17,7 @@ async function testMCPSCATools() {
     }
 
     try {
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
 
         console.log('📋 First, testing get-findings tool to see what\'s available...');
         const allFindings = await client.callTool({
@@ -30,7 +30,7 @@ async function testMCPSCATools() {
 
         if (allFindings.success) {
             console.log(`✅ All findings: ${allFindings.data.analysis?.totalFindings || 0} total findings`);
-            
+
             if (allFindings.data.findings?.length > 0) {
                 console.log('\n📋 Sample findings:');
                 allFindings.data.findings.slice(0, 3).forEach((finding, index) => {
@@ -57,7 +57,7 @@ async function testMCPSCATools() {
         if (scaResults.success) {
             console.log('✅ SCA Results retrieved successfully!');
             console.log(`Total findings: ${scaResults.data.analysis?.totalFindings || 0}`);
-            
+
             if (scaResults.data.detailed_findings?.length > 0) {
                 console.log('\n📋 Sample SCA Findings:');
                 scaResults.data.detailed_findings.slice(0, 5).forEach((finding, index) => {
@@ -67,12 +67,12 @@ async function testMCPSCATools() {
                     console.log(`   Severity: ${finding.severity}`);
                     console.log(`   CVE: ${finding.finding_details?.cve_id || 'N/A'}`);
                 });
-                
+
                 // Look specifically for system.drawing.common.dll
-                const drawingCommonFindings = scaResults.data.detailed_findings.filter(f => 
+                const drawingCommonFindings = scaResults.data.detailed_findings.filter(f =>
                     f.finding_details?.component_filename?.toLowerCase().includes('system.drawing.common')
                 );
-                
+
                 if (drawingCommonFindings.length > 0) {
                     console.log(`\n🎯 Found ${drawingCommonFindings.length} findings related to system.drawing.common.dll:`);
                     drawingCommonFindings.forEach((finding, index) => {

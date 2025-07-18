@@ -2,7 +2,7 @@
 
 // Test script for Veracode Policy Management APIs using MCP tools
 // This script demonstrates how to use the new policy management tools via MCP
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,7 +11,7 @@ async function testPolicyManagement() {
   console.log('Testing Veracode Policy Management APIs via MCP tools...\n');
 
   try {
-    const client = new VeracodeMCPClient();
+    const client = new VeracodeDirectClient();
 
     // Test 1: Get all policies
     console.log('1. Getting all policies...');
@@ -20,24 +20,24 @@ async function testPolicyManagement() {
         tool: 'get-policies',
         args: { size: 10 }
       });
-      
-      if (policies.success && policies.data?.policies) {
-        console.log(`✓ Found ${policies.data.policies.length} policies`);
-        
-        if (policies.data.policies.length > 0) {
-          const firstPolicy = policies.data.policies[0];
+
+      if (policies.success && policies.data?._embedded?.policy_versions) {
+        console.log(`✓ Found ${policies.data._embedded.policy_versions.length} policies`);
+
+        if (policies.data._embedded.policy_versions.length > 0) {
+          const firstPolicy = policies.data._embedded.policy_versions[0];
           console.log(`  Sample policy: ${firstPolicy.name} (GUID: ${firstPolicy.guid})`);
           console.log(`  Category: ${firstPolicy.category}, Type: ${firstPolicy.type}`);
-          
+
           // Test 2: Get specific policy details
           if (firstPolicy.guid) {
             console.log('\n2. Getting specific policy details...');
             try {
               const policyDetails = await client.callTool({
                 tool: 'get-policy',
-                args: { policy: firstPolicy.guid }
+                args: { policy_guid: firstPolicy.guid }
               });
-              
+
               if (policyDetails.success && policyDetails.data) {
                 console.log(`✓ Policy details retrieved for: ${policyDetails.data.name}`);
                 console.log(`  Description: ${policyDetails.data.description || 'No description'}`);
@@ -54,14 +54,14 @@ async function testPolicyManagement() {
             try {
               const versions = await client.callTool({
                 tool: 'get-policy-versions',
-                args: { 
-                  policy: firstPolicy.guid,
+                args: {
+                  policy_guid: firstPolicy.guid,
                   size: 5
                 }
               });
-              
-              if (versions.success && versions.data?.versions) {
-                console.log(`✓ Found ${versions.data.versions.length} versions`);
+
+              if (versions.success && versions.data?._embedded?.policy_versions) {
+                console.log(`✓ Found ${versions.data._embedded.policy_versions.length} versions`);
               } else {
                 console.log(`✗ Failed to get policy versions: ${versions.error || 'Unknown error'}`);
               }
@@ -82,14 +82,14 @@ async function testPolicyManagement() {
     try {
       const appPolicies = await client.callTool({
         tool: 'get-policies',
-        args: { 
+        args: {
           category: 'APPLICATION',
           size: 5
         }
       });
-      
-      if (appPolicies.success && appPolicies.data?.policies) {
-        console.log(`✓ Found ${appPolicies.data.policies.length} application policies`);
+
+      if (appPolicies.success && appPolicies.data?._embedded?.policy_versions) {
+        console.log(`✓ Found ${appPolicies.data._embedded.policy_versions.length} application policies`);
       } else {
         console.log(`✗ Failed to get application policies: ${appPolicies.error || 'Unknown error'}`);
       }
@@ -102,14 +102,15 @@ async function testPolicyManagement() {
     try {
       const componentPolicies = await client.callTool({
         tool: 'get-policies',
-        args: { 
+        args: {
           category: 'COMPONENT',
           size: 5
         }
       });
-      
-      if (componentPolicies.success && componentPolicies.data?.policies) {
-        console.log(`✓ Found ${componentPolicies.data.policies.length} component policies`);
+
+      if (componentPolicies.success) {
+        const count = componentPolicies.data?._embedded?.policy_versions?.length || 0;
+        console.log(`✓ Found ${count} component policies`);
       } else {
         console.log(`✗ Failed to get component policies: ${componentPolicies.error || 'Unknown error'}`);
       }
@@ -121,17 +122,16 @@ async function testPolicyManagement() {
     console.log('\n6. Getting policy settings...');
     try {
       const settings = await client.callTool({
-        tool: 'get-policy-settings',
-        args: {}
+        tool: 'get-policy-settings'
       });
-      
-      if (settings.success && settings.data?.settings) {
-        console.log(`✓ Found ${settings.data.settings.length} policy settings`);
-        
-        if (settings.data.settings.length > 0) {
+
+      if (settings.success && settings.data?._embedded?.policy_settings) {
+        console.log(`✓ Found ${settings.data._embedded.policy_settings.length} policy settings`);
+
+        if (settings.data._embedded.policy_settings.length > 0) {
           console.log('  Business criticality mappings:');
-          settings.data.settings.forEach(setting => {
-            console.log(`    ${setting.business_criticality}: ${setting.policy_guid}`);
+          settings.data._embedded.policy_settings.forEach(setting => {
+            console.log(`    ${setting.business_criticality || setting.agent_setting}: ${setting.policy_guid}`);
           });
         }
       } else {
@@ -146,15 +146,15 @@ async function testPolicyManagement() {
     try {
       const licenses = await client.callTool({
         tool: 'get-sca-licenses',
-        args: { 
+        args: {
           page: 0,
           size: 10
         }
       });
-      
+
       if (licenses.success) {
         console.log(`✓ SCA licenses query completed`);
-        
+
         if (licenses.data?.licenses && licenses.data.licenses.length > 0) {
           console.log(`  Found ${licenses.data.licenses.length} licenses`);
           const sampleLicense = licenses.data.licenses[0];
@@ -172,17 +172,17 @@ async function testPolicyManagement() {
     try {
       const veracodePolicies = await client.callTool({
         tool: 'get-policies',
-        args: { 
+        args: {
           name: 'Veracode',
           size: 10
         }
       });
-      
-      if (veracodePolicies.success && veracodePolicies.data?.policies) {
-        console.log(`✓ Found ${veracodePolicies.data.policies.length} policies matching 'Veracode'`);
-        
-        if (veracodePolicies.data.policies.length > 0) {
-          veracodePolicies.data.policies.forEach(policy => {
+
+      if (veracodePolicies.success && veracodePolicies.data?._embedded?.policy_versions) {
+        console.log(`✓ Found ${veracodePolicies.data._embedded.policy_versions.length} policies matching 'Veracode'`);
+
+        if (veracodePolicies.data._embedded.policy_versions.length > 0) {
+          veracodePolicies.data._embedded.policy_versions.forEach(policy => {
             console.log(`  - ${policy.name} (${policy.type})`);
           });
         }

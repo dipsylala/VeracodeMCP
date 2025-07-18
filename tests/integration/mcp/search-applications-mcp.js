@@ -1,5 +1,5 @@
 // Test the search applications functionality using MCP Client
-import { VeracodeMCPClient } from "../build/veracode-mcp-client.js";
+import { VeracodeDirectClient } from "../../../build/test-utils/veracode-direct-client.js";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -7,7 +7,7 @@ dotenv.config();
 async function testSearchApplications() {
   console.log("🔍 Testing application search functionality...");
 
-  const client = new VeracodeMCPClient();
+  const client = new VeracodeDirectClient();
 
   // Test searches for various common application name patterns
   const searchTerms = ["Test", "App", "Service", "API", "Project"];

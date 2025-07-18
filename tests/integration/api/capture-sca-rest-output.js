@@ -11,7 +11,7 @@ dotenv.config();
 
 async function captureScaRestOutput() {
     const client = new VeracodeClient();
-    const appName = 'VeraDemo-NET'; // Using the app we know exists
+    const appName = 'MCPVerademo-Net'; // Using the app we know exists
 
     console.log(`🔍 Capturing REST API output for SCA query against ${appName}`);
     console.log('='.repeat(70));

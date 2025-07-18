@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 
 async function testSearchApplicationProfiles() {
     console.log('🔍 Testing search-application-profiles tool...\n');
     
-    const client = new VeracodeMCPClient();
+    const client = new VeracodeDirectClient();
     
     try {
         // Test 1: Search with just a name parameter

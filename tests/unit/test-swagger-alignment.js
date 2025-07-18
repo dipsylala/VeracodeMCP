@@ -1,10 +1,10 @@
-import { VeracodeMCPClient } from '../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../build/test-utils/veracode-direct-client.js';
 
 console.log('🧪 Testing enhanced application service alignment with Swagger API...');
 
 async function testApplicationService() {
   try {
-    const client = new VeracodeMCPClient();
+    const client = new VeracodeDirectClient();
     console.log('✅ Client initialized successfully\n');
 
     // Test 1: Basic application search (equivalent to GET /appsec/v1/applications?name=Test)
@@ -13,7 +13,7 @@ async function testApplicationService() {
       tool: 'search-application-profiles',
       args: { name: 'Test' }
     });
-    
+
     if (searchResult.success) {
       console.log(`✅ Found ${searchResult.data.count} applications with "Test" in name`);
       if (searchResult.data.application_profiles.length > 0) {
@@ -28,12 +28,12 @@ async function testApplicationService() {
     console.log('\n🔍 Test 2: Get applications with business criticality filter');
     const filteredResult = await client.callTool({
       tool: 'get-application-profiles',
-      args: { 
+      args: {
         business_criticality: 'VERY_HIGH',
         size: 10  // Limit to 10 results for testing
       }
     });
-    
+
     if (filteredResult.success) {
       console.log(`✅ Found ${filteredResult.data.count} VERY_HIGH criticality applications`);
     } else {
@@ -44,12 +44,12 @@ async function testApplicationService() {
     if (searchResult.success && searchResult.data.application_profiles.length > 0) {
       console.log('\n🔍 Test 3: Get application details by GUID');
       const firstApp = searchResult.data.application_profiles[0];
-      
+
       const detailsResult = await client.callTool({
         tool: 'get-application-profile-details',
         args: { app_profile: firstApp.guid }
       });
-      
+
       if (detailsResult.success) {
         const app = detailsResult.data;
         console.log(`✅ Retrieved details for: "${app.name}"`);
@@ -67,12 +67,12 @@ async function testApplicationService() {
     console.log('\n🔍 Test 4: Test advanced filtering (policy compliance)');
     const complianceResult = await client.callTool({
       tool: 'get-application-profiles',
-      args: { 
+      args: {
         policy_compliance: 'DID_NOT_PASS',
         size: 5
       }
     });
-    
+
     if (complianceResult.success) {
       console.log(`✅ Found ${complianceResult.data.count} applications that did not pass policy compliance`);
     } else {

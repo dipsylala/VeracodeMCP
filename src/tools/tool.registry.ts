@@ -49,7 +49,13 @@ export class ToolRegistry {
     // Validate arguments using Zod schema if present
     if (tool.schema) {
       try {
-        const validatedArgs = tool.schema.parse(toolCall.args || {});
+        // Handle void schemas specially - they expect no arguments at all
+        let validatedArgs;
+        if (tool.schema._def.typeName === 'ZodVoid') {
+          validatedArgs = tool.schema.parse(undefined);
+        } else {
+          validatedArgs = tool.schema.parse(toolCall.args || {});
+        }
         return await tool.handler(validatedArgs, this.context);
       } catch (error: any) {
         // Return a consistent error format for validation errors
@@ -82,20 +88,20 @@ export class ToolRegistry {
     return this.allTools.filter(tool => {
       const name = tool.name;
       switch (category) {
-      case ToolCategory.APPLICATION:
-        return name.includes('application');
-      case ToolCategory.FINDINGS:
-        return name.includes('finding');
-      case ToolCategory.STATIC_ANALYSIS:
-        return name.includes('static-flaw');
-      case ToolCategory.SCA:
-        return name.includes('sca');
-      case ToolCategory.SCAN:
-        return name.includes('scan');
-      case ToolCategory.POLICY:
-        return name.includes('policy');
-      default:
-        return false;
+        case ToolCategory.APPLICATION:
+          return name.includes('application');
+        case ToolCategory.FINDINGS:
+          return name.includes('finding');
+        case ToolCategory.STATIC_ANALYSIS:
+          return name.includes('static-flaw');
+        case ToolCategory.SCA:
+          return name.includes('sca');
+        case ToolCategory.SCAN:
+          return name.includes('scan');
+        case ToolCategory.POLICY:
+          return name.includes('policy');
+        default:
+          return false;
       }
     });
   }

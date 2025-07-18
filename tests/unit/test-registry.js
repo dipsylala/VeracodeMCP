@@ -1,12 +1,12 @@
 // Quick test to verify the MCP tool registry
-import { VeracodeMCPClient } from '../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../build/test-utils/veracode-direct-client.js';
 import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
 
 // Create MCP client
-const client = new VeracodeMCPClient();
+const client = new VeracodeDirectClient();
 
 console.log('\n🔧 MCP Tool Registry Analysis');
 console.log('==============================');

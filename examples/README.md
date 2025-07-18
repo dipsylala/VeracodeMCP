@@ -88,11 +88,11 @@ We recommend running the examples in this order:
 Each example follows a consistent pattern:
 
 ```javascript
-import { VeracodeMCPClient } from '../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../build/test-utils/veracode-direct-client.js';
 
 async function exampleFunction() {
     try {
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
         const result = await client.callTool('tool-name', { parameters });
         
         if (result.success) {

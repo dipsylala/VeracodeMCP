@@ -4,7 +4,7 @@
  * Query and display Veracode applications using MCP tools
  */
 
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -14,7 +14,7 @@ async function queryApplications() {
     console.log('=' .repeat(50));
     
     try {
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
         
         // Get all applications
         console.log('📋 Getting first 10 applications...');

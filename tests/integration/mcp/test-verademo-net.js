@@ -4,21 +4,21 @@
  * Test SCA functionality against verademo-net with updated API credentials
  */
 
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 async function testVeraDemoNet() {
-    const client = new VeracodeMCPClient();
-    const appName = 'verademo-net';
+    const client = new VeracodeDirectClient();
+    const appName = 'MCPVerademo-Net';
 
     console.log(`🔍 Testing SCA functionality against ${appName}`);
     console.log('='.repeat(60));
 
     try {
         // 1. Find the application
-        console.log('\n1. Searching for verademo-net application...');
+        console.log('\n1. Searching for MCPVerademo-Net application...');
         const searchResult = await client.callTool({
             tool: 'search-application-profiles',
             args: { name: appName }
@@ -29,7 +29,7 @@ async function testVeraDemoNet() {
             console.log('\nTrying case variations...');
 
             // Try different case variations
-            const variations = ['VeraDemo-Net', 'VERADEMO-NET', 'verademo', 'VeraDemo'];
+            const variations = ['MCPVerademo-Net', 'MCPVerademo', 'verademo', 'VeraDemo'];
             for (const variation of variations) {
                 console.log(`Trying: ${variation}`);
                 const altResult = await client.callTool({

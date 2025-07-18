@@ -7,14 +7,14 @@
  * Usage: node search-applications.js [search-term]
  */
 
-import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../build/test-utils/veracode-direct-client.js';
 
 async function searchApplications(searchTerm = 'Demo') {
     console.log(`🔍 Searching for applications containing "${searchTerm}"...\n`);
 
     try {
         // Initialize the MCP client
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
 
         // Call the search-application-profiles tool
         const result = await client.callTool({
@@ -26,15 +26,15 @@ async function searchApplications(searchTerm = 'Demo') {
 
         if (result.success && result.data) {
             const applications = result.data.application_profiles || result.data;
-            
+
             console.log(`✅ Found ${applications.length} applications matching "${searchTerm}":\n`);
-            
+
             if (applications.length === 0) {
                 console.log('No applications found matching your search criteria.');
                 console.log('Try using a different search term or check application names in your Veracode account.');
                 return;
             }
-            
+
             // Display matching applications
             applications.forEach((app, index) => {
                 console.log(`${index + 1}. ${app.name}`);
@@ -43,7 +43,7 @@ async function searchApplications(searchTerm = 'Demo') {
                 console.log(`   Last Scan: ${app.last_completed_scan_date || 'Never'}`);
                 console.log('');
             });
-            
+
             console.log(`📊 Summary: Found ${applications.length} applications matching "${searchTerm}"`);
         } else {
             console.error('❌ Failed to search applications:', result.error || 'Unknown error');

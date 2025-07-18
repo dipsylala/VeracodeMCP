@@ -2,7 +2,7 @@
 
 // Test script to verify the sandbox functionality works correctly
 // This script tests MCP sandbox tools
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 import 'dotenv/config';
 
 async function testSandboxFunctionality() {
@@ -16,7 +16,7 @@ async function testSandboxFunctionality() {
 
   try {
     // Initialize MCP client
-    const client = new VeracodeMCPClient();
+    const client = new VeracodeDirectClient();
 
     console.log('✅ Initialized Veracode client and tool registries\n');
 

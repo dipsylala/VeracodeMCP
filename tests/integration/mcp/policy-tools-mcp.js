@@ -2,13 +2,13 @@
 
 // Test script for Veracode Policy Management MCP Tools
 // This script demonstrates how to use the new policy MCP tools
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 
 async function testPolicyMCPTools() {
   console.log('Testing Veracode Policy Management MCP Tools...\n');
 
   try {
-    const client = new VeracodeMCPClient();
+    const client = new VeracodeDirectClient();
 
     // Test 1: List all policies
     console.log('1. Testing get-policies tool...');

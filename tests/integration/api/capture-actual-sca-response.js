@@ -11,7 +11,7 @@ dotenv.config();
 
 async function captureActualScaResponse() {
     const client = new VeracodeClient();
-    const appName = 'VeraDemo-NET';
+    const appName = 'MCPVerademo-Net';
 
     console.log(`🔍 Capturing ACTUAL REST API response for SCA query`);
     console.log('='.repeat(70));

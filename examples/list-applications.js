@@ -7,14 +7,14 @@
  * This is a simple, well-commented example for learning purposes.
  */
 
-import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../build/test-utils/veracode-direct-client.js';
 
 async function listApplications() {
     console.log('📋 Listing all Veracode applications...\n');
 
     try {
         // Initialize the MCP client
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
 
         // Call the search-application-profiles tool with empty name to get all applications
         const result = await client.callTool({
@@ -26,9 +26,9 @@ async function listApplications() {
 
         if (result.success && result.data) {
             const applications = result.data.application_profiles || result.data;
-            
+
             console.log(`✅ Found ${applications.length} applications:\n`);
-            
+
             // Display applications in a simple format
             applications.forEach((app, index) => {
                 console.log(`${index + 1}. ${app.name}`);
@@ -37,7 +37,7 @@ async function listApplications() {
                 console.log(`   Teams: ${app.teams?.map(t => t.team_name).join(', ') || 'None'}`);
                 console.log('');
             });
-            
+
             console.log(`📊 Summary: Listed ${applications.length} applications successfully`);
         } else {
             console.error('❌ Failed to retrieve applications:', result.error || 'Unknown error');

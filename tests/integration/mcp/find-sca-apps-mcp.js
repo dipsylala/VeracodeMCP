@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { VeracodeMCPClient } from '../../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../../build/test-utils/veracode-direct-client.js';
 import * as dotenv from 'dotenv';
 
 // Load environment variables
@@ -18,7 +18,7 @@ async function findApplicationsWithSCA() {
     }
 
     try {
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
 
         console.log('📋 Getting applications with SCA scans...');
         

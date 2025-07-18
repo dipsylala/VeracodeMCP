@@ -8,14 +8,14 @@
  * Usage: node get-sca-results.js <application-name>
  */
 
-import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../build/test-utils/veracode-direct-client.js';
 
 async function getSCAResults(applicationName) {
     console.log(`🔍 Getting SCA results for application: "${applicationName}"...\n`);
 
     try {
         // Initialize the MCP client
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
 
         // Call the get-sca-results tool
         const result = await client.callTool({
@@ -28,35 +28,35 @@ async function getSCAResults(applicationName) {
 
         if (result.success && result.data) {
             const scaData = result.data;
-            
+
             console.log(`✅ SCA Analysis for "${applicationName}":\n`);
-            
+
             // Get findings array
             const findings = scaData.detailed_findings || [];
-            
+
             // Display summary
             console.log('📊 Summary:');
             console.log(`   Total Findings: ${findings.length || 0}`);
-            
+
             // Calculate severity counts
             const severityCounts = {};
             findings.forEach(finding => {
                 const severity = finding.finding_details?.severity || 'Unknown';
                 severityCounts[severity] = (severityCounts[severity] || 0) + 1;
             });
-            
+
             console.log(`   High Severity (5): ${severityCounts[5] || 0}`);
             console.log(`   Medium Severity (4): ${severityCounts[4] || 0}`);
             console.log(`   Low Severity (3): ${severityCounts[3] || 0}`);
-            
+
             // Count exploitable findings
-            const exploitableCount = findings.filter(finding => 
+            const exploitableCount = findings.filter(finding =>
                 finding.finding_details?.cve?.exploitability?.exploit_observed ||
                 finding.finding_details?.cve?.exploitability?.epss_score > 0.1
             ).length;
             console.log(`   Exploitable: ${exploitableCount}`);
             console.log('');
-            
+
             // Display top vulnerabilities
             if (findings.length > 0) {
                 console.log('🚨 Top Vulnerabilities:');
@@ -73,14 +73,14 @@ async function getSCAResults(applicationName) {
                     }
                     console.log('');
                 });
-                
+
                 if (findings.length > 5) {
                     console.log(`   ... and ${findings.length - 5} more vulnerabilities`);
                 }
             } else {
                 console.log('✅ No SCA vulnerabilities found at the specified severity level.');
             }
-            
+
         } else {
             console.error('❌ Failed to get SCA results:', result.error || 'Unknown error');
             console.log('\nTips:');

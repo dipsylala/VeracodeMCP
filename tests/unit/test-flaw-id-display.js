@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
 // Test script to demonstrate enhanced flaw ID display
-import { VeracodeMCPClient } from '../../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../../build/test-utils/veracode-direct-client.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
 async function testFlawIdDisplay() {
     console.log('🔍 Testing Enhanced Flaw ID Display...\n');
-    
+
     try {
-        const client = new VeracodeMCPClient();
-        
+        const client = new VeracodeDirectClient();
+
         // Test get-findings with enhanced flaw ID display
         console.log('📋 Testing get-findings tool with flaw ID emphasis...');
         const result = await client.callTool({
@@ -21,11 +21,11 @@ async function testFlawIdDisplay() {
                 size: 5  // Just get a few for demonstration
             }
         });
-        
+
         if (result.success && result.data.findings) {
             console.log('\n✅ Enhanced Findings Response:');
-            console.log('=' .repeat(60));
-            
+            console.log('='.repeat(60));
+
             result.data.findings.forEach((finding, index) => {
                 console.log(`\n${index + 1}. FLAW TRACKING INFORMATION:`);
                 console.log(`   🆔 Primary Flaw ID: ${finding.flaw_id}`);
@@ -35,7 +35,7 @@ async function testFlawIdDisplay() {
                 console.log(`   📝 Description: ${finding.vulnerability_title}`);
                 console.log(`   🔄 Status: ${finding.remediation_status}`);
                 console.log(`   📡 Scan Type: ${finding.scan_type}`);
-                
+
                 if (finding.tracking_info) {
                     console.log(`   📋 Tracking References:`);
                     console.log(`      - Flaw ID: ${finding.tracking_info.flaw_id}`);
@@ -44,13 +44,13 @@ async function testFlawIdDisplay() {
                 }
                 console.log('   ' + '-'.repeat(50));
             });
-            
+
             console.log(`\n📊 Summary: Found ${result.data.findings.length} findings with prominent flaw IDs`);
         } else {
             console.log('❌ No findings returned or error occurred');
             console.log('Response:', JSON.stringify(result, null, 2));
         }
-        
+
     } catch (error) {
         console.error('❌ Error:', error.message);
     }

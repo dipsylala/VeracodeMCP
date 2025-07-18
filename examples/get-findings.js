@@ -8,14 +8,14 @@
  * Usage: node get-findings.js <application-name> [scan-type]
  */
 
-import { VeracodeMCPClient } from '../build/veracode-mcp-client.js';
+import { VeracodeDirectClient } from '../build/test-utils/veracode-direct-client.js';
 
 async function getFindings(applicationName, scanType = 'ALL') {
     console.log(`🔍 Getting ${scanType} findings for application: "${applicationName}"...\n`);
 
     try {
         // Initialize the MCP client
-        const client = new VeracodeMCPClient();
+        const client = new VeracodeDirectClient();
 
         // Prepare the arguments
         const args = {
