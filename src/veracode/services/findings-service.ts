@@ -235,17 +235,17 @@ export class FindingsService extends BaseVeracodeClient {
       if (primaryPolicy) {
         const policyStatus = primaryPolicy.policy_compliance_status;
         switch (policyStatus) {
-          case 'PASSED':
-            complianceStatus = 'PASS';
-            break;
-          case 'DID_NOT_PASS':
-            complianceStatus = 'FAIL';
-            break;
-          case 'CONDITIONAL_PASS':
-            complianceStatus = 'CONDITIONAL_PASS';
-            break;
-          default:
-            complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
+        case 'PASSED':
+          complianceStatus = 'PASS';
+          break;
+        case 'DID_NOT_PASS':
+          complianceStatus = 'FAIL';
+          break;
+        case 'CONDITIONAL_PASS':
+          complianceStatus = 'CONDITIONAL_PASS';
+          break;
+        default:
+          complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
         }
       } else {
         complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';

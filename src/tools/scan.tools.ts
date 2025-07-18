@@ -70,8 +70,8 @@ Essential for security program management and audit compliance.`,
 
           // If sandbox identifier is provided, resolve it to a GUID
           if (args.sandbox_identifier) {
-            logger.debug('Resolving sandbox identifier', 'SCAN_TOOL', { 
-              sandboxIdentifier: args.sandbox_identifier 
+            logger.debug('Resolving sandbox identifier', 'SCAN_TOOL', {
+              sandboxIdentifier: args.sandbox_identifier
             });
 
             // Check if it's already a GUID (simple check for GUID format)
@@ -83,14 +83,14 @@ Essential for security program management and audit compliance.`,
               logger.debug('Sandbox identifier is GUID', 'SCAN_TOOL', { sandboxId });
             } else {
               // It's a sandbox name, use getScansBySandboxName to resolve it
-              logger.debug('Resolving sandbox by name', 'SCAN_TOOL', { 
-                sandboxName: args.sandbox_identifier 
+              logger.debug('Resolving sandbox by name', 'SCAN_TOOL', {
+                sandboxName: args.sandbox_identifier
               });
               try {
                 const sandboxResult = await context.veracodeClient.scans.getScansBySandboxName(applicationGuid, args.sandbox_identifier, args.scan_type);
                 sandboxId = sandboxResult.sandbox.guid;
                 sandboxContext = `sandbox (${sandboxResult.sandbox.name})`;
-                logger.debug('Sandbox resolved by name', 'SCAN_TOOL', { 
+                logger.debug('Sandbox resolved by name', 'SCAN_TOOL', {
                   sandboxName: args.sandbox_identifier,
                   sandboxId,
                   resolvedName: sandboxResult.sandbox.name

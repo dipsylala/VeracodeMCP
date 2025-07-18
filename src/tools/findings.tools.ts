@@ -6,13 +6,13 @@ import { isGuid } from '../utils/validation.js';
 // Helper function to convert numeric severity to text
 function severityToText(severity: number): string {
   switch (severity) {
-    case 5: return 'Very High';
-    case 4: return 'High';
-    case 3: return 'Medium';
-    case 2: return 'Low';
-    case 1: return 'Very Low';
-    case 0: return 'Informational';
-    default: return 'Unknown';
+  case 5: return 'Very High';
+  case 4: return 'High';
+  case 3: return 'Medium';
+  case 2: return 'Low';
+  case 1: return 'Very Low';
+  case 0: return 'Informational';
+  default: return 'Unknown';
   }
 }
 
