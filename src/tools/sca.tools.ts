@@ -5,7 +5,7 @@ import { validateAndResolveApplication } from '../utils/application-resolver.js'
 
 // Schema for SCA results tool
 const GetSCAResultsSchema = z.object({
-  app_profile: z.string().describe('Application GUID or name to get SCA results for'),
+  app_profile: z.string().describe('Application Profile GUID or name to get SCA results for'),
   severity_gte: z.number().min(1).max(5).optional().describe('Minimum severity level (1=Very Low, 2=Low, 3=Medium, 4=High, 5=Very High). Example: 4 for High and Very High findings only'),
   cvss_gte: z.number().min(0).max(10).optional().describe('Minimum CVSS score (0-10). Example: 7.0 for high severity vulnerabilities'),
   only_policy_violations: z.boolean().optional().describe('Show only findings that violate policy. Default is false'),
@@ -44,7 +44,7 @@ Always display the CVE identifier and component filename when showing SCA findin
 Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates.
 Critical for supply chain security and license compliance.`,
       schema: GetSCAResultsSchema,
-      handler: async(args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting get-sca-results execution', 'SCA_TOOL', { args });
 
@@ -265,7 +265,7 @@ Perfect for executive reporting, quick risk assessment, or initial security eval
 Provides vulnerability counts, risk scores, and component statistics without overwhelming detail.
 Use this before get-sca-results for efficient triage.`,
       schema: GetSCASummarySchema,
-      handler: async(args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
@@ -436,7 +436,7 @@ Use this before get-sca-results for efficient triage.`,
 Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities.
 Use this to understand your organization's SCA coverage and prioritize security efforts across multiple applications.`,
       schema: GetSCAAppsSchema,
-      handler: async(args: GetSCAAppsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async (args: GetSCAAppsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Get all applications first
           const allApps = await context.veracodeClient.applications.getApplications();

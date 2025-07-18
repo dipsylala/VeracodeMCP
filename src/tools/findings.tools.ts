@@ -18,7 +18,7 @@ function severityToText(severity: number): string {
 
 // Schema for the unified get-findings tool
 const GetFindingsSchema = z.object({
-  app_profile: z.string().describe('Application GUID or name to get findings for'),
+  app_profile: z.string().describe('Application Profile GUID or name to get findings for'),
   sandbox: z.string().optional().describe('Sandbox GUID or name to get findings from. If not specified, returns findings from policy scan (production). Use this to get findings from development/testing sandbox environments'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'SCA', 'MANUAL']).optional().describe('Type of scan to filter findings by. If not specified, returns all finding types'),
   severity: z.array(z.enum(['Very High', 'High', 'Medium', 'Low', 'Very Low', 'Informational'])).optional().describe('Filter findings by severity levels. Example: ["Very High", "High"] for critical findings only'),
