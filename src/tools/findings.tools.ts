@@ -6,13 +6,13 @@ import { isGuid } from '../utils/validation.js';
 // Helper function to convert numeric severity to text
 function severityToText(severity: number): string {
   switch (severity) {
-    case 5: return 'Very High';
-    case 4: return 'High';
-    case 3: return 'Medium';
-    case 2: return 'Low';
-    case 1: return 'Very Low';
-    case 0: return 'Informational';
-    default: return 'Unknown';
+  case 5: return 'Very High';
+  case 4: return 'High';
+  case 3: return 'Medium';
+  case 2: return 'Low';
+  case 1: return 'Very Low';
+  case 0: return 'Informational';
+  default: return 'Unknown';
   }
 }
 
@@ -151,7 +151,7 @@ Examples:
 - Sandbox with filters: {"app_profile": "MyApp", "sandbox": "dev-env", "cwe_ids": ["79", "89"], "scan_type": "STATIC"}`,
       schema: GetFindingsSchema,
 
-      handler: async (args: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetFindingsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           const client = context.veracodeClient;
           const mode = determineOperationMode(args);

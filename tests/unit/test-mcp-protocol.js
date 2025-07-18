@@ -25,7 +25,7 @@ async function testMCPProtocol() {
 
     // Test by sending the request to the MCP server via stdio
     console.log('\n🚀 Testing via MCP server...');
-    
+
     const requestString = JSON.stringify(mcpRequest) + '\n';
     console.log('Request string:', requestString);
 
@@ -35,7 +35,7 @@ async function testMCPProtocol() {
         timeout: 10000,
         cwd: process.cwd()
       });
-      
+
       console.log('📋 Server Response:');
       console.log('STDOUT:', stdout);
       if (stderr) {
@@ -59,27 +59,27 @@ async function testMCPProtocol() {
 // Alternative test using direct import (if the server can be imported)
 async function testDirectServerCall() {
   console.log('\n🧪 Testing alternative direct call...');
-  
+
   try {
     // Test the tool registry directly
     const { ToolRegistry } = await import('../../build/tools/tool.registry.js');
-    const { VeracodeClient } = await import('../../build/veracode-rest-client.js');
-    
+    const { VeracodeClient } = await import('../../build/veracode/index.js');
+
     const client = new VeracodeClient(process.env.VERACODE_API_ID, process.env.VERACODE_API_KEY);
     const registry = new ToolRegistry(client);
-    
+
     console.log('✅ Direct registry created');
-    
+
     const toolCall = {
       tool: 'search-application-profiles',
       args: { name: 'vera' }
     };
-    
+
     console.log('📤 Direct tool call:', JSON.stringify(toolCall, null, 2));
-    
+
     const result = await registry.executeTool(toolCall);
     console.log('📋 Direct result:', result.success ? `Success! Found ${result.data?.count} items` : `Failed: ${result.error}`);
-    
+
   } catch (importError) {
     console.log('❌ Direct import test failed:', importError.message);
   }

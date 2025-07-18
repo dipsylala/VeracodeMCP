@@ -44,7 +44,7 @@ Always display the CVE identifier and component filename when showing SCA findin
 Use this to assess open-source risk, find vulnerable dependencies, and prioritize library updates.
 Critical for supply chain security and license compliance.`,
       schema: GetSCAResultsSchema,
-      handler: async (args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetSCAResultsParams, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting get-sca-results execution', 'SCA_TOOL', { args });
 
@@ -265,7 +265,7 @@ Perfect for executive reporting, quick risk assessment, or initial security eval
 Provides vulnerability counts, risk scores, and component statistics without overwhelming detail.
 Use this before get-sca-results for efficient triage.`,
       schema: GetSCASummarySchema,
-      handler: async (args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetSCASummaryParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
@@ -436,7 +436,7 @@ Use this before get-sca-results for efficient triage.`,
 Essential for portfolio management, security program assessment, and identifying applications with open-source vulnerabilities.
 Use this to understand your organization's SCA coverage and prioritize security efforts across multiple applications.`,
       schema: GetSCAAppsSchema,
-      handler: async (args: GetSCAAppsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetSCAAppsParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Get all applications first
           const allApps = await context.veracodeClient.applications.getApplications();

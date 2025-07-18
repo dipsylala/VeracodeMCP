@@ -1,5 +1,5 @@
 import { ToolResponse, ToolCategory } from '../types/shared-types.js';
-import { VeracodeClient } from '../veracode-rest-client.js';
+import { VeracodeClient } from '../veracode/index.js';
 
 // Re-export shared types
 export { ToolResponse, ToolCategory };

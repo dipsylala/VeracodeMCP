@@ -1,6 +1,6 @@
 import { ToolHandler, ToolContext } from './tool-types.js';
 import { ToolCategory, ToolCall } from '../types/shared-types.js';
-import { VeracodeClient } from '../veracode-rest-client.js';
+import { VeracodeClient } from '../veracode/index.js';
 import { createApplicationTools } from './application.tools.js';
 import { createFindingsTools } from './findings.tools.js';
 import { createStaticAnalysisTools } from './static-analysis.tools.js';

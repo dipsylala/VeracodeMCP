@@ -47,7 +47,7 @@ Auto-detects whether input is an application name or GUID.
 Use this to understand scan coverage, track scan progress, review compliance status, and access scan reports.
 Essential for security program management and audit compliance.`,
       schema: GetScanResultsSchema,
-      handler: async (args: GetScanResultsParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetScanResultsParams, context: ToolContext): Promise<ToolResponse> => {
         const startTime = Date.now();
         logger.debug('Starting get-scan-results execution', 'SCAN_TOOL', { args });
 
@@ -202,7 +202,7 @@ Essential for security program management and audit compliance.`,
 Perfect for understanding sandbox testing coverage, comparing development vs staging environments,
 and tracking scan progress across different testing phases.`,
       schema: GetSandboxScansSchema,
-      handler: async (args: GetSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
@@ -254,7 +254,7 @@ and tracking scan progress across different testing phases.`,
       description: `Get scans from a specific sandbox by sandbox name.
 Useful when you want to focus on a particular development environment, staging area, or testing context.`,
       schema: GetScansBySandboxSchema,
-      handler: async (args: GetScansBySandboxParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetScansBySandboxParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
@@ -307,7 +307,7 @@ Useful when you want to focus on a particular development environment, staging a
       description: `Compare scan coverage between policy (main branch) and all sandboxes.
 Essential for understanding testing completeness, identifying coverage gaps, and ensuring proper scan distribution across environments.`,
       schema: ComparePolicyVsSandboxScansSchema,
-      handler: async (args: ComparePolicyVsSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: ComparePolicyVsSandboxScansParams, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(

@@ -54,7 +54,7 @@ export function createVeracodeClientFromEnv(): any {
   const credentials = loadVeracodeCredentials();
 
   // Dynamic import to avoid circular dependency
-  return import('../veracode-rest-client.js').then(module => {
+  return import('../veracode/index.js').then(module => {
     const { VeracodeClient } = module;
     return new VeracodeClient(credentials.apiId, credentials.apiKey, {
       apiBaseUrl: credentials.apiBaseUrl,

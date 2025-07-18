@@ -2,7 +2,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { VeracodeClient } from './veracode-rest-client.js';
+import { VeracodeClient } from './veracode/index.js';
 import { ToolRegistry } from './tools/tool.registry.js';
 import { logger } from './utils/logger.js';
 import { loadVeracodeCredentials } from './utils/credentials.js';

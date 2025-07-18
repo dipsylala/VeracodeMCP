@@ -1,4 +1,4 @@
-import { VeracodeClient } from './veracode-rest-client.js';
+import { VeracodeClient } from './veracode/index.js';
 import { logger } from './utils/logger.js';
 import { ToolRegistry } from './tools/tool.registry.js';
 import * as dotenv from 'dotenv';

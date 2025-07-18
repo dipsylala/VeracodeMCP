@@ -26,7 +26,7 @@ export function createSandboxTools(): ToolHandler[] {
 Sandboxes are isolated environments for testing security scans without affecting production results.
 Use this to discover available development environments, track feature branch scanning, or manage sandbox-specific security testing workflows.`,
       schema: GetSandboxesSchema,
-      handler: async (args: GetSandboxesArgs, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetSandboxesArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
           // Validate and resolve application identifier to GUID
           const appResolution = await validateAndResolveApplication(
@@ -100,7 +100,7 @@ Use this to discover available development environments, track feature branch sc
 Perfect for quick assessment of development environment security testing coverage.
 Use this to understand how many sandbox environments exist, who owns them, and their current status without detailed information.`,
       schema: GetSandboxSummarySchema,
-      handler: async (args: GetSandboxSummaryArgs, context: ToolContext): Promise<ToolResponse> => {
+      handler: async(args: GetSandboxSummaryArgs, context: ToolContext): Promise<ToolResponse> => {
         try {
           const appResolution = await validateAndResolveApplication(
             args.app_profile,
