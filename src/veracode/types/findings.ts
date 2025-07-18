@@ -1,6 +1,6 @@
 // Findings and scan-related types for Veracode API
 
-import { VeracodeAnnotation, VeracodeCWE, ScanType, PageMetadata } from './common.js';
+import { VeracodeMitigation, VeracodeCWE, ScanType, PageMetadata } from './common.js';
 
 // Base finding status interface
 export interface VeracodeFindingStatus {
@@ -131,7 +131,7 @@ export interface VeracodeFinding {
     violates_policy: boolean;
     build_id?: number;
     grace_period_expires_date?: string;
-    annotations?: VeracodeAnnotation[];
+    mitigations?: VeracodeMitigation[];
     finding_status: VeracodeFindingStatus;
     finding_details: VeracodeFindingDetails;
 }
@@ -222,7 +222,7 @@ export interface FindingsQueryOptions {
     cve?: string;
     sandbox_id?: string;
     findingCategory?: number[];
-    includeAnnotations?: boolean;
+    includeMitigations?: boolean;
     includeExpirationDate?: boolean;
     mitigatedAfter?: string;
     newFindingsOnly?: boolean;

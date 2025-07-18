@@ -7,8 +7,8 @@ export interface VeracodeCWE {
     href?: string;
 }
 
-// Base annotation interface
-export interface VeracodeAnnotation {
+// Base Mitigation interface
+export interface VeracodeMitigation {
     action: string;
     comment: string;
     created: string;

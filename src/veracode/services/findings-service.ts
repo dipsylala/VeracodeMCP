@@ -83,8 +83,8 @@ export class FindingsService extends BaseVeracodeClient {
         if (options.findingCategory && options.findingCategory.length > 0) {
           options.findingCategory.forEach(cat => params.append('finding_category', cat.toString()));
         }
-        if (options.includeAnnotations !== undefined)
-          params.append('include_annot', options.includeAnnotations.toString());
+        if (options.includeMitigations !== undefined)
+          params.append('include_annot', options.includeMitigations.toString());
         if (options.includeExpirationDate !== undefined)
           params.append('include_exp_date', options.includeExpirationDate.toString());
         if (options.mitigatedAfter) params.append('mitigated_after', options.mitigatedAfter);
@@ -126,16 +126,16 @@ export class FindingsService extends BaseVeracodeClient {
   async getAllFindings(
     appId: string,
     options?: FindingsQueryOptions & {
-            maxPages?: number; // Limit to prevent infinite loops
-            pageSize?: number; // Override default page size (max 500)
-        }
+      maxPages?: number; // Limit to prevent infinite loops
+      pageSize?: number; // Override default page size (max 500)
+    }
   ): Promise<{
-        findings: VeracodeFinding[];
-        totalPages: number;
-        totalElements: number;
-        pagesRetrieved: number;
-        truncated: boolean;
-    }> {
+    findings: VeracodeFinding[];
+    totalPages: number;
+    totalElements: number;
+    pagesRetrieved: number;
+    truncated: boolean;
+  }> {
     try {
       const maxPages = options?.maxPages || 50; // Default to 50 pages max (25,000 findings at 500 per page)
       const pageSize = Math.min(options?.pageSize || 500, 500); // API max is 500
@@ -235,17 +235,17 @@ export class FindingsService extends BaseVeracodeClient {
       if (primaryPolicy) {
         const policyStatus = primaryPolicy.policy_compliance_status;
         switch (policyStatus) {
-        case 'PASSED':
-          complianceStatus = 'PASS';
-          break;
-        case 'DID_NOT_PASS':
-          complianceStatus = 'FAIL';
-          break;
-        case 'CONDITIONAL_PASS':
-          complianceStatus = 'CONDITIONAL_PASS';
-          break;
-        default:
-          complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
+          case 'PASSED':
+            complianceStatus = 'PASS';
+            break;
+          case 'DID_NOT_PASS':
+            complianceStatus = 'FAIL';
+            break;
+          case 'CONDITIONAL_PASS':
+            complianceStatus = 'CONDITIONAL_PASS';
+            break;
+          default:
+            complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';
         }
       } else {
         complianceStatus = totalOpenViolations === 0 ? 'PASS' : 'FAIL';

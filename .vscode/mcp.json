@@ -5,11 +5,7 @@
       "args": [
         "./build/index.js"
       ],
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "VERACODE_API_ID": "${env:VERACODE_API_ID}",
-        "VERACODE_API_KEY": "${env:VERACODE_API_KEY}"
-      }
+      "cwd": "${workspaceFolder}"
     }
   }
 }
