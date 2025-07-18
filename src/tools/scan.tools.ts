@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { ToolHandler, ToolContext, ToolResponse } from './tool-types.js';
 import { validateAndResolveApplication } from '../utils/application-resolver.js';
+import { logger } from '../utils/logger.js';
 
 // Schema for getting scan results with optional sandbox filtering
 const GetScanResultsSchema = z.object({
-  application: z.string().describe('Application GUID or name to get scan results for'),
+  app_profile: z.string().describe('Application GUID or name to get scan results for'),
   sandbox_identifier: z.string().optional().describe('Sandbox GUID or name to get scans from specific sandbox'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type')
 });
@@ -13,7 +14,7 @@ type GetScanResultsParams = z.infer<typeof GetScanResultsSchema>;
 
 // Schema for getting all sandbox scans for an application
 const GetSandboxScansSchema = z.object({
-  identifier: z.string().describe('Application GUID or name to get sandbox scans for'),
+  app_profile: z.string().describe('Application GUID or name to get sandbox scans for'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type (optional)')
 });
 
@@ -21,7 +22,7 @@ type GetSandboxScansParams = z.infer<typeof GetSandboxScansSchema>;
 
 // Schema for getting scans from a specific sandbox
 const GetScansBySandboxSchema = z.object({
-  identifier: z.string().describe('Application GUID or name'),
+  app_profile: z.string().describe('Application GUID or name'),
   sandbox_name: z.string().describe('Sandbox name to get scans from'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter scans by type (optional)')
 });
@@ -30,7 +31,7 @@ type GetScansBySandboxParams = z.infer<typeof GetScansBySandboxSchema>;
 
 // Schema for comparing policy vs sandbox scans
 const ComparePolicyVsSandboxScansSchema = z.object({
-  identifier: z.string().describe('Application GUID or name to compare scans for'),
+  app_profile: z.string().describe('Application GUID or name to compare scans for'),
   scan_type: z.enum(['STATIC', 'DYNAMIC', 'MANUAL', 'SCA']).optional().describe('Filter comparison by scan type (optional)')
 });
 
@@ -47,34 +48,87 @@ Use this to understand scan coverage, track scan progress, review compliance sta
 Essential for security program management and audit compliance.`,
       schema: GetScanResultsSchema,
       handler: async(args: GetScanResultsParams, context: ToolContext): Promise<ToolResponse> => {
+        const startTime = Date.now();
+        logger.debug('Starting get-scan-results execution', 'SCAN_TOOL', { args });
+
         try {
+          const appResolution = await validateAndResolveApplication(
+            args.app_profile,
+            context.veracodeClient
+          );
+          const applicationGuid = appResolution.guid;
+          const appDetails = appResolution.details;
+
+          logger.debug('Application resolved', 'SCAN_TOOL', {
+            appName: appDetails.profile?.name,
+            applicationGuid,
+            resolvedFromName: appResolution.resolvedFromName
+          });
+
           let sandboxId: string | undefined;
           let sandboxContext = 'policy';
 
           // If sandbox identifier is provided, resolve it to a GUID
           if (args.sandbox_identifier) {
+            logger.debug('Resolving sandbox identifier', 'SCAN_TOOL', { 
+              sandboxIdentifier: args.sandbox_identifier 
+            });
+
             // Check if it's already a GUID (simple check for GUID format)
             const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(args.sandbox_identifier);
 
             if (isGuid) {
               sandboxId = args.sandbox_identifier;
               sandboxContext = `sandbox (${args.sandbox_identifier})`;
+              logger.debug('Sandbox identifier is GUID', 'SCAN_TOOL', { sandboxId });
             } else {
               // It's a sandbox name, use getScansBySandboxName to resolve it
+              logger.debug('Resolving sandbox by name', 'SCAN_TOOL', { 
+                sandboxName: args.sandbox_identifier 
+              });
               try {
-                const sandboxResult = await context.veracodeClient.scans.getScansBySandboxName(args.application, args.sandbox_identifier, args.scan_type);
+                const sandboxResult = await context.veracodeClient.scans.getScansBySandboxName(applicationGuid, args.sandbox_identifier, args.scan_type);
                 sandboxId = sandboxResult.sandbox.guid;
                 sandboxContext = `sandbox (${sandboxResult.sandbox.name})`;
+                logger.debug('Sandbox resolved by name', 'SCAN_TOOL', { 
+                  sandboxName: args.sandbox_identifier,
+                  sandboxId,
+                  resolvedName: sandboxResult.sandbox.name
+                });
               } catch (error) {
+                logger.error('Failed to resolve sandbox by name', 'SCAN_TOOL', {
+                  sandboxName: args.sandbox_identifier,
+                  error: error instanceof Error ? error.message : String(error)
+                });
                 return {
                   success: false,
-                  error: `Sandbox "${args.sandbox_identifier}" not found for application "${args.application}": ${error instanceof Error ? error.message : String(error)}`
+                  error: `Sandbox "${args.sandbox_identifier}" not found for application "${args.app_profile}": ${error instanceof Error ? error.message : String(error)}`
                 };
               }
             }
           }
 
-          const result = await context.veracodeClient.scans.getScans(args.application, args.scan_type, sandboxId);
+          logger.debug('Calling getScans', 'SCAN_TOOL', {
+            applicationGuid,
+            scanType: args.scan_type,
+            sandboxId,
+            sandboxContext
+          });
+
+          const result = await context.veracodeClient.scans.getScans(applicationGuid, args.scan_type, sandboxId);
+
+          logger.debug('Scans retrieved', 'SCAN_TOOL', {
+            totalScans: result.length,
+            scanTypes: [...new Set(result.map((scan: any) => scan.scan_type))],
+            scanIds: result.map((scan: any) => scan.scan_id),
+            rawScansData: result.map((scan: any) => ({
+              scan_id: scan.scan_id,
+              scan_type: scan.scan_type,
+              status: scan.status,
+              created_date: scan.created_date,
+              policy_compliance_status: scan.policy_compliance_status
+            }))
+          });
 
           // Format scan results with essential fields
           const formattedScans = result.map((scan: any) => ({
@@ -91,10 +145,30 @@ Essential for security program management and audit compliance.`,
 
           const scanTypes = [...new Set(formattedScans.map(scan => scan.scan_type))];
 
+          const executionTime = Date.now() - startTime;
+          logger.debug('Scan results processed', 'SCAN_TOOL', {
+            appName: appDetails.profile?.name,
+            totalScans: formattedScans.length,
+            scanTypes,
+            context: sandboxContext,
+            executionTime,
+            formattedScansPreview: formattedScans.slice(0, 3).map(scan => ({
+              scan_id: scan.scan_id,
+              scan_type: scan.scan_type,
+              status: scan.status,
+              created_date: scan.created_date
+            })),
+            showingFirst: Math.min(3, formattedScans.length),
+            totalCount: formattedScans.length
+          });
+
           return {
             success: true,
             data: {
-              application_identifier: args.application,
+              application: {
+                name: appDetails.profile?.name,
+                guid: applicationGuid
+              },
               context: sandboxContext,
               sandbox_identifier: args.sandbox_identifier,
               scan_type_filter: args.scan_type || 'all',
@@ -108,6 +182,12 @@ Essential for security program management and audit compliance.`,
             }
           };
         } catch (error) {
+          const executionTime = Date.now() - startTime;
+          logger.error('Scan tool execution failed', 'SCAN_TOOL', {
+            args,
+            executionTime,
+            error: error instanceof Error ? error.message : String(error)
+          });
           return {
             success: false,
             error: `Error fetching scan results: ${error instanceof Error ? error.message : String(error)}`
@@ -126,7 +206,7 @@ and tracking scan progress across different testing phases.`,
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.identifier,
+            args.app_profile,
             context.veracodeClient
           );
 
@@ -139,9 +219,8 @@ and tracking scan progress across different testing phases.`,
             success: true,
             data: {
               application: {
-                name: targetApp.profile.name,
-                id: applicationGuid,
-                business_criticality: targetApp.profile.business_criticality
+                name: targetApp.profile?.name,
+                guid: applicationGuid
               },
               total_sandbox_scans: result.totalSandboxScans,
               sandbox_count: result.sandboxes.length,
@@ -179,7 +258,7 @@ Useful when you want to focus on a particular development environment, staging a
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.identifier,
+            args.app_profile,
             context.veracodeClient
           );
 
@@ -201,13 +280,12 @@ Useful when you want to focus on a particular development environment, staging a
             success: true,
             data: {
               application: {
-                name: targetApp.profile.name,
-                id: applicationGuid,
-                business_criticality: targetApp.profile.business_criticality
+                name: targetApp.profile?.name,
+                guid: applicationGuid
               },
               sandbox: {
                 name: result.sandbox.name,
-                id: result.sandbox.guid
+                guid: result.sandbox.guid
               },
               scan_count: result.scanCount,
               scan_types: result.scanTypes,
@@ -233,7 +311,7 @@ Essential for understanding testing completeness, identifying coverage gaps, and
         try {
           // Step 1: Resolve application (GUID or name)
           const appResolution = await validateAndResolveApplication(
-            args.identifier,
+            args.app_profile,
             context.veracodeClient
           );
 
@@ -246,9 +324,8 @@ Essential for understanding testing completeness, identifying coverage gaps, and
             success: true,
             data: {
               application: {
-                name: targetApp.profile.name,
-                id: applicationGuid,
-                business_criticality: targetApp.profile.business_criticality
+                name: targetApp.profile?.name,
+                guid: applicationGuid
               },
               scan_type_filter: args.scan_type || 'all',
               policy_scans: {

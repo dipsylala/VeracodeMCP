@@ -41,8 +41,10 @@ Use this to discover available development environments, track feature branch sc
           });
 
           const result = {
-            application_id: appResolution.guid,
-            application_name: appResolution.details.profile?.name || null,
+            application: {
+              name: appResolution.details.profile?.name,
+              guid: appResolution.guid
+            },
             sandbox_count: sandboxes.length,
             sandboxes: sandboxes.map((sandbox: any) => ({
               name: sandbox.name,
@@ -109,8 +111,10 @@ Use this to understand how many sandbox environments exist, who owns them, and t
           const sandboxes = await context.veracodeClient.sandboxes.getSandboxes(appResolution.guid);
 
           const result = {
-            application_id: appResolution.guid,
-            application_name: appResolution.details.profile?.name || null,
+            application: {
+              name: appResolution.details.profile?.name,
+              guid: appResolution.guid
+            },
             sandbox_summary: {
               total_count: sandboxes.length,
               sandboxes: sandboxes.map((sandbox: any) => ({

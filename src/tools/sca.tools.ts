@@ -196,11 +196,8 @@ Critical for supply chain security and license compliance.`,
             success: true,
             data: {
               application: {
-                name: targetApp.profile.name,
-                id: targetApp.guid,
-                business_criticality: targetApp.profile.business_criticality,
-                app_profile_url: targetApp.app_profile_url,
-                results_url: targetApp.results_url
+                name: targetApp.profile?.name,
+                guid: applicationGuid
               },
               scan_information: latestScanResults
                 ? {
@@ -380,11 +377,8 @@ Use this before get-sca-results for efficient triage.`,
             success: true,
             data: {
               application: {
-                name: targetApp.profile.name,
-                id: applicationGuid,
-                business_criticality: targetApp.profile.business_criticality,
-                app_profile_url: targetApp.app_profile_url,
-                results_url: targetApp.results_url
+                name: targetApp.profile?.name,
+                guid: applicationGuid
               },
               scan_status: {
                 has_sca_scans: latestScanResults !== null,
